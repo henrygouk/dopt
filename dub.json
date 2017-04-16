@@ -1,0 +1,9 @@
+{
+	"name": "dopt",
+	"authors": [
+		"Henry Gouk"
+	],
+	"description": "Numerical optimisation framework",
+	"copyright": "Copyright © 2017, Henry Gouk",
+	"license": "BSD"
+}

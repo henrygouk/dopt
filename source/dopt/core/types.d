@@ -8,6 +8,21 @@ enum DataType
     int32
 }
 
+size_t sizeOf(DataType t)
+{
+    switch(t)
+    {
+        case DataType.float32:
+            return float.sizeof;
+
+        case DataType.int32:
+            return int.sizeof;
+
+        default:
+            throw new Exception("Not implemented");
+    }
+}
+
 struct TensorType
 {
     DataType elementType;

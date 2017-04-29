@@ -4,5 +4,5 @@ void main()
     import std.stdio;
 
     writeln(listAllOperations());
-    writeln(listAllKernels());
+    writeln(listAllCPUKernels());
 }

@@ -202,5 +202,7 @@ Operation repeat(const(Operation) input, size_t repititions, string mod = __MODU
 
 Operation variable(TensorType type, string mod = __MODULE__, size_t line = __LINE__)
 {
-    return createOperation("variable", [], ["type": Variant(type)], mod, line);
+    auto defaultVal = new ubyte[type.volume * sizeOf(type.elementType)];
+
+    return createOperation("variable", [], ["type": Variant(type), "default": Variant(cast(void[])defaultVal)], mod, line);
 }

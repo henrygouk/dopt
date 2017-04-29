@@ -5,5 +5,11 @@
 	],
 	"description": "Numerical optimisation framework",
 	"copyright": "Copyright © 2017, Henry Gouk",
-	"license": "BSD"
+	"license": "BSD",
+	"dependencies": {
+		"cblas": "~>1.0.0"
+	},
+	"libs": [
+		"blas"
+	]
 }

@@ -34,13 +34,13 @@ struct TensorType
         shape = s.dup;
     }
 
-    this()(auto ref const TensorType t)
+    this(ref const TensorType t)
     {
         elementType = t.elementType;
         shape = t.shape.dup;
     }
 
-    bool opEquals()(auto ref const TensorType t) const
+    bool opEquals(ref const TensorType t) const
     {
         return elementType == t.elementType && shape == t.shape;
     }

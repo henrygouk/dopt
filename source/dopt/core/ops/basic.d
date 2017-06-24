@@ -168,7 +168,7 @@ private
 }
 
 /**
-Produces a tensor that results from performing a slice operation similar to input[start .. stop]
+Produces a tensor that results from performing a slice operation similar to input[start .. stop].
 */
 Operation slice(const(Operation) input, const(size_t)[] start, const(size_t)[] stop,
     string mod = __MODULE__, size_t line = __LINE__)
@@ -177,7 +177,7 @@ Operation slice(const(Operation) input, const(size_t)[] start, const(size_t)[] s
 }
 
 /**
-Extends the size of the input by padding it with zeros
+Extends the size of the input by padding it with zeros.
 */
 Operation pad(const(Operation) input, const(size_t)[] before, const(size_t)[] after,
     string mod = __MODULE__, size_t line = __LINE__)
@@ -185,21 +185,35 @@ Operation pad(const(Operation) input, const(size_t)[] before, const(size_t)[] af
     return createOperation("pad", [input], ["before": Variant(before), "after": Variant(after)], mod, line);
 }
 
+/**
+Essentially acts as a type casting operation, but for only the shape component of the TensorType.
+*/
 Operation reshape(const(Operation) input, const(size_t)[] shape, string mod = __MODULE__, size_t line = __LINE__)
 {
     return createOperation("reshape", [input], ["shape": Variant(shape)], mod, line);
 }
 
+/**
+Changes the order of the dimensions of the input tensor.
+*/
 Operation transpose(const(Operation) input, const(size_t)[] order, string mod = __MODULE__, size_t line = __LINE__)
 {
     return createOperation("transpose", [input], ["order": Variant(order)], mod, line);
 }
 
+/**
+Repeats a tensor, and increases the rank of the tensor by one in order to index these repititions.
+*/
 Operation repeat(const(Operation) input, size_t repititions, string mod = __MODULE__, size_t line = __LINE__)
 {
     return createOperation("repeat", [input], ["repititions": Variant(repititions)], mod, line);
 }
 
+/**
+Creates a variable of the given type.
+
+The resulting operation contains an attribute called "default", which is used as the default value of the variable.
+*/
 Operation variable(TensorType type, string mod = __MODULE__, size_t line = __LINE__)
 {
     auto defaultVal = new ubyte[type.volume * sizeOf(type.elementType)];

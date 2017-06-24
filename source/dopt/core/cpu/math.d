@@ -26,9 +26,9 @@ private
             auto ashape = op.deps[0].outputType.shape;
             auto bshape = op.deps[1].outputType.shape;
 
-            static import cblas;
+            import cblas;
 
-            cblas.cblas.cblas_sgemm(cblas.cblas.Order.RowMajor, cblas.cblas.Transpose.NoTrans, cblas.cblas.Transpose.NoTrans,
+            gemm(Order.RowMajor, Transpose.NoTrans, Transpose.NoTrans,
                 cast(int)ashape[0], cast(int)bshape[1], cast(int)ashape[1], 1.0, cast(float *)inputs[0].ptr,
                 cast(int)ashape[1], cast(float *)inputs[1].ptr, cast(int)bshape[1], 0, cast(float *)output.ptr,
                 cast(int)bshape[1]);

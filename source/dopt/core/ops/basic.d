@@ -8,14 +8,17 @@ import std.functional;
 import std.range;
 import std.variant;
 
-static this()
+package
 {
-    registerOperation("slice", OpDef(toDelegate(&verifySlice), toDelegate(&judgeSlice)));
-    registerOperation("pad", OpDef(toDelegate(&verifyPad), toDelegate(&judgeSlice)));
-    registerOperation("reshape", OpDef(toDelegate(&verifyReshape), toDelegate(&judgeReshape)));
-    registerOperation("transpose", OpDef(toDelegate(&verifyTranspose), toDelegate(&judgeTranspose)));
-    registerOperation("repeat", OpDef(toDelegate(&verifyRepeat), toDelegate(&judgeRepeat)));
-    registerOperation("variable", OpDef(toDelegate(&verifyVariable), toDelegate(&judgeVariable)));
+    void initialize()
+    {
+        registerOperation("slice", OpDef(toDelegate(&verifySlice), toDelegate(&judgeSlice)));
+        registerOperation("pad", OpDef(toDelegate(&verifyPad), toDelegate(&judgeSlice)));
+        registerOperation("reshape", OpDef(toDelegate(&verifyReshape), toDelegate(&judgeReshape)));
+        registerOperation("transpose", OpDef(toDelegate(&verifyTranspose), toDelegate(&judgeTranspose)));
+        registerOperation("repeat", OpDef(toDelegate(&verifyRepeat), toDelegate(&judgeRepeat)));
+        registerOperation("variable", OpDef(toDelegate(&verifyVariable), toDelegate(&judgeVariable)));
+    }
 }
 
 private
@@ -167,56 +170,74 @@ private
     }
 }
 
-/**
-Produces a tensor that results from performing a slice operation similar to input[start .. stop].
-*/
-Operation slice(const(Operation) input, const(size_t)[] start, const(size_t)[] stop,
-    string mod = __MODULE__, size_t line = __LINE__)
+public
 {
-    return createOperation("slice", [input], ["start": Variant(start), "stop": Variant(stop)], mod, line);
-}
+    /**
+    Produces a tensor that results from performing a slice operation similar to input[start .. stop].
+    */
+    Operation slice(const(Operation) input, const(size_t)[] start, const(size_t)[] stop,
+        string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("slice", [input], ["start": Variant(start), "stop": Variant(stop)], mod, line);
+    }
 
-/**
-Extends the size of the input by padding it with zeros.
-*/
-Operation pad(const(Operation) input, const(size_t)[] before, const(size_t)[] after,
-    string mod = __MODULE__, size_t line = __LINE__)
-{
-    return createOperation("pad", [input], ["before": Variant(before), "after": Variant(after)], mod, line);
-}
+    /**
+    Extends the size of the input by padding it with zeros.
+    */
+    Operation pad(const(Operation) input, const(size_t)[] before, const(size_t)[] after,
+        string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("pad", [input], ["before": Variant(before), "after": Variant(after)], mod, line);
+    }
 
-/**
-Essentially acts as a type casting operation, but for only the shape component of the TensorType.
-*/
-Operation reshape(const(Operation) input, const(size_t)[] shape, string mod = __MODULE__, size_t line = __LINE__)
-{
-    return createOperation("reshape", [input], ["shape": Variant(shape)], mod, line);
-}
+    /**
+    Essentially acts as a type casting operation, but for only the shape component of the TensorType.
+    */
+    Operation reshape(const(Operation) input, const(size_t)[] shape, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("reshape", [input], ["shape": Variant(shape)], mod, line);
+    }
 
-/**
-Changes the order of the dimensions of the input tensor.
-*/
-Operation transpose(const(Operation) input, const(size_t)[] order, string mod = __MODULE__, size_t line = __LINE__)
-{
-    return createOperation("transpose", [input], ["order": Variant(order)], mod, line);
-}
+    /**
+    Changes the order of the dimensions of the input tensor.
+    */
+    Operation transpose(const(Operation) input, const(size_t)[] order, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("transpose", [input], ["order": Variant(order)], mod, line);
+    }
 
-/**
-Repeats a tensor, and increases the rank of the tensor by one in order to index these repititions.
-*/
-Operation repeat(const(Operation) input, size_t repititions, string mod = __MODULE__, size_t line = __LINE__)
-{
-    return createOperation("repeat", [input], ["repititions": Variant(repititions)], mod, line);
-}
+    /**
+    Repeats a tensor, and increases the rank of the tensor by one in order to index these repititions.
+    */
+    Operation repeat(const(Operation) input, size_t repititions, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("repeat", [input], ["repititions": Variant(repititions)], mod, line);
+    }
 
-/**
-Creates a variable of the given type.
+    /**
+    Creates a variable of the given type.
 
-The resulting operation contains an attribute called "default", which is used as the default value of the variable.
-*/
-Operation variable(TensorType type, string mod = __MODULE__, size_t line = __LINE__)
-{
-    auto defaultVal = new ubyte[type.volume * sizeOf(type.elementType)];
+    The resulting operation contains an attribute called "default", which is used as the default value of the variable.
+    */
+    Operation variable(TensorType type, void[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        auto bufSize = type.volume * sizeOf(type.elementType);
 
-    return createOperation("variable", [], ["type": Variant(type), "default": Variant(cast(void[])defaultVal)], mod, line);
+        if(defaultVal is null)
+        {
+            defaultVal = new ubyte[bufSize];
+        }
+
+        return createOperation("variable", [], ["type": Variant(type), "default": Variant(defaultVal)], mod, line);
+    }
+
+    Operation float32(const(size_t)[] size, float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return variable(TensorType(DataType.float32, size), defaultVal, mod, line);
+    }
+
+    Operation int32(const(size_t)[] size, int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return variable(TensorType(DataType.int32, size), defaultVal, mod, line);
+    }
 }

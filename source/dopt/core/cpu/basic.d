@@ -8,10 +8,8 @@ static this()
 
     registerCPUKernel("slice", new CPUKernelDelegate(toDelegate(&slice)));
     registerCPUKernel("pad", new CPUKernelDelegate(toDelegate(&pad)));
-    registerCPUKernel("reshape", new CPUKernelDelegate(toDelegate(&reshape)));
     registerCPUKernel("transpose", new CPUKernelDelegate(toDelegate(&transpose)));
     registerCPUKernel("repeat", new CPUKernelDelegate(toDelegate(&repeat)));
-    registerCPUKernel("variable", new CPUKernelDelegate(toDelegate(&variable)));
 }
 
 private
@@ -112,11 +110,6 @@ private
         padImpl(cast(const(ubyte)[])inputs[0], inShape, inVol, cast(ubyte[])output, outShape, outVol, offset);
     }
 
-    void reshape(const(Operation) op, const(void[])[] inputs, void[] output)
-    {
-        output[] = inputs[0][];
-    }
-
     void transpose(const(Operation) op, const(void[])[] inputs, void[] output)
     {
         import std.exception : enforce;
@@ -157,10 +150,5 @@ private
         {
             c[] = inBuf[];
         }
-    }
-
-    void variable(const(Operation) op, const(void[])[] inputs, void[] output)
-    {
-        output[] = op.attributes["default"].get!(void[]);
     }
 }

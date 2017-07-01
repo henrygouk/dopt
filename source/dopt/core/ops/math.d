@@ -7,49 +7,52 @@ import std.range;
 
 import dopt.core;
 
-static this()
+package
 {
-    void registerPointwiseBinary(string opName)
+    void initialize()
     {
-        bool verifier(const(Operation) op)
+        void registerPointwiseBinary(string opName)
         {
-            return op.deps.length == 2 && op.deps[0].outputType == op.deps[1].outputType;
+            bool verifier(const(Operation) op)
+            {
+                return op.deps.length == 2 && op.deps[0].outputType == op.deps[1].outputType;
+            }
+
+            TensorType judge(const(Operation) op)
+            {
+                return TensorType(op.deps[0].outputType);
+            }
+
+            registerOperation(opName, OpDef(&verifier, &judge));
         }
 
-        TensorType judge(const(Operation) op)
+        void registerPointwiseUnary(string opName)
         {
-            return TensorType(op.deps[0].outputType);
+            bool verifier(const(Operation) op)
+            {
+                return true;
+            }
+
+            TensorType judge(const(Operation) op)
+            {
+                return TensorType(op.deps[0].outputType);
+            }
+
+            registerOperation(opName, OpDef(&verifier, &judge));
         }
 
-        registerOperation(opName, OpDef(&verifier, &judge));
-    }
-
-    void registerPointwiseUnary(string opName)
-    {
-        bool verifier(const(Operation) op)
+        foreach(opName; chain(arith, comp, binfunc))
         {
-            return true;
+            registerPointwiseBinary(opName);
         }
 
-        TensorType judge(const(Operation) op)
+        foreach(opName; unfunc)
         {
-            return TensorType(op.deps[0].outputType);
+            registerPointwiseUnary(opName);
         }
 
-        registerOperation(opName, OpDef(&verifier, &judge));
+        registerOperation("matmul", OpDef(toDelegate(&verifyMatmul), toDelegate(&judgeMatmul)));
     }
-
-    foreach(opName; chain(arith, comp, binfunc))
-    {
-        registerPointwiseBinary(opName);
-    }
-
-    foreach(opName; unfunc)
-    {
-        registerPointwiseUnary(opName);
-    }
-
-    registerOperation("matmul", OpDef(toDelegate(&verifyMatmul), toDelegate(&judgeMatmul)));
 }
 
 private

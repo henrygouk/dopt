@@ -8,7 +8,14 @@ import dopt.core;
 
 public
 {
+    import dopt.core.ops.basic;
     import dopt.core.ops.math;
+}
+
+static this()
+{
+    dopt.core.ops.basic.initialize();
+    dopt.core.ops.math.initialize();
 }
 
 alias Verifier = bool delegate(const Operation);
@@ -68,6 +75,31 @@ class Operation
         @property const(Variant[string]) attributes() const
         {
             return mAttributes;
+        }
+
+        /**
+        Convenience method for pointwise operations.
+
+        Internally, this just calls the appropriate function from dopt.core.ops.math.
+        */
+        Operation opBinary(string op)(const(Operation) rhs)
+        {
+            static if(op == "+")
+            {
+                return this.add(rhs);
+            }
+            else static if(op == "-")
+            {
+                return this.sub(rhs);
+            }
+            else static if(op == "*")
+            {
+                return this.mul(rhs);
+            }
+            else static if(op == "/")
+            {
+                return this.div(rhs);
+            }
         }
     }
 

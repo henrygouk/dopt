@@ -19,7 +19,7 @@ mixin(generateKernels());
 
 private
 {
-    void matmulKernel(const(Operation) op, const(void[])[] inputs, void[] output)
+    void matmulKernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
         if(op.outputType.elementType == DataType.float32)
         {
@@ -29,9 +29,9 @@ private
             import cblas;
 
             gemm(Order.RowMajor, Transpose.NoTrans, Transpose.NoTrans,
-                cast(int)ashape[0], cast(int)bshape[1], cast(int)ashape[1], 1.0, cast(float *)inputs[0].ptr,
-                cast(int)ashape[1], cast(float *)inputs[1].ptr, cast(int)bshape[1], 0, cast(float *)output.ptr,
-                cast(int)bshape[1]);
+                cast(int)ashape[0], cast(int)bshape[1], cast(int)ashape[1], 1.0, cast(float *)inputs[0].as!float.ptr,
+                cast(int)ashape[1], cast(float *)inputs[1].as!float.ptr, cast(int)bshape[1], 0,
+                cast(float *)output.as!float.ptr, cast(int)bshape[1]);
         }
         else
         {
@@ -64,10 +64,10 @@ private
         string generateSingleKernel(string op, string dtype, string expr)
         {
             return
-                "void " ~ op ~ "Kernel_" ~ dtype ~ "(const(Operation) op, const(void[])[] inputs, void[] output)
+                "void " ~ op ~ "Kernel_" ~ dtype ~ "(const(Operation) op, const(Buffer)[] inputs, Buffer output)
                 {
-                    auto ins = inputs.map!(x => cast(" ~ dtype ~ "[])x).array();
-                    auto outs = cast(" ~ dtype ~ "[])output;
+                    auto ins = inputs.map!(x => x.as!" ~ dtype ~ ").array();
+                    auto outs = output.as!" ~ dtype ~ ";
 
                     for(size_t i = 0; i < outs.length; i++)
                     {
@@ -80,7 +80,7 @@ private
         string generateTypedKernel(string op, string[string] types)
         {
             string ret =
-                "void " ~ op ~ "Kernel(const(Operation) op, const(void[])[] inputs, void[] output)
+                "void " ~ op ~ "Kernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
                 {
                     switch(op.outputType.elementType)
                     {

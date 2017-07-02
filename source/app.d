@@ -9,5 +9,5 @@ void main()
 
     auto d = (a + b) * c;
 
-    writeln(cast(float[])evaluate(d).get!(void[]));
+    writeln(evaluate(d).as!float);
 }

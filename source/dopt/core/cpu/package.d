@@ -1,25 +1,24 @@
 module dopt.core.cpu;
 
 import std.exception;
-import std.variant;
 
 import dopt.core;
 
 interface CPUKernel
 {
-    void execute(const(Operation) op, const(void[])[] inputs, void[] output);
+    void execute(const(Operation) op, const(Buffer)[] inputs, Buffer output);
 }
 
 class CPUKernelDelegate : CPUKernel
 {
     public
     {
-        this(void delegate(const(Operation), const(void[])[], void[]) kern)
+        this(void delegate(const(Operation), const(Buffer)[], Buffer) kern)
         {
             mKernel = kern;
         }
 
-        void execute(const(Operation) op, const(void[])[] inputs, void[] output)
+        void execute(const(Operation) op, const(Buffer)[] inputs, Buffer output)
         {
             mKernel(op, inputs, output);
         }
@@ -27,7 +26,7 @@ class CPUKernelDelegate : CPUKernel
 
     private
     {
-        void delegate(const(Operation) op, const(void[])[], void[]) mKernel;
+        void delegate(const(Operation) op, const(Buffer)[], Buffer) mKernel;
     }
 }
 
@@ -48,12 +47,12 @@ string[] listAllCPUKernels()
     return mKernels.keys.dup;
 }
 
-Variant evaluate(const(Operation) op, Variant[const(Operation)] args = null)
+Buffer evaluate(const(Operation) op, Buffer[const(Operation)] args = null)
 {
     return evaluate([op], args)[0];
 }
 
-Variant[] evaluate(const(Operation)[] ops, Variant[const(Operation)] args = null)
+Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
 {
     //Toposort the operations by dependency
     const(Operation)[] sortedOps;
@@ -90,13 +89,7 @@ Variant[] evaluate(const(Operation)[] ops, Variant[const(Operation)] args = null
     }
 
     //Start executing the operations
-    void[][const(Operation)] results;
-
-    //Put the args into results
-    foreach(k, v; args)
-    {
-        results[k] = v.get!(void[]);
-    }
+    Buffer[const(Operation)] results = args.dup;
 
     foreach(o; sortedOps)
     {
@@ -106,7 +99,7 @@ Variant[] evaluate(const(Operation)[] ops, Variant[const(Operation)] args = null
         //Check for some easy optimizations
         if(o.opType == "variable" && !("variable" in mKernels))
         {
-            results[o] = cast(void[])o.attributes["default"].get!(void[]);
+            results[o] = Buffer(cast(void[])o.attributes["default"].get!(void[]));
             continue;
         }
         else if(o.opType == "reshape" && !("reshape" in mKernels))
@@ -116,12 +109,12 @@ Variant[] evaluate(const(Operation)[] ops, Variant[const(Operation)] args = null
         }
 
         //Allocate a buffer for the output of this operation
-        auto output = new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()];
+        auto output = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
         results[o] = output;
         //writeln("Allocated buffer for operation ", (cast(void *)o).to!string);
 
         //Get the input buffers
-        void[][] inputs;
+        Buffer[] inputs;
 
         foreach(d; o.deps)
         {
@@ -144,12 +137,12 @@ Variant[] evaluate(const(Operation)[] ops, Variant[const(Operation)] args = null
             if(refCounts[d] == 0)
             {
                 //writeln("Freeing buffer for operation ", (cast(void *)d).to!string);
-                results[d] = null;
+                results[d] = Buffer([]);
             }
         }
     }
 
-    Variant[] returnVals = new Variant[ops.length];
+    Buffer[] returnVals = new Buffer[ops.length];
 
     foreach(i, o; ops)
     {

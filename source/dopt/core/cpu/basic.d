@@ -14,7 +14,7 @@ static this()
 
 private
 {
-    void slice(const(Operation) op, const(void[])[] inputs, void[] output)
+    void slice(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
         size_t size = 4;
 
@@ -56,10 +56,10 @@ private
             outVol /= outShape[0];
         }
 
-        sliceImpl(cast(const(ubyte)[])inputs[0], inShape, inVol, cast(ubyte[])output, outShape, outVol, offset);
+        sliceImpl(inputs[0].as!ubyte, inShape, inVol, output.as!ubyte, outShape, outVol, offset);
     }
 
-    void pad(const(Operation) op, const(void[])[] inputs, void[] output)
+    void pad(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
         size_t size = 4;
 
@@ -107,23 +107,23 @@ private
             outVol /= outShape[0];
         }
 
-        padImpl(cast(const(ubyte)[])inputs[0], inShape, inVol, cast(ubyte[])output, outShape, outVol, offset);
+        padImpl(inputs[0].as!ubyte, inShape, inVol, output.as!ubyte, outShape, outVol, offset);
     }
 
-    void transpose(const(Operation) op, const(void[])[] inputs, void[] output)
+    void transpose(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
         import std.exception : enforce;
         enforce(op.outputType.rank <= 2, "transpose is only implemented for rank <= 2");
 
         if(op.outputType.rank < 2)
         {
-            output[] = inputs[0][];
+            output.as!ubyte[] = inputs[0].as!ubyte[];
         }
         else
         {
-            auto inBuf = cast(const(ubyte)[])inputs[0];
-            auto outBuf = cast(ubyte[])output;
-            size_t size = output.length / op.outputType.volume;
+            auto inBuf = inputs[0].as!ubyte;
+            auto outBuf = output.as!ubyte;
+            size_t size = outBuf.length / op.outputType.volume;
             size_t rows = op.outputType.shape[0];
             size_t cols = op.outputType.shape[1];
 
@@ -138,13 +138,13 @@ private
         }
     }
 
-    void repeat(const(Operation) op, const(void[])[] inputs, void[] output)
+    void repeat(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
         import std.parallelism : parallel;
         import std.range : chunks;
 
-        auto inBuf = cast(const(ubyte)[])inputs[0];
-        auto outBuf = cast(ubyte[])output;
+        auto inBuf = inputs[0].as!ubyte;
+        auto outBuf = output.as!ubyte;
 
         foreach(c; outBuf.chunks(inBuf.length).parallel)
         {

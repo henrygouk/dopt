@@ -55,3 +55,32 @@ struct TensorType
         return shape.fold!((a, b) => a * b)(cast(size_t)1);
     }
 }
+
+/**
+Creates a wrapper around a user allocated buffer
+*/
+struct Buffer
+{
+    public
+    {
+        this(void[] buf)
+        {
+            mBuffer = buf;
+        }
+
+        T[] as(T)()
+        {
+            return cast(T[])mBuffer;
+        }
+
+        const(T[]) as(T)() const
+        {
+            return cast(const(T[]))mBuffer;
+        }
+    }
+
+    private
+    {
+        void[] mBuffer;
+    }
+}

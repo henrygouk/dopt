@@ -6,11 +6,12 @@ import dopt.core.grads.basic;
 import dopt.core.grads.math;
 import dopt.core.ops;
 
-alias Gradient = Operation[] delegate(const(Operation) op, const(Operation) parentGrad);
+alias Gradient = Operation[] delegate(const(Operation) op, Operation parentGrad);
 
 static this()
 {
     dopt.core.grads.basic.initialize();
+    dopt.core.grads.math.initialize();
 }
 
 Operation[] grad(const(Operation) objective, const(Operation)[] wrt)

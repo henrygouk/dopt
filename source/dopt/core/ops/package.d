@@ -4,7 +4,7 @@ import std.array;
 import std.exception;
 import std.variant;
 
-import dopt.core;
+import dopt.core.types;
 
 public
 {
@@ -82,7 +82,7 @@ class Operation
 
         Internally, this just calls the appropriate function from dopt.core.ops.math.
         */
-        Operation opBinary(string op)(const(Operation) rhs)
+        Operation opBinary(string op)(const(Operation) rhs) const
         {
             static if(op == "+")
             {

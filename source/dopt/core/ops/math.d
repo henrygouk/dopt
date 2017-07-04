@@ -5,7 +5,8 @@ import std.conv;
 import std.functional;
 import std.range;
 
-import dopt.core;
+import dopt.core.ops;
+import dopt.core.types;
 
 package
 {

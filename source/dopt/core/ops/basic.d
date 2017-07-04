@@ -1,6 +1,7 @@
 module dopt.core.ops.basic;
 
-import dopt.core;
+import dopt.core.ops;
+import dopt.core.types;
 
 import std.algorithm;
 import std.array;

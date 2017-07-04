@@ -61,7 +61,7 @@ private
     immutable string[] arith = ["add", "sub", "mul", "div"];
     immutable string[] comp = ["lt", "lte", "gt", "gte", "eq", "neq"];
     immutable string[] binfunc = ["max", "min", "pow"];
-    immutable string[] unfunc = ["neg", "abs"];
+    immutable string[] unfunc = ["neg", "abs", "sgn", "exp", "log", "sqrt"];
 
     string createAllCtors()
     {

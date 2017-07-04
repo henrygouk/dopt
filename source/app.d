@@ -4,7 +4,7 @@ void main()
     import std.stdio;
 
     writeln(listAllOperations());
-    writeln(listAllCPUKernels());
+    writeln(listAllCPUOperations());
     writeln(listAllGradients());
 
     auto a = float32([3, 3], [1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f]);

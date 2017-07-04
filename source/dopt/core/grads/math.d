@@ -9,10 +9,22 @@ package
     {
         import std.functional;
         
-        registerGradient("add", toDelegate(&addGrad));
-        registerGradient("sub", toDelegate(&subGrad));
-        registerGradient("mul", toDelegate(&mulGrad));
-        registerGradient("div", toDelegate(&divGrad));
+        string createRegisterGradientCalls()
+        {
+            auto ops = ["add", "sub", "mul", "div", "pow", "min", "max",
+                        "neg", "abs", "exp", "log", "sqrt"];
+
+            string ret;
+
+            foreach(o; ops)
+            {
+                ret ~= "registerGradient(\"" ~ o ~ "\", toDelegate(&" ~ o ~ "Grad));\n";
+            }
+
+            return ret;
+        }
+
+        mixin(createRegisterGradientCalls());
     }
 }
 
@@ -39,5 +51,54 @@ private
             parentGrad / op.deps[1],
             neg(parentGrad * op.deps[0]) / (op.deps[1] * op.deps[1])
         ];
+    }
+
+    Operation[] powGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [
+            parentGrad * op.deps[1] * pow(op.deps[0], op.deps[1] - 1),
+            parentGrad * op.deps[1] * log(op.deps[0])
+        ];
+    }
+
+    Operation[] minGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [
+            op.deps[0].eq(op) * parentGrad,
+            op.deps[1].eq(op) * parentGrad
+        ];
+    }
+
+    Operation[] maxGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [
+            op.deps[0].eq(op) * parentGrad,
+            op.deps[1].eq(op) * parentGrad
+        ];
+    }
+
+    Operation[] negGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [neg(parentGrad)];
+    }
+
+    Operation[] absGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad * sgn(op.deps[0])];
+    }
+
+    Operation[] expGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad * op];
+    }
+
+    Operation[] logGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad / op.deps[0]];
+    }
+
+    Operation[] sqrtGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad / op];
     }
 }

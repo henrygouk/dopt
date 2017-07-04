@@ -42,9 +42,9 @@ void deregisterCPUKernel(string opName)
     mKernels.remove(opName);
 }
 
-string[] listAllCPUKernels()
+string[] listAllCPUOperations()
 {
-    return mKernels.keys.dup;
+    return mKernels.keys.dup ~ ["variable", "reshape"];
 }
 
 Buffer evaluate(const(Operation) op, Buffer[const(Operation)] args = null)

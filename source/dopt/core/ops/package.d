@@ -101,6 +101,24 @@ class Operation
                 return this.div(rhs);
             }
         }
+
+        Operation opBinary(string op)(int i) const
+        {
+            auto bc = int32([], [i])
+                     .repeat(outputType.volume)
+                     .reshape(outputType.shape);
+
+            return opBinary!op(bc);
+        }
+
+        Operation opBinary(string op)(float i) const
+        {
+            auto bc = float32([], [i])
+                     .repeat(outputType.volume)
+                     .reshape(outputType.shape);
+
+            return opBinary!op(bc);
+        }
     }
 
     private

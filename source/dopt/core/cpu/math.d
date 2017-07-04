@@ -19,6 +19,35 @@ mixin(generateKernels());
 
 private
 {
+    T expCast(T)(T t)
+    {
+        static if(is(T : int))
+        {
+            return cast(int)exp(cast(float)t);
+        }
+        else
+        {
+            return exp(t);
+        }
+    }
+
+    T sqrtCast(T)(T t)
+    {
+        static if(is(T : int))
+        {
+            return cast(int)sqrt(cast(float)t);
+        }
+        else
+        {
+            return sqrt(t);
+        }
+    }
+
+    T sgn(T)(T t)
+    {
+        return cast(T)((t > 0) - (t < 0));
+    }
+
     void matmulKernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
         if(op.outputType.elementType == DataType.float32)
@@ -42,7 +71,7 @@ private
     immutable string[] arith = ["add", "sub", "mul", "div"];
     immutable string[] comp = ["lt", "lte", "gt", "gte", "eq", "neq"];
     immutable string[] binfunc = ["max", "min", "pow"];
-    immutable string[] unfunc = ["neg", "abs"];
+    immutable string[] unfunc = ["neg", "abs", "sgn", "exp", "log", "sqrt"];
     
     string generateRegistrations()
     {
@@ -55,7 +84,8 @@ private
     string generateKernels()
     {
         string[string] opsymbol = ["add": "+", "sub": "-", "mul": "*", "div": "/", "lt": "<", "lte": "<=",
-                                         "gt": ">", "gte": ">=", "eq": "==", "neq": "!=", "neg": "-"];
+                                         "gt": ">", "gte": ">=", "eq": "==", "neq": "!=", "neg": "-",
+                                         "exp": "expCast", "sqrt": "sqrtCast"];
 
         string[string] types = ["float": "float32", "int": "int32"];
 
@@ -135,7 +165,7 @@ private
             }
             else
             {
-                expr = sym ~ "ins[0][i]";
+                expr = sym ~ "(ins[0][i])";
             }
 
             auto mux = generateTypedKernel(op, types);

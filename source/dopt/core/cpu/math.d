@@ -8,14 +8,17 @@ import std.functional;
 import std.math;
 import std.range;
 
-static this()
+package
 {
-    mixin(generateRegistrations());
+    static this()
+    {
+        mixin(generateRegistrations());
 
-    registerCPUKernel("matmul", new CPUKernelDelegate(toDelegate(&matmulKernel)));
+        registerCPUKernel("matmul", new CPUKernelDelegate(toDelegate(&matmulKernel)));
+    }
+
+    mixin(generateKernels());
 }
-
-mixin(generateKernels());
 
 private
 {
@@ -91,6 +94,7 @@ private
 
         string[] kernelStrings;
 
+        //This is used for generating a kernel for a specific operation and type combination
         string generateSingleKernel(string op, string dtype, string expr)
         {
             return
@@ -107,6 +111,7 @@ private
                 ";
         }
 
+        //Dispatches the arguments to the correct kernel, as determined by the output type of the operation
         string generateTypedKernel(string op, string[string] types)
         {
             string ret =
@@ -129,6 +134,7 @@ private
             return ret;
         }
 
+        //Iterate over each type of (binary) operation and generate the kernels
         foreach(op; chain(arith, comp, binfunc))
         {
             string sym = opsymbol.get(op, "");
@@ -154,6 +160,7 @@ private
             kernelStrings ~= kerns;
         }
 
+        //Generates kernels for unary operations
         foreach(op; unfunc)
         {
             string sym = opsymbol.get(op, "");
@@ -179,6 +186,7 @@ private
             kernelStrings ~= kerns;
         }
 
+        //Return all the source code we've generated so it can be mixed in
         return kernelStrings.joiner().to!string;
     }
 }

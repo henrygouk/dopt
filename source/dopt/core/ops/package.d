@@ -82,42 +82,59 @@ class Operation
 
         Internally, this just calls the appropriate function from dopt.core.ops.math.
         */
-        Operation opBinary(string op)(const(Operation) rhs) const
+        Operation opBinary(string op)(const(Operation) rhs, string mod = __MODULE__, size_t line = __LINE__) const
         {
             static if(op == "+")
             {
-                return this.add(rhs);
+                return this.add(rhs, mod, line);
             }
             else static if(op == "-")
             {
-                return this.sub(rhs);
+                return this.sub(rhs, mod, line);
             }
             else static if(op == "*")
             {
-                return this.mul(rhs);
+                return this.mul(rhs, mod, line);
             }
             else static if(op == "/")
             {
-                return this.div(rhs);
+                return this.div(rhs, mod, line);
             }
         }
 
-        Operation opBinary(string op)(int i) const
+        Operation opBinary(string op)(int i, string mod = __MODULE__, size_t line = __LINE__) const
         {
             auto bc = int32([], [i])
                      .repeat(outputType.volume)
                      .reshape(outputType.shape);
 
-            return opBinary!op(bc);
+            return opBinary!op(bc, mod, line);
         }
 
-        Operation opBinary(string op)(float i) const
+        Operation opBinary(string op)(float i, string mod = __MODULE__, size_t line = __LINE__) const
         {
             auto bc = float32([], [i])
                      .repeat(outputType.volume)
                      .reshape(outputType.shape);
 
-            return opBinary!op(bc);
+            return opBinary!op(bc, mod, line);
+        }
+
+        override string toString() const
+        {
+            import std.algorithm : joiner, map;
+            import std.conv : to;
+
+            //If it's a variable, we should have some unique identifier
+            if(opType == "variable")
+            {
+                //This is very ugly. Someone please come up with a better way.
+                return to!string(cast(void *)this);
+            }
+            else
+            {
+                return opType ~ "(" ~ deps.map!(x => x.toString).joiner(", ").to!string ~ ")";
+            }
         }
     }
 
@@ -167,12 +184,14 @@ Creates an operation of the given type, with the given dependencies and attribut
 Operation createOperation(string opType, const(Operation)[] deps = [], const(Variant[string]) attribs = null,
     string mod = __MODULE__, size_t line = __LINE__)
 {
+    import std.conv : to;
+
     enforce(opType in mOpDefs,
         "Cannot create operation because there is no operation definition registered with the name '" ~ opType ~ "'");
 
     auto op = new Operation(opType, deps, attribs, mod, line);
 
-    enforce(mOpDefs[opType].verifier(op), "Operation failed verification");
+    enforce(mOpDefs[opType].verifier(op), "Operation failed verification. Instantiated at " ~ mod ~ ":" ~ line.to!string);
 
     return op;
 }

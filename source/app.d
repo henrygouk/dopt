@@ -3,15 +3,12 @@ void main()
     import dopt.core;
     import std.stdio;
 
-    writeln(listAllOperations());
-    writeln(listAllCPUOperations());
-    writeln(listAllGradients());
+    auto a = float32([]);
+    auto b = float32([]);
+    auto c = float32([]);
 
-    auto a = float32([3, 3], [1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f]);
-    auto b = float32([3, 3], [1.0f, 2.0f, 3.0f, 1.0f, 2.0f, 3.0f, 1.0f, 2.0f, 3.0f]);
-    auto c = float32([3, 3], [2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f]);
+    auto d = a * b + c;
 
-    auto d = (a + b) * c;
-
-    writeln(evaluate(d).as!float);
+    writeln("Expression: ", d);
+    writeln("Gradient: ", d.grad([a]));
 }

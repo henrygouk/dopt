@@ -25,11 +25,18 @@ package
         }
 
         mixin(createRegisterGradientCalls());
+
+        registerGradient("matmul", toDelegate(&matmulGrad));
     }
 }
 
 private
 {
+    Operation[] matmulGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad * transpose(op.deps[1], [1, 0]), parentGrad * transpose(op.deps[0], [1, 0])];
+    }
+
     Operation[] addGrad(const(Operation) op, Operation parentGrad)
     {
         return [parentGrad, parentGrad];

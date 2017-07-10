@@ -115,6 +115,16 @@ private
         import std.exception : enforce;
         enforce(op.outputType.rank <= 2, "transpose is only implemented for rank <= 2");
 
+        //Check whether we actually need to reorder them..
+        auto order = op
+                    .attributes["order"]
+                    .get!(const(size_t)[]);
+
+        if(order == [0, 1])
+        {
+            return;
+        }
+
         if(op.outputType.rank < 2)
         {
             output.as!ubyte[] = inputs[0].as!ubyte[];

@@ -149,11 +149,16 @@ class Operation
 
         this(string opType, const(Operation)[] deps, const(Variant[string]) attribs, string mod, size_t line)
         {
+            import std.conv : to;
+            
             mOpType = opType;
             mDeps = deps.array;
             mAttributes = attribs.dup;
             mModule = mod;
             mLine = line;
+
+            enforce(mOpDefs[opType].verifier(this),
+                "Operation failed verification. Instantiated at " ~ mod ~ ":" ~ line.to!string);
 
             mOutputType = makeJudgement(this);
         }
@@ -190,8 +195,6 @@ Operation createOperation(string opType, const(Operation)[] deps = [], const(Var
         "Cannot create operation because there is no operation definition registered with the name '" ~ opType ~ "'");
 
     auto op = new Operation(opType, deps, attribs, mod, line);
-
-    enforce(mOpDefs[opType].verifier(op), "Operation failed verification. Instantiated at " ~ mod ~ ":" ~ line.to!string);
 
     return op;
 }

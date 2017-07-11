@@ -14,7 +14,7 @@ package
     void initialize()
     {
         registerOperation("slice", OpDef(toDelegate(&verifySlice), toDelegate(&judgeSlice)));
-        registerOperation("pad", OpDef(toDelegate(&verifyPad), toDelegate(&judgeSlice)));
+        registerOperation("pad", OpDef(toDelegate(&verifyPad), toDelegate(&judgePad)));
         registerOperation("reshape", OpDef(toDelegate(&verifyReshape), toDelegate(&judgeReshape)));
         registerOperation("transpose", OpDef(toDelegate(&verifyTranspose), toDelegate(&judgeTranspose)));
         registerOperation("repeat", OpDef(toDelegate(&verifyRepeat), toDelegate(&judgeRepeat)));
@@ -54,11 +54,11 @@ private
     {
         auto start = op
                     .attributes["start"]
-                    .get!(size_t[]);
+                    .get!(const(size_t)[]);
 
         auto stop = op
                    .attributes["stop"]
-                   .get!(size_t[]);
+                   .get!(const(size_t)[]);
 
         auto shape = zip(start, stop)
                     .map!(x => x[1] - x[0])
@@ -94,11 +94,11 @@ private
     {
         auto before = op
                      .attributes["before"]
-                     .get!(size_t[]);
+                     .get!(const(size_t)[]);
 
         auto after = op
                     .attributes["after"]
-                    .get!(size_t[]);
+                    .get!(const(size_t)[]);
 
         auto shape = zip(before, after, op.deps[0].outputType.shape)
                     .map!(x => x[0] + x[1] + x[2])

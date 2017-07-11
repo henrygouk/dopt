@@ -44,7 +44,7 @@ Operation[] grad(const(Operation) objective, const(Operation)[] wrt)
     Operation[const(Operation)] grads;
 
     //TODO: when I implement a 'ones' operation, replace this line
-    grads[objective] = float32([], [1.0f]);
+    grads[objective] = float32(objective.outputType.shape, [1.0f]);
 
     //Iterate through the operations in reverse order (reverse mode autodiff)
     foreach(op; ops.retro)

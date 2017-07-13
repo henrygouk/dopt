@@ -27,6 +27,7 @@ package
         mixin(createRegisterGradientCalls());
 
         registerGradient("matmul", toDelegate(&matmulGrad));
+        registerGradient("sum", toDelegate(&sumGrad));
     }
 }
 
@@ -35,6 +36,12 @@ private
     Operation[] matmulGrad(const(Operation) op, Operation parentGrad)
     {
         return [parentGrad * transpose(op.deps[1], [1, 0]), parentGrad * transpose(op.deps[0], [1, 0])];
+    }
+
+    Operation[] sumGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad.repeat(op.deps[0].outputType.volume / op.outputType.volume)
+                          .reshape(op.deps[0].outputType.shape)];
     }
 
     Operation[] addGrad(const(Operation) op, Operation parentGrad)

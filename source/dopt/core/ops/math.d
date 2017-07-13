@@ -53,6 +53,7 @@ package
         }
 
         registerOperation("matmul", OpDef(toDelegate(&verifyMatmul), toDelegate(&judgeMatmul)));
+        registerOperation("sum", OpDef(toDelegate(&verifySum), toDelegate(&judgeSum)));
     }
 }
 
@@ -112,6 +113,35 @@ private
         return TensorType(op.deps[0].outputType.elementType,
             [op.deps[0].outputType.shape[0], op.deps[1].outputType.shape[1]]);
     }
+
+    bool verifySum(const(Operation) op)
+    {
+        if(("rank" in op.attributes) is null || op.attributes["rank"].peek!size_t is null)
+        {
+            return false;
+        }
+
+        return op.attributes["rank"].get!size_t < op.deps[0].outputType.rank;
+    }
+
+    TensorType judgeSum(const(Operation) op)
+    {
+        auto t = op.deps[0].outputType;
+
+        return TensorType(t.elementType, t.shape[0 .. op.attributes["rank"].get!size_t]);
+    }
 }
 
 mixin(createAllCtors());
+
+Operation matmul(const(Operation) lhs, const(Operation) rhs, string mod = __MODULE__, size_t line = __LINE__)
+{
+    return createOperation("matmul", [lhs, rhs], null, mod, line);
+}
+
+Operation sum(const(Operation) op, size_t newRank = 0, string mod = __MODULE__, size_t line = __LINE__)
+{
+    import std.variant : Variant;
+    
+    return createOperation("sum", [op], ["rank": Variant(newRank)], mod, line);
+}

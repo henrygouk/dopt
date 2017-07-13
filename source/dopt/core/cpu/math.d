@@ -15,6 +15,7 @@ package
         mixin(generateRegistrations());
 
         registerCPUKernel("matmul", new CPUKernelDelegate(toDelegate(&matmulKernel)));
+        registerCPUKernel("sum", new CPUKernelDelegate(toDelegate(&sumKernel)));
     }
 
     mixin(generateKernels());
@@ -68,6 +69,39 @@ private
         else
         {
             throw new Exception("Not implemented.");
+        }
+    }
+
+    void sumKernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    {
+        void run(T)()
+        {
+            import std.algorithm : fold;
+
+            auto shape = cast(size_t[])op.deps[0].outputType.shape[op.attributes["rank"].get!size_t .. $];
+            auto chunkSize = shape.fold!((a, b) => a * b)(cast(size_t)1);
+            auto inbuf = cast(T[])inputs[0].as!T;
+            auto outbuf = output.as!T;
+            outbuf[] = 0;
+
+            foreach(c; inbuf.chunks(chunkSize))
+            {
+                outbuf[] += c[];
+            }
+        }
+
+        switch(op.outputType.elementType)
+        {
+            case DataType.float32:
+                run!float();
+                break;
+
+            case DataType.int32:
+                run!int();
+                break;
+
+            default:
+                throw new Exception("Not implemented.");
         }
     }
 

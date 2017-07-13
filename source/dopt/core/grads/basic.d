@@ -13,6 +13,7 @@ package
         registerGradient("slice", toDelegate(&sliceGrad));
         registerGradient("pad", toDelegate(&padGrad));
         registerGradient("reshape", toDelegate(&reshapeGrad));
+        registerGradient("repeat", toDelegate(&repeatGrad));
     }
 }
 
@@ -77,5 +78,10 @@ private
     Operation[] reshapeGrad(const(Operation) op, Operation parentGrad)
     {
         return [parentGrad.reshape(op.deps[0].outputType.shape)];
+    }
+
+    Operation[] repeatGrad(const(Operation) op, Operation parentGrad)
+    {
+        return [parentGrad.sum(op.outputType.rank - 1)];
     }
 }

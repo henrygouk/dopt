@@ -124,7 +124,7 @@ class Operation
             return opBinary!op(bc, mod, line);
         }
 
-        Operation opUnary(string op)()
+        Operation opUnary(string op)() const
         {
             static if(op == "-")
             {

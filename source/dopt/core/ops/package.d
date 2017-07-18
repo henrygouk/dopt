@@ -100,6 +100,10 @@ class Operation
             {
                 return this.div(rhs, mod, line);
             }
+            else
+            {
+                static assert(0, "Unknown binary operation '" ~ op ~ "'");
+            }
         }
 
         Operation opBinary(string op)(int i, string mod = __MODULE__, size_t line = __LINE__) const
@@ -118,6 +122,18 @@ class Operation
                      .reshape(outputType.shape);
 
             return opBinary!op(bc, mod, line);
+        }
+
+        Operation opUnary(string op)()
+        {
+            static if(op == "-")
+            {
+                return neg(this);
+            }
+            else
+            {
+                static assert("Unknown unary operation '" ~ op ~ "'");
+            }
         }
 
         override string toString() const

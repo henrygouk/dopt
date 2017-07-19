@@ -229,7 +229,7 @@ public
             defaultVal = new ubyte[bufSize];
         }
 
-        return createOperation("variable", [], ["type": Variant(type), "default": Variant(defaultVal)], mod, line);
+        return createOperation("variable", [], ["type": Variant(type), "default": Variant(Buffer(defaultVal))], mod, line);
     }
 
     Operation float32(const(size_t)[] size, float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)

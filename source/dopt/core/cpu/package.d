@@ -99,7 +99,7 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
         //Check for some easy optimizations
         if(o.opType == "variable" && !("variable" in mKernels))
         {
-            results[o] = Buffer(cast(void[])o.attributes["default"].get!(void[]));
+            results[o] = cast(Buffer)o.attributes["default"].get!Buffer;
             continue;
         }
         else if(o.opType == "reshape" && !("reshape" in mKernels))

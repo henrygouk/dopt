@@ -14,8 +14,8 @@ import dopt.core;
     This function returns a delegate that is used to actually perform the update steps. The optimised values are
     stored in the "default" attributes of the elements of wrt.
 */
-Buffer delegate(Buffer[const(Operation)] args) sgd(const(Operation) objective, Operation[] wrt,
-    const(Operation) learningRate = float32([], [0.1f]))
+float delegate(Buffer[const(Operation)] args) sgd(const(Operation) objective, Operation[] wrt,
+    const(Operation) learningRate = float32([], [0.01f]))
 {
     import std.algorithm : map;
     import std.array : array;
@@ -27,7 +27,7 @@ Buffer delegate(Buffer[const(Operation)] args) sgd(const(Operation) objective, O
                   .map!(x => x[0] - learningRate * x[1])
                   .array();
 
-    Buffer update(Buffer[const(Operation)] args)
+    float update(Buffer[const(Operation)] args)
     {
         auto newbufs = evaluate([objective] ~ newvals, args);
 
@@ -37,8 +37,52 @@ Buffer delegate(Buffer[const(Operation)] args) sgd(const(Operation) objective, O
             wrtbuf[] = b.as!byte[];
         }
 
-        return newbufs[0];
+        return newbufs[0].as!float[0];
     }
 
     return &update;
+}
+
+///
+unittest
+{
+    import std.random : uniform;
+
+    //Generate some points
+    auto xdata = new float[100];
+    auto ydata = new float[100];
+
+    foreach(i; 0 .. 100)
+    {
+        xdata[i] = uniform(-10.0f, 10.0f);
+        ydata[i] = 3.0f * xdata[i] + 2.0f;
+    }
+
+    //Create the model
+    auto x = float32([]);
+    auto m = float32([]);
+    auto c = float32([]);
+
+    auto yhat = m * x + c;
+    auto y = float32([]);
+
+    //Create an SGD updater
+    auto updater = sgd((yhat - y) * (yhat - y), [m, c]);
+
+    //Iterate for a while
+    float loss;
+
+    for(size_t i = 0; i < 500; i++)
+    {
+        size_t j = i % 100;
+
+        loss = updater([
+            x: Buffer(xdata[j .. j + 1]),
+            y: Buffer(ydata[j .. j + 1])
+        ]);
+    }
+
+    //Print the loss after 500 iterations. Let the user decide whether it's good enough to be considered a pass.
+    import std.stdio;
+    writeln("SGD loss: ", loss);
 }

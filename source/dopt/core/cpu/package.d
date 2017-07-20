@@ -1,14 +1,25 @@
+/**
+    This module enables operation graphs to be evaluated using CPU kernels.
+
+    Author: Henry Gouk
+*/
 module dopt.core.cpu;
 
 import std.exception;
 
 import dopt.core;
 
+/**
+    Common interface for all CPU kernels.
+*/
 interface CPUKernel
 {
     void execute(const(Operation) op, const(Buffer)[] inputs, Buffer output);
 }
 
+/**
+    Convenience class that allows one to wrap a delegate and implement CPUKernel.
+*/
 class CPUKernelDelegate : CPUKernel
 {
     public
@@ -30,6 +41,16 @@ class CPUKernelDelegate : CPUKernel
     }
 }
 
+/**
+    Registers a kernel for the specified operation.
+
+    Params:
+        opName = The name of the operation.
+        kernel = A kernel that can execute operations of the type specified by opName.
+
+    Throws:
+        If there is already a kernel registered for the operation.
+*/
 void registerCPUKernel(string opName, CPUKernel kernel)
 {
     enforce((opName in mKernels) is null, "A CPUKernel is already registered for the operation '" ~ opName ~ "'");
@@ -37,21 +58,41 @@ void registerCPUKernel(string opName, CPUKernel kernel)
     mKernels[opName] = kernel;
 }
 
+/**
+    Deregisters the kernel associated with the specified operation.
+
+    Params:
+        opName = The name of the operation that should have its kernel deregistered.
+*/
 void deregisterCPUKernel(string opName)
 {
     mKernels.remove(opName);
 }
 
+/**
+    Provides a list of operations for which a CPUKernel has been registered.
+
+    Returns:
+        An array of operation names.
+*/
 string[] listAllCPUOperations()
 {
     return mKernels.keys.dup ~ ["variable", "reshape"];
 }
 
-Buffer evaluate(const(Operation) op, Buffer[const(Operation)] args = null)
-{
-    return evaluate([op], args)[0];
-}
+/**
+    Evaluates an several nodes from the operation graph.
 
+    If the elements of $(D ops) have common dependencies, then each dependency is evaluated more than one. For this
+    reason it is recommended that this overload is used when multiple nodes should be evaluated.
+
+    Params:
+        ops = The nodes of the operation graph that values should be computed for.
+        args = A set of variable assignments.
+
+    Returns:
+        An array of $(D Buffer) objects, each containing the value of the corresponding element in $(D ops).
+*/
 Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
 {
     //Toposort the operations by dependency
@@ -111,7 +152,6 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
         //Allocate a buffer for the output of this operation
         auto output = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
         results[o] = output;
-        //writeln("Allocated buffer for operation ", (cast(void *)o).to!string);
 
         //Get the input buffers
         Buffer[] inputs;
@@ -123,12 +163,7 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
         }
 
         //Execute the operation
-        //write("Executing operation ", (cast(void *)o).to!string, "...");
-        //stdout.flush();
-
         mKernels[o.opType].execute(o, inputs, output);
-
-        //writeln(" done");
 
         foreach(d; o.deps)
         {
@@ -136,7 +171,6 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
             //This will allow the GC to collect it at some point, if required
             if(refCounts[d] == 0)
             {
-                //writeln("Freeing buffer for operation ", (cast(void *)d).to!string);
                 results[d] = Buffer([]);
             }
         }
@@ -150,6 +184,23 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
     }
 
     return returnVals;
+}
+
+/**
+    Evaluates an operation graph with a single root node.
+
+    This overload is here for convenience. Internally, the multi-output version of evaluate is called.
+
+    Params:
+        op = The root node of the operation graph.
+        args = A set of variable assignments.
+
+    Returns:
+        A $(D Buffer) containing the result of the computation.
+*/
+Buffer evaluate(const(Operation) op, Buffer[const(Operation)] args = null)
+{
+    return evaluate([op], args)[0];
 }
 
 private

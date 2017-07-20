@@ -5,6 +5,7 @@ import std.exception;
 import dopt.core.grads.basic;
 import dopt.core.grads.math;
 import dopt.core.ops;
+import dopt.core.types;
 
 alias Gradient = Operation[] delegate(const(Operation) op, Operation parentGrad);
 
@@ -22,6 +23,7 @@ Operation[] grad(const(Operation) objective, const(Operation)[] wrt)
     import std.range : retro, zip;
 
     enforce(objective.outputType.volume == 1, "The objective must have a volume of one");
+    enforce(objective.outputType.elementType == DataType.float32, "The objective must have a floating point type");
 
     const(Operation)[] ops;
 

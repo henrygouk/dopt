@@ -1,7 +1,7 @@
 /**
     This module enables operation graphs to be evaluated using CPU kernels.
 
-    Author: Henry Gouk
+    Authors: Henry Gouk
 */
 module dopt.core.cpu;
 

@@ -1,3 +1,8 @@
+/**
+    Contains constructors for common math operations.
+
+    Authors: Henry Gouk
+*/
 module dopt.core.ops.math;
 
 import std.algorithm;

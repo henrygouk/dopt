@@ -1,3 +1,8 @@
+/**
+    Contains operations for creating variables and manipulating shapes.
+
+    Authors: Henry Gouk
+*/
 module dopt.core.ops.basic;
 
 import dopt.core.ops;
@@ -174,7 +179,15 @@ private
 public
 {
     /**
-    Produces a tensor that results from performing a slice operation similar to input[start .. stop].
+        Slices the result of an operation.
+
+        Params:
+            input = The operation that should be sliced.
+            start = The starting indices for each dimension.
+            stop = The stopping indices for each dimension.
+
+        Returns:
+            The new $(D Operation).
     */
     Operation slice(const(Operation) input, const(size_t)[] start, const(size_t)[] stop,
         string mod = __MODULE__, size_t line = __LINE__)
@@ -183,7 +196,15 @@ public
     }
 
     /**
-    Extends the size of the input by padding it with zeros.
+        Pads the result of an operation with zeros in each dimension.
+
+        Params:
+            input = The operation that should be padded.
+            before = The amount of padding that should be prepended for each dimension.
+            after = The amount of padding that should be appended for each dimension.
+
+        Returns:
+            The new $(D Operation).
     */
     Operation pad(const(Operation) input, const(size_t)[] before, const(size_t)[] after,
         string mod = __MODULE__, size_t line = __LINE__)
@@ -192,7 +213,14 @@ public
     }
 
     /**
-    Essentially acts as a type casting operation, but for only the shape component of the TensorType.
+        Allows one to cast an operation to a different shape with the same volume.
+
+        Params:
+            input = The operation to be reshaped.
+            shape = The new shape.
+
+        Returns:
+            The new $(D Operation).
     */
     Operation reshape(const(Operation) input, const(size_t)[] shape, string mod = __MODULE__, size_t line = __LINE__)
     {
@@ -200,7 +228,14 @@ public
     }
 
     /**
-    Changes the order of the dimensions of the input tensor.
+        Reorders the dimensions of output of an operation.
+
+        Params:
+            input = The operation that should have its dimensions reordered.
+            order = Determines how the dimensions are permuted.
+
+        Returns:
+            The new $(D Operation).
     */
     Operation transpose(const(Operation) input, const(size_t)[] order, string mod = __MODULE__, size_t line = __LINE__)
     {
@@ -208,17 +243,34 @@ public
     }
 
     /**
-    Repeats a tensor, and increases the rank of the tensor by one in order to index these repititions.
+        Repeats the output of an operation the given number of times.
+
+        A new dimension with a length of $(D repetitions) is added.
+
+        Params:
+            input = The operation to have its output repeated.
+            repetitions = The number of repetitions to perform.
+
+        Return:
+            
     */
-    Operation repeat(const(Operation) input, size_t repititions, string mod = __MODULE__, size_t line = __LINE__)
+    Operation repeat(const(Operation) input, size_t repetitions, string mod = __MODULE__, size_t line = __LINE__)
     {
-        return createOperation("repeat", [input], ["repititions": Variant(repititions)], mod, line);
+        return createOperation("repeat", [input], ["repetitions": Variant(repetitions)], mod, line);
     }
 
     /**
-    Creates a variable of the given type.
+        Creates a variable with the given type.
 
-    The resulting operation contains an attribute called "default", which is used as the default value of the variable.
+        If no default value is provided, then the variable will have a default value of all zeros. The default value is
+        stored in the attributes["default"] field of the returned operation.
+
+        Params:
+            type = The type of the variable
+            defaultVal = The default value of the variable. The array should store the elements in row major order.
+
+        Returns:
+            The newly created variable
     */
     Operation variable(TensorType type, void[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
@@ -232,11 +284,37 @@ public
         return createOperation("variable", [], ["type": Variant(type), "default": Variant(Buffer(defaultVal))], mod, line);
     }
 
+    /**
+        Creates a variable with the given shape and float32 elements.
+
+        If no default value is provided, then the variable will have a default value of all zeros. The default value is
+        stored in the attributes["default"] field of the returned operation.
+
+        Params:
+            size = The shape of the variable
+            defaultVal = The default value of the variable. The array should store the elements in row major order.
+
+        Returns:
+            The newly created variable
+    */
     Operation float32(const(size_t)[] size, float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.float32, size), defaultVal, mod, line);
     }
 
+    /**
+        Creates a variable with the given shape and int32 elements.
+
+        If no default value is provided, then the variable will have a default value of all zeros. The default value is
+        stored in the attributes["default"] field of the returned operation.
+
+        Params:
+            size = The shape of the variable
+            defaultVal = The default value of the variable. The array should store the elements in row major order.
+
+        Returns:
+            The newly created variable
+    */
     Operation int32(const(size_t)[] size, int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.int32, size), defaultVal, mod, line);

@@ -1,3 +1,5 @@
+module app;
+
 void main()
 {
     import dopt.core;

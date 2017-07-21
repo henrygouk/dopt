@@ -11,5 +11,8 @@
 	},
 	"libs": [
 		"blas"
+	],
+	"-ddoxFilterArgs": [
+		"--ex", "cblas"
 	]
 }

@@ -215,6 +215,33 @@ Operation createOperation(string opType, const(Operation)[] deps = [], const(Var
     return op;
 }
 
+inout(Operation)[] topologicalSort(inout(Operation)[] ops)
+{
+    inout(Operation)[] sortedOps;
+
+    void toposort(inout(Operation) o)
+    {
+        import std.algorithm : canFind;
+
+        foreach(d; o.deps)
+        {
+            toposort(d);
+        }
+
+        if(!sortedOps.canFind(o))
+        {
+            sortedOps ~= o;
+        }
+    }
+
+    foreach(o; ops)
+    {
+        toposort(o);
+    }
+
+    return sortedOps;
+}
+
 private
 {
     OpDef[string] mOpDefs;

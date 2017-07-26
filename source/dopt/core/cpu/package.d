@@ -95,28 +95,13 @@ string[] listAllCPUOperations()
 */
 Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
 {
+    import std.algorithm : canFind, filter;
+    import std.array : array;
+
     //Toposort the operations by dependency
-    const(Operation)[] sortedOps;
-
-    void toposort(const(Operation) o)
-    {
-        import std.algorithm : canFind;
-
-        foreach(d; o.deps)
-        {
-            toposort(d);
-        }
-
-        if(!sortedOps.canFind(o) && !args.keys.canFind(o))
-        {
-            sortedOps ~= o;
-        }
-    }
-
-    foreach(o; ops)
-    {
-        toposort(o);
-    }
+    const(Operation)[] sortedOps = topologicalSort(ops)
+                                  .filter!(x => !canFind(args.keys, x))
+                                  .array();
 
     //Count the number of references to each operation
     int[const(Operation)] refCounts;

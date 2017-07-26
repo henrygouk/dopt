@@ -1,6 +1,8 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"cblas": "2.0.0"
+		"cblas": "2.0.0",
+		"derelict-cuda": "3.1.0",
+		"derelict-util": "3.0.0-beta.1"
 	}
 }

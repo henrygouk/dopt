@@ -92,5 +92,9 @@ unittest
 
     //Print the loss after 500 iterations. Let the user decide whether it's good enough to be considered a pass.
     import std.stdio : writeln;
-    writeln("SGD loss: ", loss);
+    writeln(
+        "SGD loss: ", loss, "    ",
+        "mhat=", m.attributes["default"].get!Buffer.as!float[0], ", ",
+        "chat=", c.attributes["default"].get!Buffer.as!float[0], "    ",
+        "(m=3, c=2)");
 }

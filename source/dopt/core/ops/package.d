@@ -152,6 +152,11 @@ class Operation
                 return opType ~ "(" ~ deps.map!(x => x.toString).joiner(", ").to!string ~ ")";
             }
         }
+
+        Buffer value()
+        {
+            return cast(Buffer)attributes["default"].get!Buffer;
+        }
     }
 
     private

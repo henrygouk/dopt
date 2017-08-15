@@ -6,6 +6,7 @@
 module dopt.online.sgd;
 
 import dopt.core;
+import dopt.core.cuda;
 
 /**
     Creates a delegate that can be used to perform a step using the stochastic gradient descent update rule.
@@ -94,7 +95,7 @@ unittest
     import std.stdio : writeln;
     writeln(
         "SGD loss: ", loss, "    ",
-        "mhat=", m.attributes["default"].get!Buffer.as!float[0], ", ",
-        "chat=", c.attributes["default"].get!Buffer.as!float[0], "    ",
-        "(m=3, c=2)");
+        "mhat=", m.value.as!float[0], ", ",
+        "chat=", c.value.as!float[0], "    ",
+        "(expected m=3, c=2)");
 }

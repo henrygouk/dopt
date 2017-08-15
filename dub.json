@@ -8,12 +8,16 @@
 	"license": "BSD 3-clause",
 	"dependencies": {
 		"cblas": "~>2.0.0",
-		"derelict-cuda": "~>3.1.0"
+		"derelict-cuda": "~>3.1.0",
+		"derelict-nvrtc": "~>1.0.1"
 	},
 	"libs": [
 		"blas"
 	],
+	"-ddoxTool": "scod",
 	"-ddoxFilterArgs": [
-		"--ex", "cblas"
+		"--ex", "cblas",
+		"--min-protection", "Protected",
+		"--only-documented"
 	]
 }

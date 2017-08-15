@@ -13,6 +13,9 @@ module dopt.core.cuda;
 
 import std.exception;
 
+import dopt.core.cuda.basic;
+import dopt.core.cuda.nvrtc;
+import dopt.core.cuda.math;
 import dopt.core.ops;
 import dopt.core.types;
 
@@ -20,11 +23,26 @@ import derelict.cuda;
 
 alias CUDAKernelCtr = CUDAKernel delegate(const(Operation) op);
 
-static this()
+private __gshared
+{
+    CUdevice mDevice;
+    CUcontext mContext;
+}
+
+shared static this()
 {
     //TODO: handle case where CUDA isn't available
     DerelictCUDADriver.load();
+    
+    //Initialise CUDA and create a context
     cuInit(0);
+    cuDeviceGet(&mDevice, 0);
+    cuCtxCreate(&mContext, 0, mDevice);
+
+    //Initialize submodules
+    dopt.core.cuda.basic.initialize();
+    dopt.core.cuda.nvrtc.initialize();
+    dopt.core.cuda.math.initialize();
 }
 
 /**
@@ -212,7 +230,7 @@ class CUDAPlan
             }
 
             //Convert the results into regular Buffer objects
-            Buffer[] rets;
+            Buffer[] rets = new Buffer[mOutputs.length];
 
             foreach(i, o; mOutputs)
             {
@@ -267,6 +285,11 @@ Buffer[] evaluateCUDA(const(Operation)[] ops, Buffer[const(Operation)] args = nu
 
     foreach(o; sortedOps)
     {
+        if(o.opType == "variable" || o.opType == "reshape")
+        {
+            continue;
+        }
+        
         auto k = mKernelCtrs.get(o.opType, null);
 
         enforce(k !is null, "Could not construct a CUDA kernel for operation of type '" ~ o.opType ~ "'");
@@ -331,7 +354,32 @@ string[] listCUDAOperations()
     return mKernelCtrs.keys ~ ["variable", "reshape"];
 }
 
+package
+{
+    string cudaType(DataType t)
+    {
+        switch(t)
+        {
+            case DataType.float32:
+                return "float";
+            
+            case DataType.int32:
+                return "int32";
+
+            default:
+                import std.conv : to;
+                assert(0, "DataType '" ~ t.to!string ~ "' is not currently supported by the CUDA backend");
+        }
+    }
+}
+
 private
 {
     CUDAKernelCtr[string] mKernelCtrs;
+}
+
+unittest
+{
+    import std.stdio;
+    writeln(listCUDAOperations());
 }

@@ -153,12 +153,12 @@ private
     bool verifyRepeat(const(Operation) op)
     {
         return op.deps.length == 1
-            && ("repititions" in op.attributes) !is null;
+            && ("repetitions" in op.attributes) !is null;
     }
 
     TensorType judgeRepeat(const(Operation) op)
     {
-        size_t reps = op.attributes["repititions"].get!size_t;
+        size_t reps = op.attributes["repetitions"].get!size_t;
 
         return TensorType(op.deps[0].outputType.elementType, reps ~ op.deps[0].outputType.shape);
     }

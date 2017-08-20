@@ -78,15 +78,17 @@ private
         {
             import std.algorithm : fold, sort;
 
-            void process(const(T)[] inbuf, T[] outbuf, size_t stride)
+            void process(const(T)[] inbuf, T[] outbuf, size_t highstride, size_t lowstride)
             {
-                for(size_t o = 0; o < outbuf.length; o++)
+                //I still don't really understand how this works
+                for(size_t o = 0; o < outbuf.length; o += lowstride)
                 {
-                    outbuf[o] = 0;
+                    outbuf[o * lowstride .. (o + 1) * lowstride] = 0;
 
-                    for(size_t i = o; i < inbuf.length; i += stride)
+                    for(size_t i = 0; i < highstride / lowstride; i++)
                     {
-                        outbuf[o] += inbuf[i];
+                        outbuf[o * lowstride .. (o + 1) * lowstride] +=
+                            inbuf[o * highstride + i * lowstride .. o * highstride + (i + 1) * lowstride];
                     }
                 }
             }
@@ -95,28 +97,33 @@ private
             auto shape = op.deps[0].shape.dup;
 
             auto inbuf = inputs[0].as!T;
+            T[] outbuf;
 
             foreach(axis; axes)
             {
                 //auto axis = axes[0];
                 auto newvol = shape.fold!((a, b) => a * b)(size_t(1)) / shape[axis];
-                size_t stride;
+                size_t lowstride;
                 
                 if(axis == shape.length - 1)
                 {
-                    stride = 1;
+                    lowstride = 1;
                 }
                 else
                 {
-                    stride = shape[axis + 1 .. $].fold!((a, b) => a * b)(size_t(1));
+                    lowstride = shape[axis + 1 .. $].fold!((a, b) => a * b)(size_t(1));
                 }
 
-                auto outbuf = new T[newvol];
-                process(inbuf, outbuf, stride);
+                size_t highstride = lowstride * shape[axis];
+
+                outbuf = new T[newvol];
+                process(inbuf, outbuf, highstride, lowstride);
                 inbuf = outbuf;
 
                 shape[axis] = 1;
             }
+
+            output.as!T[] = outbuf[];
         }
 
         switch(op.outputType.elementType)
@@ -132,6 +139,21 @@ private
             default:
                 throw new Exception("Not implemented.");
         }
+    }
+
+    //Test for sumKernel
+    unittest
+    {
+        auto s1 = float32([2], [0.5, 1.5]).sum();
+        auto s2 = float32([2, 2], [0, 1, 0, 5]).sum();
+        auto s3 = float32([2, 2], [0, 1, 0, 5]).sum([0]);
+        auto s4 = float32([2, 2], [0, 1, 0, 5]).sum([1]);
+
+        import std.stdio;
+        writeln(s1.evaluate().as!float);
+        writeln(s2.evaluate().as!float);
+        writeln(s3.evaluate().as!float);
+        writeln(s4.evaluate().as!float);
     }
 
     immutable string[] arith = ["add", "sub", "mul", "div"];

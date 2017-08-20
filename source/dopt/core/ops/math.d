@@ -171,7 +171,7 @@ Operation sum(const(Operation) op, const(size_t)[] axes = [], string mod = __MOD
 
     if(axes.length == 0)
     {
-        axes = iota(0, op.deps[0].rank).array();
+        axes = iota(0, op.rank).array();
     }
     
     return createOperation("sum", [op], ["axes": Variant(axes)], mod, line);

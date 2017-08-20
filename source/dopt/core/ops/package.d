@@ -172,6 +172,11 @@ class Operation
             }
         }
 
+        const(Buffer) value() const
+        {
+            return attributes["default"].get!Buffer;
+        }
+
         Buffer value()
         {
             return cast(Buffer)attributes["default"].get!Buffer;

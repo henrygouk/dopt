@@ -139,7 +139,7 @@ private
         {
             enum code = `
                 //TODO: change this to iterate over elements with a stride to fully exploit SIMD units
-                extern "C" __global__ void pointwiseKernel(size_t n, const T *dep1, const T *dep2, T *output)
+                extern "C" __device__ void pointwiseKernel(size_t n, const T *dep1, const T *dep2, T *output)
                 {
                     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -153,13 +153,13 @@ private
         else static if(deps == 1)
         {
             enum code = `
-                T sgn(T a)
+                T __device__ sgn(T a)
                 {
                     return (T)((T(0) < a) - (a < T(0)));
                 }
 
                 //TODO: change this to iterate over elements with a stride to fully exploit SIMD units
-                extern "C" __global__ void pointwiseKernel(size_t n, const T *dep1, T *output)
+                extern "C" __device__ void pointwiseKernel(size_t n, const T *dep1, T *output)
                 {
                     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -263,56 +263,22 @@ private
     {
         this(const(Operation) op)
         {
-            mOp = op;
-
-            if(mOp.outputType.elementType == DataType.float32)
-            {
-                auto otot = mOp.outputType.volume;
-                auto itot = op.deps[0].outputType.volume;
-                auto vol = itot / otot;
-                auto tmp = new float[itot * otot];
-
-                for(size_t i = 0; i < itot; i++)
-                {
-                    for(size_t o = 0; o < otot; o++)
-                    {
-                        tmp[i * otot + o] = (o == (i / vol)) ? 1.0f : 0.0f;
-                    }
-                }
-
-                ashape = [1, cast(int)itot];
-                bshape = [cast(int)itot, cast(int)otot];
-                cshape = [1, cast(int)otot];
-            }
-            else
-            {
-                throw new Exception("Element type not supported.");
-            }
+            mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
+            mOp = sum(mInput, op.attributes["axes"].get!(const(size_t)[]));
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
-            if(mOp.outputType.elementType == DataType.float32)
-            {
-                auto a = cast(float *)inputs[0].ptr;
-				auto b = cast(float *)mBuffer.ptr;
-				auto c = cast(float *)output.ptr;
-				float alpha = 1;
-				float beta = 0;
+            auto inbuf = new byte[inputs[0].numBytes];
+            inputs[0].get(inbuf);
 
-				cublasSgemm_v2(mCuBLASHandle, CUBLAS_OP_N, CUBLAS_OP_N, bshape[1], ashape[0], ashape[1], &alpha, b,
-                    bshape[1], a, ashape[1], &beta, c, cshape[1]);
-            }
-            else
-            {
-                throw new Exception("Element type not supported.");
-            }
+            import dopt.core.cpu : evaluate;
+            auto outbuf = evaluate(mOp, [mInput: Buffer(inbuf)]);
+
+            output.set(outbuf.as!byte);
         }
 
+        const(Operation) mInput;
         const(Operation) mOp;
-        int[] ashape;
-		int[] bshape;
-		int[] cshape;
-        CUDABuffer mBuffer;
     }
 }

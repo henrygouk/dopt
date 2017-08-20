@@ -35,7 +35,7 @@ private
 {
     Operation[] matmulGrad(const(Operation) op, Operation parentGrad)
     {
-        return [parentGrad * transpose(op.deps[1], [1, 0]), parentGrad * transpose(op.deps[0], [1, 0])];
+        return [matmul(parentGrad, transpose(op.deps[1], [1, 0])), matmul(transpose(op.deps[0], [1, 0]), parentGrad)];
     }
 
     Operation[] sumGrad(const(Operation) op, Operation parentGrad)

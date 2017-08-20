@@ -139,7 +139,7 @@ private
         {
             enum code = `
                 //TODO: change this to iterate over elements with a stride to fully exploit SIMD units
-                extern "C" __device__ void pointwiseKernel(size_t n, const T *dep1, const T *dep2, T *output)
+                extern "C" __global__ void pointwiseKernel(size_t n, const T *dep1, const T *dep2, T *output)
                 {
                     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -159,7 +159,7 @@ private
                 }
 
                 //TODO: change this to iterate over elements with a stride to fully exploit SIMD units
-                extern "C" __device__ void pointwiseKernel(size_t n, const T *dep1, T *output)
+                extern "C" __global__ void pointwiseKernel(size_t n, const T *dep1, T *output)
                 {
                     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -189,6 +189,7 @@ private
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
+            //Args = [vol, <inputs...>, output]
             void*[] args = new void*[inputs.length + 2];
             CUdeviceptr[] ptrs = new CUdeviceptr[inputs.length + 1];
 

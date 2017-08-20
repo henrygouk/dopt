@@ -73,9 +73,9 @@ struct Buffer
             return cast(T[])mBuffer;
         }
 
-        const(T[]) as(T)() const
+        const(T)[] as(T)() const
         {
-            return cast(const(T[]))mBuffer;
+            return cast(const(T)[])mBuffer;
         }
     }
 

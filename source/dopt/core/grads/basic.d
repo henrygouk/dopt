@@ -82,6 +82,6 @@ private
 
     Operation[] repeatGrad(const(Operation) op, Operation parentGrad)
     {
-        return [parentGrad.sum(op.outputType.rank - 1)];
+        return [parentGrad.sum([0])];
     }
 }

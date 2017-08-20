@@ -121,19 +121,35 @@ private
 
     bool verifySum(const(Operation) op)
     {
-        if(("rank" in op.attributes) is null || op.attributes["rank"].peek!size_t is null)
+        if(op.deps.length != 1)
         {
             return false;
         }
 
-        return op.attributes["rank"].get!size_t < op.deps[0].outputType.rank;
+        if(("axes" in op.attributes) is null || op.attributes["axes"].peek!(const(size_t)[]) is null)
+        {
+            return false;
+        }
+
+        auto axes = op.attributes["axes"].get!(const(size_t)[]);
+
+        return axes.all!(x => x < op.deps[0].rank) &&
+               axes.map!(x => size_t(x)).array().sort().uniq().count() == axes.length;
     }
 
     TensorType judgeSum(const(Operation) op)
     {
         auto t = op.deps[0].outputType;
+        auto axes = op.attributes["axes"].get!(const(size_t)[]);
 
-        return TensorType(t.elementType, t.shape[0 .. op.attributes["rank"].get!size_t]);
+        auto newShape = t
+                       .shape
+                       .zip(iota(0, t.shape.length))
+                       .filter!(x => !axes.canFind(x[1]))
+                       .map!(x => x[0])
+                       .array();
+
+        return TensorType(t.elementType, newShape);
     }
 }
 
@@ -144,9 +160,19 @@ Operation matmul(const(Operation) lhs, const(Operation) rhs, string mod = __MODU
     return createOperation("matmul", [lhs, rhs], null, mod, line);
 }
 
-Operation sum(const(Operation) op, size_t newRank = 0, string mod = __MODULE__, size_t line = __LINE__)
+Operation sum(const(Operation) op, const(size_t)[] axes = [], string mod = __MODULE__, size_t line = __LINE__)
 {
     import std.variant : Variant;
+
+    if(op.rank == 0)
+    {
+        return op.reshape(op.shape);
+    }
+
+    if(axes.length == 0)
+    {
+        axes = iota(0, op.deps[0].rank).array();
+    }
     
-    return createOperation("sum", [op], ["rank": Variant(newRank)], mod, line);
+    return createOperation("sum", [op], ["axes": Variant(axes)], mod, line);
 }

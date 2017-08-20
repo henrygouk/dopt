@@ -76,17 +76,46 @@ private
     {
         void run(T)()
         {
-            import std.algorithm : fold;
+            import std.algorithm : fold, sort;
 
-            auto shape = cast(size_t[])op.deps[0].outputType.shape[op.attributes["rank"].get!size_t .. $];
-            auto chunkSize = shape.fold!((a, b) => a * b)(cast(size_t)1);
-            auto inbuf = cast(T[])inputs[0].as!T;
-            auto outbuf = output.as!T;
-            outbuf[] = 0;
-
-            foreach(c; inbuf.chunks(chunkSize))
+            void process(const(T)[] inbuf, T[] outbuf, size_t stride)
             {
-                outbuf[] += c[];
+                for(size_t o = 0; o < outbuf.length; o++)
+                {
+                    outbuf[o] = 0;
+
+                    for(size_t i = o; i < inbuf.length; i += stride)
+                    {
+                        outbuf[o] += inbuf[i];
+                    }
+                }
+            }
+
+            auto axes = op.attributes["axes"].get!(const(size_t)[]);
+            auto shape = op.deps[0].shape.dup;
+
+            auto inbuf = inputs[0].as!T;
+
+            foreach(axis; axes)
+            {
+                //auto axis = axes[0];
+                auto newvol = shape.fold!((a, b) => a * b)(size_t(1)) / shape[axis];
+                size_t stride;
+                
+                if(axis == shape.length - 1)
+                {
+                    stride = 1;
+                }
+                else
+                {
+                    stride = shape[axis + 1 .. $].fold!((a, b) => a * b)(size_t(1));
+                }
+
+                auto outbuf = new T[newvol];
+                process(inbuf, outbuf, stride);
+                inbuf = outbuf;
+
+                shape[axis] = 1;
             }
         }
 

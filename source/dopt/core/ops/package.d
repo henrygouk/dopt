@@ -10,12 +10,14 @@ public
 {
     import dopt.core.ops.basic;
     import dopt.core.ops.math;
+    import dopt.core.ops.nnet;
 }
 
 static this()
 {
     dopt.core.ops.basic.initialize();
     dopt.core.ops.math.initialize();
+    dopt.core.ops.nnet.initialize();
 }
 
 alias Verifier = bool delegate(const Operation);
@@ -84,6 +86,15 @@ class Operation
         */
         Operation opBinary(string op)(const(Operation) rhs, string mod = __MODULE__, size_t line = __LINE__) const
         {
+            if(rhs.rank == 0 && this.rank != 0)
+            {
+                return this.opBinary!op(rhs.repeat(this.volume).reshape(this.shape));
+            }
+            else if(this.rank == 0 && rhs.rank != 0)
+            {
+                return this.repeat(rhs.volume).reshape(rhs.shape).opBinary!op(rhs);
+            }
+
             static if(op == "+")
             {
                 return this.add(rhs, mod, line);
@@ -108,20 +119,28 @@ class Operation
 
         Operation opBinary(string op)(int i, string mod = __MODULE__, size_t line = __LINE__) const
         {
-            auto bc = int32([], [i])
-                     .repeat(outputType.volume)
-                     .reshape(outputType.shape);
+            auto bc = int32([], [i]);
 
             return opBinary!op(bc, mod, line);
         }
 
         Operation opBinary(string op)(float i, string mod = __MODULE__, size_t line = __LINE__) const
         {
-            auto bc = float32([], [i])
-                     .repeat(outputType.volume)
-                     .reshape(outputType.shape);
+            auto bc = float32([], [i]);
 
             return opBinary!op(bc, mod, line);
+        }
+
+        Operation opBinaryRight(string op, T)(T t, string mod = __MODULE__, size_t line = __LINE__) const
+        {
+            static if(op == "*" || op == "+")
+            {
+                return opBinary!op(t);
+            }
+            else
+            {
+                static assert(0, "Not implemented.");
+            }
         }
 
         Operation opUnary(string op)() const
@@ -157,6 +176,26 @@ class Operation
         {
             return cast(Buffer)attributes["default"].get!Buffer;
         }
+
+        auto shape() const
+        {
+            return outputType.shape;
+        }
+
+        auto elementType() const
+        {
+            return outputType.elementType;
+        }
+
+        auto volume() const
+        {
+            return outputType.volume;
+        }
+
+        auto rank() const
+        {
+            return outputType.rank;
+        }
     }
 
     private
@@ -179,7 +218,8 @@ class Operation
             mLine = line;
 
             enforce(mOpDefs[opType].verifier(this),
-                "Operation failed verification. Instantiated at " ~ mod ~ ":" ~ line.to!string);
+                "Operation of type \"" ~ opType ~ "\" failed verification. Instantiated at " ~ mod ~ ":" ~
+                line.to!string);
 
             mOutputType = makeJudgement(this);
         }

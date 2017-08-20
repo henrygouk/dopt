@@ -148,7 +148,14 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
         }
 
         //Execute the operation
-        mKernels[o.opType].execute(o, inputs, output);
+        auto kern = mKernels.get(o.opType, null);
+
+        if(kern is null)
+        {
+            throw new Exception("No CPU kernel registered for operation " ~ o.opType);
+        }
+
+        kern.execute(o, inputs, output);
 
         foreach(d; o.deps)
         {

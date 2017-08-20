@@ -15,6 +15,16 @@ package
     }
 }
 
+private
+{
+    void nvrtcCheck(nvrtcResult res, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        import std.conv : to;
+        import std.exception : enforce;
+        enforce(res == NVRTC_SUCCESS, mod ~ "(" ~ line.to!string ~ "): Failed to execute NVRTC function.");
+    }
+}
+
 class NVRTCKernel
 {
     public
@@ -40,27 +50,27 @@ class NVRTCKernel
 							//"compute_52",
 							/*"compute_53"*/].map!(x => ("--gpu-architecture=" ~ x).toStringz()).array();
 
-			nvrtcCreateProgram(&program, codez, entryz, 0, null, null);
-			nvrtcCompileProgram(program, cast(int)options.length, options.ptr);
+			nvrtcCreateProgram(&program, codez, entryz, 0, null, null).nvrtcCheck;
+			nvrtcCompileProgram(program, cast(int)options.length, options.ptr).nvrtcCheck;
 
 			size_t logSize;
-			nvrtcGetProgramLogSize(program, &logSize);
+			nvrtcGetProgramLogSize(program, &logSize).nvrtcCheck;
 
 			if(logSize > 1)
 			{
 				auto log = new char[logSize];
-				nvrtcGetProgramLog(program, log.ptr);
+				nvrtcGetProgramLog(program, log.ptr).nvrtcCheck;
 
 				import std.stdio;
 				stderr.writeln(log[0 .. $ - 1]);
 			}
 
 			size_t ptxSize;
-			nvrtcGetPTXSize(program, &ptxSize);
+			nvrtcGetPTXSize(program, &ptxSize).nvrtcCheck;
 
 			auto ptx = new char[ptxSize];
-			nvrtcGetPTX(program, ptx.ptr);
-			nvrtcDestroyProgram(&program);
+			nvrtcGetPTX(program, ptx.ptr).nvrtcCheck;
+			nvrtcDestroyProgram(&program).nvrtcCheck;
 
 			cuModuleLoadDataEx(&mModule, ptx.ptr, 0, null, null);
 			cuModuleGetFunction(&mKernel, mModule, entryz);

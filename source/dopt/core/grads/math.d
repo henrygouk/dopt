@@ -40,8 +40,14 @@ private
 
     Operation[] sumGrad(const(Operation) op, Operation parentGrad)
     {
-        return [parentGrad.repeat(op.deps[0].outputType.volume / op.outputType.volume)
-                          .reshape(op.deps[0].outputType.shape)];
+        if(op.volume == 1)
+        {
+            return [parentGrad.repeat(op.deps[0].volume).reshape(op.deps[0].shape)];
+        }
+        else
+        {
+            throw new Exception("Sum gradient is currently only partially implemented.");
+        }
     }
 
     Operation[] addGrad(const(Operation) op, Operation parentGrad)

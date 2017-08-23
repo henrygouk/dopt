@@ -1,5 +1,5 @@
 /**
-    This is the main interface for the dopt-cuda backend.
+    This is the main interface for the dopt CUDA backend.
 
     The APIs in this module allow users to evaluate operation graphs on GPUs through the use of CUDA. There is also
     functionality to register CUDA implementations of custom operations.
@@ -16,6 +16,7 @@ import std.exception;
 import dopt.core.cuda.basic;
 import dopt.core.cuda.nvrtc;
 import dopt.core.cuda.math;
+import dopt.core.cuda.nnet;
 import dopt.core.ops;
 import dopt.core.types;
 
@@ -29,7 +30,7 @@ private __gshared
     CUcontext mContext;
 }
 
-shared static this()
+void initialize()
 {
     //TODO: handle case where CUDA isn't available
     DerelictCUDADriver.load();
@@ -43,6 +44,7 @@ shared static this()
     dopt.core.cuda.basic.initialize();
     dopt.core.cuda.nvrtc.initialize();
     dopt.core.cuda.math.initialize();
+    dopt.core.cuda.nnet.initialize();
 }
 
 /**
@@ -81,6 +83,11 @@ class CUDABuffer
             enforce(cuMemsetD8(mPtr, 0, mNumBytes) == CUDA_SUCCESS, "CUDA default buffer initialisation failed");
         }
 
+        ~this()
+        {
+            cuMemFree(mPtr);
+        }
+
         /**
             Copies data from the host to the device.
 
@@ -99,7 +106,7 @@ class CUDABuffer
             Params:
                 buf = The buffer that the data from the CUDA device will be written to.
         */
-        void get(void[] buf)
+        void get(void[] buf) const
         {
             enforce(buf.length == mNumBytes, "output buffer is the wrong length.");
 			enforce(cuMemcpyDtoH(buf.ptr, mPtr, buf.length) == CUDA_SUCCESS, "Failed to get contents of CUDA buffer");
@@ -190,7 +197,7 @@ class CUDAPlan
                 //Check for some easy optimizations
                 if(o.opType == "variable" && !(o in mKernels))
                 {
-                    auto buf = cast(Buffer)o.attributes["default"].get!Buffer;
+                    auto buf = cast(Buffer)o.value;
                     auto cbuf = new CUDABuffer(buf.as!ubyte.length);
                     cbuf.set(buf.as!ubyte);
                     results[o] = cbuf;
@@ -321,7 +328,7 @@ Buffer evaluateCUDA(const(Operation) op, Buffer[const(Operation)] args = null)
     Registers a CUDA kernel constructor for a given operation type.
 
     Params:
-        opType = The type of operation this kernel constructor caters to.
+        opName = The type of operation this kernel constructor caters to.
         kernelCtr = The constructor that should be associated with operations with the type $(D opType).
 */
 void registerCUDAKernel(string opName, CUDAKernelCtr kernelCtr)
@@ -380,6 +387,11 @@ private
 
 unittest
 {
-    import std.stdio;
-    writeln(listCUDAOperations());
+    auto a = float32([], [3.0f]);
+    auto b = float32([], [4.0f]);
+    auto c = float32([], [-1.0f]);
+
+    auto y = a * b + c;
+
+    assert(evaluateCUDA(y).as!float[0] == 11.0f);
 }

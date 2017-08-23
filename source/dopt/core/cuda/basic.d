@@ -144,19 +144,24 @@ private
     {
         this(const(Operation) op)
         {
-            mOp = op;
+            mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
+            mOp = repeat(mInput, op.attributes["repetitions"].get!(const(size_t)[]));
         }
 
-        void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+        override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
-            size_t numReps = output.numBytes / inputs[0].numBytes;
+            import dopt.core.cpu : evaluateCPU;
 
-            for(size_t i = 0; i < numReps; i++)
-            {
-                cuMemcpy(output.ptr + i * inputs[0].numBytes, inputs[0].ptr, inputs[0].numBytes);
-            }
+            auto inbuf = new byte[inputs[0].numBytes];
+            inputs[0].get(inbuf);
+
+            import dopt.core.cpu : evaluate;
+            auto outbuf = evaluateCPU([mOp], [mInput: Buffer(inbuf)])[0];
+
+            output.set(outbuf.as!byte);
         }
 
+        const(Operation) mInput;
         const(Operation) mOp;
     }
 

@@ -270,11 +270,13 @@ private
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
+            import dopt.core.cpu : evaluateCPU;
+
             auto inbuf = new byte[inputs[0].numBytes];
             inputs[0].get(inbuf);
 
             import dopt.core.cpu : evaluate;
-            auto outbuf = evaluate(mOp, [mInput: Buffer(inbuf)]);
+            auto outbuf = evaluateCPU([mOp], [mInput: Buffer(inbuf)])[0];
 
             output.set(outbuf.as!byte);
         }

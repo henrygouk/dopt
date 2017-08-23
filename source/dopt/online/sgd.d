@@ -95,7 +95,7 @@ unittest
     import std.stdio : writeln;
     writeln(
         "SGD loss: ", loss, "    ",
-        "mhat=", m.value.as!float[0], ", ",
-        "chat=", c.value.as!float[0], "    ",
+        "m=", m.value.as!float[0], ", ",
+        "c=", c.value.as!float[0], "    ",
         "(expected m=3, c=2)");
 }

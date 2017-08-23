@@ -82,6 +82,16 @@ private
 
     Operation[] repeatGrad(const(Operation) op, Operation parentGrad)
     {
-        return [parentGrad.sum([0])];
+        import std.array : array;
+        import std.range : iota, roundRobin;
+
+        auto reps = op.attributes["repetitions"].get!(const(size_t)[]);
+        
+        //Add some new dimensions that explicitly represent the repetitions
+        auto tmpShape = roundRobin(reps, op.deps[0].shape).array();
+        auto tmp = parentGrad.reshape(tmpShape);
+
+        //Sum over these dimensions
+        return [tmp.sum(iota(0, tmpShape.length, 2).array())];
     }
 }

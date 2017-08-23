@@ -46,7 +46,20 @@ private
         }
         else
         {
-            throw new Exception("Sum gradient is currently only partially implemented.");
+            auto axes = op.attributes["axes"].get!(const(size_t)[]);
+            auto tmpShape = op.deps[0].shape.dup;
+            auto reps = new size_t[tmpShape.length];
+            reps[] = 1;
+            
+            foreach(a; axes)
+            {
+                reps[a] = tmpShape[a];
+                tmpShape[a] = 1;
+            }
+
+            auto tmp = parentGrad.reshape(tmpShape);
+
+            return [tmp.repeat(reps)];
         }
     }
 

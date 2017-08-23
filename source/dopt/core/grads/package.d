@@ -89,12 +89,6 @@ Operation[] grad(const(Operation) objective, const(Operation)[] wrt)
         //we can just add this grad to the existing grad, because maths.
         foreach(d, g; zip(op.deps, depGrads))
         {
-            if(d.outputType != g.outputType)
-            {
-                import std.stdio;
-                writeln(op.opType, d.outputType, g.outputType);
-            }
-
             auto currentGrad = grads.get(d, null);
 
             if(currentGrad is null)

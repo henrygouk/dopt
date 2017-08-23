@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Module dopt.nnet.paraminit</title>
+<link rel="stylesheet" href="../../css/style.min.css"/>
+<script type="text/javascript" src="../../js/script.min.js"></script></head><body onload="setupDdox();"><header></header><nav id="main-nav"><div><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script></div><ul class="tree-view"><li class="tree-view "><div class="package ">dopt</div><ul class="tree-view"><li class="tree-view collapsed"><div class="package "><a href="../../dopt/core.html">core</a></div><ul class="tree-view"><li class="tree-view collapsed"><div class="package ">ops</div><ul class="tree-view"><li><div class="module "><a href="../../dopt/core/ops/basic.html">basic</a></div></li><li><div class="module "><a href="../../dopt/core/ops/math.html">math</a></div></li><li><div class="module "><a href="../../dopt/core/ops/nnet.html">nnet</a></div></li></ul></li><li><div class="module "><a href="../../dopt/core/cpu.html">cpu</a></div></li><li><div class="module "><a href="../../dopt/core/cuda.html">cuda</a></div></li><li><div class="module "><a href="../../dopt/core/grads.html">grads</a></div></li></ul></li><li class="tree-view "><div class="package "><a href="../../dopt/nnet.html">nnet</a></div><ul class="tree-view"><li><div class="module "><a href="../../dopt/nnet/layers.html">layers</a></div></li><li><div class="module selected"><a href="../../dopt/nnet/paraminit.html">paraminit</a></div></li></ul></li><li class="tree-view collapsed"><div class="package ">online</div><ul class="tree-view"><li><div class="module "><a href="../../dopt/online/sgd.html">sgd</a></div></li></ul></li></ul></li></ul></div><p id="main-nav-footer">Built with
+<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Module dopt.nnet.paraminit</h1><p>This module contains methods for initialising the parameters of neural networks.
+</p><section><p>Several of the methods implemented in this module rely on <code class="lang-d"><span class="pln">fan_in</span></code> and <code class="lang-d"><span class="pln">fan_out</span></code> values. These are calculated
+    differently depending on the rank of the parameter.
+</p>
+
+<p>    For rank-2 tensors,
+</p>
+
+<p>        <code class="lang-d"><span class="pln">fan_in </span><span class="pun">= </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">0</span><span class="pun">]</span></code>, <code class="lang-d"><span class="pln">fan_out </span><span class="pun">= </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">1</span><span class="pun">]</span></code>
+</p>
+
+<p>    For rank-4 tensors,
+</p>
+
+<p>        <code class="lang-d"><span class="pln">fan_in </span><span class="pun">= </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">1</span><span class="pun">] * </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">2</span><span class="pun">] * </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">3</span><span class="pun">]</span></code>, <code class="lang-d"><span class="pln">fan_out </span><span class="pun">= </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] * </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">2</span><span class="pun">] * </span><span class="pln">shape</span><span class="pun">[</span><span class="lit">3</span><span class="pun">]</span></code>
+</p>
+</section>
+
+<section></section><section><h2>Functions</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Description</th></tr><tr><td><code><a id="constantInit" class="["public"]" href="../../dopt/nnet/paraminit/constantInit.html">constantInit</a><span class="decoration">(val)</span></code></td><td>Creates a parameter initialiser that sets the initial value of each element in a parameter tensor to a constant
+    value.
+</td></tr><tr><td><code><a id="gaussianInit" class="["public"]" href="../../dopt/nnet/paraminit/gaussianInit.html">gaussianInit</a><span class="decoration">(mean, stddev)</span></code></td><td>Creates a parameter initialiser that sets the initial value of each element in a parameter tensor to a different
+    sample from a Gaussian distribution.
+</td></tr><tr><td><code><a id="glorotGaussianInit" class="["public"]" href="../../dopt/nnet/paraminit/glorotGaussianInit.html">glorotGaussianInit</a><span class="decoration">()</span></code></td><td>Creates a parameter initialiser that uses the method of Glorot and Bengio (2010).
+</td></tr><tr><td><code><a id="glorotUniformInit" class="["public"]" href="../../dopt/nnet/paraminit/glorotUniformInit.html">glorotUniformInit</a><span class="decoration">()</span></code></td><td>Creates a parameter initialiser that uses the method of Glorot and Bengio (2010).
+</td></tr><tr><td><code><a id="heGaussianInit" class="["public"]" href="../../dopt/nnet/paraminit/heGaussianInit.html">heGaussianInit</a><span class="decoration">()</span></code></td><td>Creates a parameter initialiser that uses the method of He et al. (2015).
+</td></tr><tr><td><code><a id="heUniformInit" class="["public"]" href="../../dopt/nnet/paraminit/heUniformInit.html">heUniformInit</a><span class="decoration">()</span></code></td><td>Creates a parameter initialiser that uses the method of He et al. (2015).
+</td></tr><tr><td><code><a id="uniformInit" class="["public"]" href="../../dopt/nnet/paraminit/uniformInit.html">uniformInit</a><span class="decoration">(minval, maxval)</span></code></td><td>Creates a parameter initialiser that sets the initial value of each element in a parameter tensor to a different
+    sample from a uniform distribution.
+</td></tr></table></section><section><h2>Aliases</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Type</th><th>Description</th></tr><tr><td><a id="ParamInitializer" class="["public"]" href="../../dopt/nnet/paraminit/ParamInitializer.html"><code>ParamInitializer</code></a></td><td><code class="prettyprint lang-d"><span class="typ">void</span> <span class="kwd">delegate</span><span class="pun">(</span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span><span class="pun">)</span></code></td><td>Used to initialize a parameter in the neural network.
+</td></tr></table></section></div><footer><div id="license-info">
+
+</div></footer></div></body></html>

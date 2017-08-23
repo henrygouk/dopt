@@ -1,0 +1,56 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Function grad</title>
+<link rel="stylesheet" href="../../../css/style.min.css"/>
+<script type="text/javascript" src="../../../js/script.min.js"></script></head><body onload="setupDdox();"><header></header><nav id="main-nav"><div><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script></div><ul class="tree-view"><li class="tree-view "><div class="package ">dopt</div><ul class="tree-view"><li class="tree-view "><div class="package "><a href="../../../dopt/core.html">core</a></div><ul class="tree-view"><li class="tree-view collapsed"><div class="package ">ops</div><ul class="tree-view"><li><div class="module "><a href="../../../dopt/core/ops/basic.html">basic</a></div></li><li><div class="module "><a href="../../../dopt/core/ops/math.html">math</a></div></li><li><div class="module "><a href="../../../dopt/core/ops/nnet.html">nnet</a></div></li></ul></li><li><div class="module "><a href="../../../dopt/core/cpu.html">cpu</a></div></li><li><div class="module "><a href="../../../dopt/core/cuda.html">cuda</a></div></li><li><div class="module selected"><a href="../../../dopt/core/grads.html">grads</a></div></li></ul></li><li class="tree-view collapsed"><div class="package "><a href="../../../dopt/nnet.html">nnet</a></div><ul class="tree-view"><li><div class="module "><a href="../../../dopt/nnet/layers.html">layers</a></div></li><li><div class="module "><a href="../../../dopt/nnet/paraminit.html">paraminit</a></div></li></ul></li><li class="tree-view collapsed"><div class="package ">online</div><ul class="tree-view"><li><div class="module "><a href="../../../dopt/online/sgd.html">sgd</a></div></li></ul></li></ul></li></ul></div><p id="main-nav-footer">Built with
+<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Function grad</h1><p>Computes the gradient of a scalar-valued operation with respect to several dependencies.
+</p><div class="prototype"><code class="lang-d"><div class="single-prototype">
+<span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span><span class="pun">[]</span> <span class="pln">grad</span>
+<span class="pun">(</span>
+<br/>
+&nbsp;&nbsp;<span class="kwd">const</span><span class="pun">(</span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span><span class="pun">)</span> <span class="pln">objective</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="kwd">const</span><span class="pun">(</span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span><span class="pun">)</span><span class="pun">[]</span> <span class="pln">wrt</span>
+<br/>
+<span class="pun">)</span><span class="pun">;</span></div></code></div><section><p>This function provides an implementation of automatic differentiation can be used for greatly simplifying the
+    process of optimising objective functions. The particular technique used by the function is known as
+    reverse mode automatic differentiation.
+</p>
+</section>
+
+<section><h2>Parameters</h2>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="objective">objective</td><td> The function being differentiated.</td></tr>
+<tr><td id="wrt">wrt</td><td> The (indirect) dependencies that <code class="lang-d"><a href="../../../dopt/core/grads/grad.html#objective"><span class="pln">objective</span></a></code> is being differentiated with respect to.</td></tr>
+</table>
+</section>
+<section><h2>Returns</h2>
+<p>An array of operations that evaluate to the derivative of <code class="lang-d"><a href="../../../dopt/core/grads/grad.html#objective"><span class="pln">objective</span></a></code> to each of the elements of <code class="lang-d"><a href="../../../dopt/core/grads/grad.html#wrt"><span class="pln">wrt</span></a></code>.
+</p>
+</section>
+<section><h2>Example</h2>
+
+<pre class="code"><code class="lang-d"><span class="kwd">import </span><span class="pln">std<wbr/></span><span class="pun">.</span><span class="pln">random </span><span class="pun">: </span><span class="pln">uniform</span><span class="pun">;
+</span><span class="kwd">import <a href="../../../dopt/core/cpu.html"></span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">cpu</span></a><span class="pln"> </span><span class="pun">: </span><span class="pln">evaluate</span><span class="pun">;
+
+</span><span class="kwd">auto </span><span class="pln">x </span><span class="pun">= </span><span class="pln">float32</span><span class="pun">();
+</span><span class="kwd">auto </span><span class="pln">y </span><span class="pun">= </span><span class="pln">x </span><span class="pun">* </span><span class="pln">x</span><span class="pun">;
+</span><span class="kwd">auto </span><span class="pln">gradY </span><span class="pun">= </span><span class="pln">grad</span><span class="pun">(</span><span class="pln">y</span><span class="pun">, [</span><span class="pln">x</span><span class="pun">]);
+
+</span><span class="kwd">auto </span><span class="pln">r </span><span class="pun">= </span><span class="pln">uniform</span><span class="pun">(-</span><span class="lit">100.0f</span><span class="pun">, </span><span class="lit">100.0f</span><span class="pun">);
+
+</span><span class="kwd">auto </span><span class="pln">gradYwrtX </span><span class="pun">= </span><span class="pln">gradY<wbr/></span><span class="pun">.</span><span class="pln">evaluate</span><span class="pun">([
+    </span><span class="pln">x</span><span class="pun">: </span><span class="typ">Buffer</span><span class="pun">([</span><span class="pln">r</span><span class="pun">])
+])[</span><span class="lit">0</span><span class="pun">];
+
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">gradYwrtX<wbr/></span><span class="pun">.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] == </span><span class="pln">r </span><span class="pun">+ </span><span class="pln">r</span><span class="pun">);
+</span></code></pre>
+</section>
+</div><footer><div id="license-info"><p>Henry Gouk
+</p>
+
+
+</div></footer></div></body></html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Module dopt.core.cuda</title>
+<link rel="stylesheet" href="../../css/style.min.css"/>
+<script type="text/javascript" src="../../js/script.min.js"></script></head><body onload="setupDdox();"><header></header><nav id="main-nav"><div><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script></div><ul class="tree-view"><li class="tree-view "><div class="package ">dopt</div><ul class="tree-view"><li class="tree-view "><div class="package "><a href="../../dopt/core.html">core</a></div><ul class="tree-view"><li class="tree-view collapsed"><div class="package ">ops</div><ul class="tree-view"><li><div class="module "><a href="../../dopt/core/ops/basic.html">basic</a></div></li><li><div class="module "><a href="../../dopt/core/ops/math.html">math</a></div></li><li><div class="module "><a href="../../dopt/core/ops/nnet.html">nnet</a></div></li></ul></li><li><div class="module "><a href="../../dopt/core/cpu.html">cpu</a></div></li><li><div class="module selected"><a href="../../dopt/core/cuda.html">cuda</a></div></li><li><div class="module "><a href="../../dopt/core/grads.html">grads</a></div></li></ul></li><li class="tree-view collapsed"><div class="package "><a href="../../dopt/nnet.html">nnet</a></div><ul class="tree-view"><li><div class="module "><a href="../../dopt/nnet/layers.html">layers</a></div></li><li><div class="module "><a href="../../dopt/nnet/paraminit.html">paraminit</a></div></li></ul></li><li class="tree-view collapsed"><div class="package ">online</div><ul class="tree-view"><li><div class="module "><a href="../../dopt/online/sgd.html">sgd</a></div></li></ul></li></ul></li></ul></div><p id="main-nav-footer">Built with
+<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Module dopt.core.cuda</h1><p>This is the main interface for the dopt CUDA backend.
+</p><section><p>The APIs in this module allow users to evaluate operation graphs on GPUs through the use of CUDA. There is also
+    functionality to register CUDA implementations of custom operations.
+</p>
+
+<p>    In future, this module will also have an interface allowing the user to register their own optimisation passes to
+    be called when constructing a plan.
+</p>
+</section>
+
+<section></section><section><h2>Functions</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Description</th></tr><tr><td><code><a id="deregisterCUDAKernel" class="["public"]" href="../../dopt/core/cuda/deregisterCUDAKernel.html">deregisterCUDAKernel</a><span class="decoration">(opType)</span></code></td><td>Deregisters a kernel constructor associated with the given operation type.
+</td></tr><tr><td><code><a id="evaluateCUDA" class="["public"]" href="../../dopt/core/cuda/evaluateCUDA.html">evaluateCUDA</a><span class="decoration">(ops, args)</span></code></td><td>Used for performing a one-off evaluation of a set of operations.
+</td></tr><tr><td><code><a id="evaluateCUDA" class="["public"]" href="../../dopt/core/cuda/evaluateCUDA.html">evaluateCUDA</a><span class="decoration">(op, args)</span></code></td><td>A convenience overload that evaluates a single operation and returns a single <code class="lang-d"><span class="typ">Buffer</span></code>.
+</td></tr><tr><td><code><a id="listCUDAOperations" class="["public"]" href="../../dopt/core/cuda/listCUDAOperations.html">listCUDAOperations</a><span class="decoration">()</span></code></td><td>Provides a list of all operation types supported by the CUDA backend.
+</td></tr><tr><td><code><a id="registerCUDAKernel" class="["public"]" href="../../dopt/core/cuda/registerCUDAKernel.html">registerCUDAKernel</a><span class="decoration">(opName, kernelCtr)</span></code></td><td>Registers a CUDA kernel constructor for a given operation type.
+</td></tr></table></section><section><h2>Interfaces</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Description</th></tr><tr><td><code><a id="CUDAKernel" class="["public"]" href="../../dopt/core/cuda/CUDAKernel.html">CUDAKernel</a></code></td><td>Provides a common interface for CUDA kernels.
+</td></tr></table></section><section><h2>Classes</h2><table>
+<col class="caption"/>
+<tr><th>Name</th><th>Description</th></tr><tr><td><code><a id="CUDABuffer" class="["public"]" href="../../dopt/core/cuda/CUDABuffer.html">CUDABuffer</a></code></td><td>A class that encapsulates the CUDA memory allocation/deallocation process.
+</td></tr><tr><td><code><a id="CUDAPlan" class="["public"]" href="../../dopt/core/cuda/CUDAPlan.html">CUDAPlan</a></code></td><td>A Plan stores all the resources (preallocated buffers, custom CUDA kernels) required to evaluate nodes from the
+    Operation graph.
+</td></tr></table></section></div><footer><div id="license-info"><p>Henry Gouk
+</p>
+
+
+</div></footer></div></body></html>

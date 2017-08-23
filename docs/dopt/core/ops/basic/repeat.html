@@ -1,0 +1,102 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>repeat - multiple declarations</title>
+<link rel="stylesheet" href="../../../../css/style.min.css"/>
+<script type="text/javascript" src="../../../../js/script.min.js"></script></head><body onload="setupDdox();"><header></header><nav id="main-nav"><div><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../../../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script></div><ul class="tree-view"><li class="tree-view "><div class="package ">dopt</div><ul class="tree-view"><li class="tree-view "><div class="package "><a href="../../../../dopt/core.html">core</a></div><ul class="tree-view"><li class="tree-view "><div class="package ">ops</div><ul class="tree-view"><li><div class="module selected"><a href="../../../../dopt/core/ops/basic.html">basic</a></div></li><li><div class="module "><a href="../../../../dopt/core/ops/math.html">math</a></div></li><li><div class="module "><a href="../../../../dopt/core/ops/nnet.html">nnet</a></div></li></ul></li><li><div class="module "><a href="../../../../dopt/core/cpu.html">cpu</a></div></li><li><div class="module "><a href="../../../../dopt/core/cuda.html">cuda</a></div></li><li><div class="module "><a href="../../../../dopt/core/grads.html">grads</a></div></li></ul></li><li class="tree-view collapsed"><div class="package "><a href="../../../../dopt/nnet.html">nnet</a></div><ul class="tree-view"><li><div class="module "><a href="../../../../dopt/nnet/layers.html">layers</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/paraminit.html">paraminit</a></div></li></ul></li><li class="tree-view collapsed"><div class="package ">online</div><ul class="tree-view"><li><div class="module "><a href="../../../../dopt/online/sgd.html">sgd</a></div></li></ul></li></ul></li></ul></div><p id="main-nav-footer">Built with
+<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>repeat - multiple declarations</h1><nav class="page-nav"><ul><li><a href="#0">Function <code>repeat</code></a></li><li><a href="#1">Function <code>repeat</code></a></li></ul></nav><h2 id="0">Function repeat</h2><p>Repeats the output of an operation along each axis the given number of times.
+</p><div class="prototype"><code class="lang-d"><div class="single-prototype">
+<span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span> <span class="pln">repeat</span>
+<span class="pun">(</span>
+<br/>
+&nbsp;&nbsp;<span class="kwd">const</span><span class="pun">(</span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span><span class="pun">)</span> <span class="pln">input</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="kwd">const</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">)</span><span class="pun">[]</span> <span class="pln">repetitions</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="typ">string</span> <span class="pln">mod</span> <span class="pun">=</span> <span class="kwd">__MODULE__</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="typ">ulong</span> <span class="pln">line</span> <span class="pun">=</span> <span class="kwd">cast</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">)</span><span class="kwd">__LINE__</span>
+<br/>
+<span class="pun">)</span><span class="pun">;</span></div></code></div><section></section>
+
+<section><h3>Parameters</h3>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="input">input</td><td> The operation to have its output repeated.</td></tr>
+<tr><td id="repetitions">repetitions</td><td> The number of repetitions to perform along each axis.</td></tr>
+</table>
+</section>
+<section><h3>Return</h3>
+<p>The new <code class="lang-d"><span class="typ">Operation</span></code>.
+</p>
+</section>
+<section><h3>Example</h3>
+
+<pre class="code"><code class="lang-d"><span class="kwd">import <a href="../../../../dopt/core/cpu.html"></span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">cpu</span></a><span class="pln"> </span><span class="pun">: </span><span class="pln">evaluate</span><span class="pun">;
+
+</span><span class="kwd">auto </span><span class="pln">r1 </span><span class="pun">= <a href="../../../../dopt/core/ops/basic/float32.html"></span><span class="pln">float32</span></a><span class="pun">([</span><span class="lit">1</span><span class="pun">, </span><span class="lit">1</span><span class="pun">], [</span><span class="lit">3.0f</span><span class="pun">])<wbr/>.</span><span class="pln">repeat</span><span class="pun">([</span><span class="lit">2</span><span class="pun">, </span><span class="lit">3</span><span class="pun">]);
+</span><span class="kwd">auto </span><span class="pln">r2 </span><span class="pun">= <a href="../../../../dopt/core/ops/basic/float32.html"></span><span class="pln">float32</span></a><span class="pun">([</span><span class="lit">2</span><span class="pun">, </span><span class="lit">2</span><span class="pun">], [</span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">])<wbr/>.</span><span class="pln">repeat</span><span class="pun">([</span><span class="lit">3</span><span class="pun">, </span><span class="lit">2</span><span class="pun">]);
+
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">r1<wbr/></span><span class="pun">.</span><span class="pln">evaluate</span><span class="pun">()<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float </span><span class="pun">== [
+    </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">,
+    </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">3.0f
+</span><span class="pun">]);
+
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">r2<wbr/></span><span class="pun">.</span><span class="pln">evaluate</span><span class="pun">()<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float </span><span class="pun">== [
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">, </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">,
+    </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">,
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">, </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">,
+    </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">,
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">, </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">,
+    </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">, </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">4.0f
+</span><span class="pun">]);
+
+</span></code></pre>
+</section>
+<h2 id="1">Function repeat</h2><p>Repeats the output of an operation the given number of times.
+</p><div class="prototype"><code class="lang-d"><div class="single-prototype">
+<span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span> <span class="pln">repeat</span>
+<span class="pun">(</span>
+<br/>
+&nbsp;&nbsp;<span class="kwd">const</span><span class="pun">(</span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">ops<wbr/></span><span class="pun">.</span><span class="typ">Operation</span><span class="pun">)</span> <span class="pln">input</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="typ">ulong</span> <span class="pln">repetitions</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="typ">string</span> <span class="pln">mod</span> <span class="pun">=</span> <span class="kwd">__MODULE__</span><span class="pun">,</span>
+<br/>
+&nbsp;&nbsp;<span class="typ">ulong</span> <span class="pln">line</span> <span class="pun">=</span> <span class="kwd">cast</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">)</span><span class="kwd">__LINE__</span>
+<br/>
+<span class="pun">)</span><span class="pun">;</span></div></code></div><section><p>A new dimension is added, allowing one to index each of these repetitions.
+</p>
+</section>
+
+<section><h3>Parameters</h3>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="input">input</td><td> The operation to have its output repeated.</td></tr>
+<tr><td id="repetitions">repetitions</td><td> The number of repetitions to perform.</td></tr>
+</table>
+</section>
+<section><h3>Return</h3>
+<p>The new <code class="lang-d"><span class="typ">Operation</span></code>.
+</p>
+</section>
+<section><h3>Example</h3>
+
+<pre class="code"><code class="lang-d"><span class="kwd">import <a href="../../../../dopt/core/cpu.html"></span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="pln">cpu</span></a><span class="pln"> </span><span class="pun">: </span><span class="pln">evaluate</span><span class="pun">;
+
+</span><span class="kwd">auto </span><span class="pln">r1 </span><span class="pun">= <a href="../../../../dopt/core/ops/basic/float32.html"></span><span class="pln">float32</span></a><span class="pun">([</span><span class="lit">2</span><span class="pun">], [</span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">])<a href="../../../../dopt/core/ops/basic/repeat.html"></span><wbr/><span class="pun">.</span><span class="pln">repeat</span></a><span class="pun">(</span><span class="lit">3</span><span class="pun">);
+
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">r1<wbr/></span><span class="pun">.</span><span class="pln">evaluate</span><span class="pun">()<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float </span><span class="pun">== [
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">,
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f</span><span class="pun">,
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">2.0f
+</span><span class="pun">]);
+
+</span></code></pre>
+</section>
+</div><footer><div id="license-info"><p>Henry Gouk
+</p>
+
+
+</div></footer></div></body></html>

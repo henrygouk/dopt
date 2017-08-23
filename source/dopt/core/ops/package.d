@@ -13,7 +13,7 @@ public
     import dopt.core.ops.nnet;
 }
 
-static this()
+void initialize()
 {
     dopt.core.ops.basic.initialize();
     dopt.core.ops.math.initialize();

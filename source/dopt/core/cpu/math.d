@@ -10,7 +10,7 @@ import std.range;
 
 package
 {
-    static this()
+    void initialize()
     {
         mixin(generateRegistrations());
 
@@ -81,7 +81,7 @@ private
             void process(const(T)[] inbuf, T[] outbuf, size_t highstride, size_t lowstride)
             {
                 //I still don't really understand how this works
-                for(size_t o = 0; o < outbuf.length; o += lowstride)
+                for(size_t o = 0; o < outbuf.length / lowstride; o++)
                 {
                     outbuf[o * lowstride .. (o + 1) * lowstride] = 0;
 
@@ -139,21 +139,6 @@ private
             default:
                 throw new Exception("Not implemented.");
         }
-    }
-
-    //Test for sumKernel
-    unittest
-    {
-        auto s1 = float32([2], [0.5, 1.5]).sum();
-        auto s2 = float32([2, 2], [0, 1, 0, 5]).sum();
-        auto s3 = float32([2, 2], [0, 1, 0, 5]).sum([0]);
-        auto s4 = float32([2, 2], [0, 1, 0, 5]).sum([1]);
-
-        import std.stdio;
-        writeln(s1.evaluate().as!float);
-        writeln(s2.evaluate().as!float);
-        writeln(s3.evaluate().as!float);
-        writeln(s4.evaluate().as!float);
     }
 
     immutable string[] arith = ["add", "sub", "mul", "div"];

@@ -10,6 +10,7 @@ import dopt.core.types;
 
 import std.algorithm;
 import std.array;
+import std.exception;
 import std.functional;
 import std.range;
 import std.variant;
@@ -152,15 +153,25 @@ private
 
     bool verifyRepeat(const(Operation) op)
     {
+        if(("repetitions" in op.attributes) is null)
+        {
+            return false;
+        }
+
+        auto reps = op.attributes["repetitions"].get!(const(size_t)[]);
+
         return op.deps.length == 1
-            && ("repetitions" in op.attributes) !is null;
+            && reps.length == op.deps[0].rank
+            && reps.all!(x => x > 0);
     }
 
     TensorType judgeRepeat(const(Operation) op)
     {
-        size_t reps = op.attributes["repetitions"].get!size_t;
+        auto reps = op.attributes["repetitions"].get!(const(size_t)[]);
+        auto shape = op.deps[0].shape.dup;
+        shape[] *= reps[];
 
-        return TensorType(op.deps[0].outputType.elementType, reps ~ op.deps[0].outputType.shape);
+        return TensorType(op.deps[0].elementType, shape);
     }
 
     bool verifyVariable(const(Operation) op)
@@ -195,6 +206,23 @@ public
         return createOperation("slice", [input], ["start": Variant(start), "stop": Variant(stop)], mod, line);
     }
 
+    ///
+    unittest
+    {
+        import dopt.core.cpu : evaluate;
+
+        auto s1 = int32([3, 3], [
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9
+        ]).slice([1, 1], [3, 3]);
+
+        assert(s1.evaluate().as!int == [
+            5, 6,
+            8, 9
+        ]);
+    }
+
     /**
         Pads the result of an operation with zeros in each dimension.
 
@@ -212,6 +240,23 @@ public
         return createOperation("pad", [input], ["before": Variant(before), "after": Variant(after)], mod, line);
     }
 
+    ///
+    unittest
+    {
+        import dopt.core.cpu : evaluate;
+
+        auto p1 = int32([1, 1], [3]).pad([2, 1], [3, 3]);
+
+        assert(p1.evaluate().as!int == [
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 3, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0
+        ]);
+    }
+
     /**
         Allows one to cast an operation to a different shape with the same volume.
 
@@ -227,12 +272,26 @@ public
         return createOperation("reshape", [input], ["shape": Variant(shape)], mod, line);
     }
 
+    ///
+    unittest
+    {
+        import dopt.core.cpu : evaluate;
+
+        auto r1 = float32([2, 2], [1.0f, 2.0f, 3.0f, 4.0f]).reshape([1, 4]);
+
+        assert(r1.shape == [1, 4]);
+        assert(r1.evaluate().as!float == [1.0f, 2.0f, 3.0f, 4.0f]);
+    }
+
     /**
         Reorders the dimensions of output of an operation.
 
         Params:
             input = The operation that should have its dimensions reordered.
             order = Determines how the dimensions are permuted.
+
+        Notes:
+            Currently only implemented for rank 2 tensors.
 
         Returns:
             The new $(D Operation).
@@ -242,21 +301,90 @@ public
         return createOperation("transpose", [input], ["order": Variant(order)], mod, line);
     }
 
+    ///
+    unittest
+    {
+        import dopt.core.cpu : evaluate;
+
+        auto t1 = float32([2, 2], [1.0f, 2.0f, 3.0f, 4.0f]).transpose([1, 0]);
+
+        assert(t1.evaluate().as!float == [1.0f, 3.0f, 2.0f, 4.0f]);
+    }
+
+    /**
+        Repeats the output of an operation along each axis the given number of times.
+
+        Params:
+            input = The operation to have its output repeated.
+            repetitions = The number of repetitions to perform along each axis.
+
+        Return:
+            The new $(D Operation).
+    */
+    Operation repeat(const(Operation) input, const(size_t)[] repetitions, string mod = __MODULE__,
+        size_t line = __LINE__)
+    {
+        enforce(repetitions.length == input.rank,
+            "The length of repetitions must be the same as the rank of the input.");
+        
+        return createOperation("repeat", [input], ["repetitions": Variant(repetitions)], mod, line);
+    }
+
+    ///
+    unittest
+    {
+        import dopt.core.cpu : evaluate;
+        
+        auto r1 = float32([1, 1], [3.0f]).repeat([2, 3]);
+        auto r2 = float32([2, 2], [1.0f, 2.0f, 3.0f, 4.0f]).repeat([3, 2]);
+
+        assert(r1.evaluate().as!float == [
+            3.0f, 3.0f, 3.0f,
+            3.0f, 3.0f, 3.0f
+        ]);
+
+        assert(r2.evaluate().as!float == [
+            1.0f, 2.0f, 1.0f, 2.0f,
+            3.0f, 4.0f, 3.0f, 4.0f,
+            1.0f, 2.0f, 1.0f, 2.0f,
+            3.0f, 4.0f, 3.0f, 4.0f,
+            1.0f, 2.0f, 1.0f, 2.0f,
+            3.0f, 4.0f, 3.0f, 4.0f
+        ]);
+    }
+
     /**
         Repeats the output of an operation the given number of times.
 
-        A new dimension with a length of $(D repetitions) is added.
+        A new dimension is added, allowing one to index each of these repetitions.
 
         Params:
             input = The operation to have its output repeated.
             repetitions = The number of repetitions to perform.
-
+        
         Return:
-            
+            The new $(D Operation).
     */
     Operation repeat(const(Operation) input, size_t repetitions, string mod = __MODULE__, size_t line = __LINE__)
     {
-        return createOperation("repeat", [input], ["repetitions": Variant(repetitions)], mod, line);
+        auto flat = input.reshape([input.volume]);
+        auto r = flat.repeat([repetitions]);
+        
+        return r.reshape([repetitions] ~ input.shape);
+    }
+
+    ///
+    unittest
+    {
+        import dopt.core.cpu : evaluate;
+
+        auto r1 = float32([2], [1.0f, 2.0f]).repeat(3);
+
+        assert(r1.evaluate().as!float == [
+            1.0f, 2.0f,
+            1.0f, 2.0f,
+            1.0f, 2.0f
+        ]);
     }
 
     /**
@@ -297,7 +425,7 @@ public
         Returns:
             The newly created variable
     */
-    Operation float32(const(size_t)[] size, float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    Operation float32(const(size_t)[] size = [], float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.float32, size), defaultVal, mod, line);
     }
@@ -315,7 +443,7 @@ public
         Returns:
             The newly created variable
     */
-    Operation int32(const(size_t)[] size, int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    Operation int32(const(size_t)[] size = [], int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.int32, size), defaultVal, mod, line);
     }

@@ -9,6 +9,15 @@ import std.exception;
 
 import dopt.core;
 
+void initialize()
+{
+    import dopt.core.cpu.basic;
+    import dopt.core.cpu.math;
+
+    dopt.core.cpu.basic.initialize();
+    dopt.core.cpu.math.initialize();
+}
+
 /**
     Common interface for all CPU kernels.
 */
@@ -81,9 +90,9 @@ string[] listAllCPUOperations()
 }
 
 /**
-    Evaluates an several nodes from the operation graph.
+    Evaluates an several nodes from the operation graph using the CPU.
 
-    If the elements of $(D ops) have common dependencies, then each dependency is evaluated more than one. For this
+    If the elements of $(D ops) have common dependencies, then each dependency is evaluated only once. For this
     reason it is recommended that this overload is used when multiple nodes should be evaluated.
 
     Params:
@@ -93,7 +102,7 @@ string[] listAllCPUOperations()
     Returns:
         An array of $(D Buffer) objects, each containing the value of the corresponding element in $(D ops).
 */
-Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
+Buffer[] evaluateCPU(const(Operation)[] ops, Buffer[const(Operation)] args = null)
 {
     import std.algorithm : canFind, filter;
     import std.array : array;
@@ -176,23 +185,6 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
     }
 
     return returnVals;
-}
-
-/**
-    Evaluates an operation graph with a single root node.
-
-    This overload is here for convenience. Internally, the multi-output version of evaluate is called.
-
-    Params:
-        op = The root node of the operation graph.
-        args = A set of variable assignments.
-
-    Returns:
-        A $(D Buffer) containing the result of the computation.
-*/
-Buffer evaluate(const(Operation) op, Buffer[const(Operation)] args = null)
-{
-    return evaluate([op], args)[0];
 }
 
 private

@@ -155,11 +155,53 @@ private
 
 mixin(createAllCtors());
 
+/**
+    Computes the matrix multiplication between two rank-2 tensors.
+
+    Params:
+        lhs = The tensor on the left-hand side of the operation.
+        rhs = The tensor on the right-hand side of the operation.
+
+    Returns:
+        The resulting operation.
+*/
 Operation matmul(const(Operation) lhs, const(Operation) rhs, string mod = __MODULE__, size_t line = __LINE__)
 {
     return createOperation("matmul", [lhs, rhs], null, mod, line);
 }
 
+///
+unittest
+{
+    import dopt.core.cpu : evaluate;
+    
+    auto a = float32([2, 1], [
+        1.0f,
+        2.0f
+    ]);
+    
+    auto b = float32([1, 2], [
+        3.0f, 4.0f
+    ]);
+
+    auto c = matmul(a, b);
+
+    assert(c.evaluate().as!float == [
+        3.0f, 4.0f,
+        6.0f, 8.0f
+    ]);
+}
+
+/**
+    Computes a sum reduction along the specified axes.
+
+    Params:
+        op = The input to the reduction.
+        axes = The axes the reduction should be performed along.
+
+    Returns:
+        The resulting operation.
+*/
 Operation sum(const(Operation) op, const(size_t)[] axes = [], string mod = __MODULE__, size_t line = __LINE__)
 {
     import std.variant : Variant;
@@ -175,4 +217,20 @@ Operation sum(const(Operation) op, const(size_t)[] axes = [], string mod = __MOD
     }
     
     return createOperation("sum", [op], ["axes": Variant(axes)], mod, line);
+}
+
+///
+unittest
+{
+    import dopt.core.cpu : evaluate;
+
+    auto s1 = float32([2], [0.5, 1.5]).sum();
+    auto s2 = float32([2, 2], [0, 1, 0, 5]).sum();
+    auto s3 = float32([2, 2], [0, 1, 0, 5]).sum([0]);
+    auto s4 = float32([2, 2], [0, 1, 0, 5]).sum([1]);
+
+    assert(s1.evaluate().as!float == [2.0f]);
+    assert(s2.evaluate().as!float == [6.0f]);
+    assert(s3.evaluate().as!float == [0.0f, 6.0f]);
+    assert(s4.evaluate().as!float == [1.0f, 5.0f]);
 }

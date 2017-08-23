@@ -2,14 +2,17 @@ module dopt.core.cpu.basic;
 
 import dopt.core;
 
-static this()
+package
 {
-    import std.functional : toDelegate;
+    void initialize()
+    {
+        import std.functional : toDelegate;
 
-    registerCPUKernel("slice", new CPUKernelDelegate(toDelegate(&slice)));
-    registerCPUKernel("pad", new CPUKernelDelegate(toDelegate(&pad)));
-    registerCPUKernel("transpose", new CPUKernelDelegate(toDelegate(&transpose)));
-    registerCPUKernel("repeat", new CPUKernelDelegate(toDelegate(&repeat)));
+        registerCPUKernel("slice", new CPUKernelDelegate(toDelegate(&slice)));
+        registerCPUKernel("pad", new CPUKernelDelegate(toDelegate(&pad)));
+        registerCPUKernel("transpose", new CPUKernelDelegate(toDelegate(&transpose)));
+        registerCPUKernel("repeat", new CPUKernelDelegate(toDelegate(&repeat)));
+    }
 }
 
 private
@@ -150,15 +153,48 @@ private
 
     void repeat(const(Operation) op, const(Buffer)[] inputs, Buffer output)
     {
-        import std.parallelism : parallel;
-        import std.range : chunks;
-
-        auto inBuf = inputs[0].as!ubyte;
-        auto outBuf = output.as!ubyte;
-
-        foreach(c; outBuf.chunks(inBuf.length).parallel)
+        void run(T)()
         {
-            c[] = inBuf[];
+            void process(const(T)[] inbuf, T[] outbuf, size_t reps, size_t vol)
+            {
+                for(size_t i = 0; i < inbuf.length; i += vol)
+                {
+                    for(size_t o = i * reps; o < (i + vol) * reps; o += vol)
+                    {
+                        outbuf[o .. o + vol] = inbuf[i .. i + vol];
+                    }
+                }
+            }
+
+            //Iterate over each axis, from smallest stride to largest stride
+            size_t vol = 1;
+            auto inbuf = inputs[0].as!T;
+            T[] outbuf;
+
+            foreach_reverse(i, a; op.attributes["repetitions"].get!(const(size_t)[]))
+            {
+                vol *= op.deps[0].shape[i];
+                outbuf = new T[inbuf.length * a];
+                process(inbuf, outbuf, a, vol);
+                vol *= a;
+                inbuf = outbuf;
+            }
+
+            output.as!T[] = outbuf[];
+        }
+
+        switch(op.outputType.elementType)
+        {
+            case DataType.float32:
+                run!float();
+                break;
+
+            case DataType.int32:
+                run!int();
+                break;
+
+            default:
+                throw new Exception("Not implemented.");
         }
     }
 }

@@ -1,7 +1,7 @@
 dopt
 ====
 
-A numerical optimisation framework for the D programming language.
+A numerical optimisation and deep learning framework for D.
 
 Current features include:
 
@@ -35,43 +35,43 @@ Example
 See `examples/mnist.d` for the full code.
 
 ```
-    void main(string[] args)
+void main(string[] args)
+{
+    import dopt.core;
+    import dopt.nnet;
+    import dopt.online;
+
+    auto data = loadMNIST(args[1]);
+
+    auto features = float32([100, 1, 28, 28]);
+    auto labels = float32([100, 10]);
+
+    auto layers = dataSource(features)
+                    .convolutional(32, [5, 5])
+                    .relu()
+                    .maxPool([2, 2])
+                    .convolutional(32, [5, 5])
+                    .relu()
+                    .maxPool([2, 2])
+                    .dense(10)
+                    .softmax();
+
+    auto network = new NeuralNetwork([layers, layers.crossEntropy(dataSource(labels))]);
+
+    auto updater = sgd(network.loss, cast(Operation[])network.parameters);
+
+    import std.range : zip;
+
+    foreach(fs, ls; zip(data.trainFeatures.chunks(100), data.trainLabels.chunks(100)))
     {
-        import dopt.core;
-        import dopt.nnet;
-        import dopt.online;
+        auto loss = updater([
+            features: Buffer(fs.joiner().array()),
+            labels: Buffer(ls.joiner().array())
+        ]);
 
-        auto data = loadMNIST(args[1]);
+        import std.stdio;
 
-        auto features = float32([100, 1, 28, 28]);
-        auto labels = float32([100, 10]);
-
-        auto layers = dataSource(features)
-                     .convolutional(32, [5, 5])
-                     .relu()
-                     .maxPool([2, 2])
-                     .convolutional(32, [5, 5])
-                     .relu()
-                     .maxPool([2, 2])
-                     .dense(10)
-                     .softmax();
-
-        auto network = new NeuralNetwork([layers, layers.crossEntropy(dataSource(labels))]);
-
-        auto updater = sgd(network.loss, cast(Operation[])network.parameters);
-
-        import std.range : zip;
-
-        foreach(fs, ls; zip(data.trainFeatures.chunks(100), data.trainLabels.chunks(100)))
-        {
-            auto loss = updater([
-                features: Buffer(fs.joiner().array()),
-                labels: Buffer(ls.joiner().array())
-            ]);
-
-            import std.stdio;
-
-            writeln(loss);
-        }
+        writeln(loss);
     }
+}
 ```

@@ -22,7 +22,7 @@ import dopt.core.types;
 
 import derelict.cuda;
 
-alias CUDAKernelCtr = CUDAKernel delegate(const(Operation) op);
+alias CUDAKernelCtr = CUDAKernel delegate(Operation op);
 
 private __gshared
 {
@@ -160,7 +160,7 @@ class CUDAPlan
             Params:
                 args = A set of variable assignments.
         */
-        Buffer[] execute(Buffer[const(Operation)] args = null)
+        Buffer[] execute(Buffer[Operation] args = null)
         {
             //Make sure all the args are variable assignments
             foreach(o; args.keys)
@@ -170,7 +170,7 @@ class CUDAPlan
             }
 
             //Convert the args into CUDABuffer objects
-            CUDABuffer[const(Operation)] results;
+            CUDABuffer[Operation] results;
 
             foreach(k, v; args)
             {
@@ -181,7 +181,7 @@ class CUDAPlan
             }
 
             //Count the number of references to each operation
-            int[const(Operation)] refCounts;
+            int[Operation] refCounts;
 
             foreach(o; mOps)
             {
@@ -251,11 +251,11 @@ class CUDAPlan
 
     private
     {
-        const(Operation)[] mOutputs;
-        const(Operation)[] mOps;
-        CUDAKernel[const(Operation)] mKernels;
+        Operation[] mOutputs;
+        Operation[] mOps;
+        CUDAKernel[Operation] mKernels;
 
-        this(const(Operation)[] ops, const(Operation)[] outputs, CUDAKernel[const(Operation)] kernels)
+        this(Operation[] ops, Operation[] outputs, CUDAKernel[Operation] kernels)
         {
             import std.array : array;
 
@@ -279,7 +279,7 @@ class CUDAPlan
     Returns:
         The result of evaluating $(D ops).
 */
-Buffer[] evaluateCUDA(const(Operation)[] ops, Buffer[const(Operation)] args = null)
+Buffer[] evaluateCUDA(Operation[] ops, Buffer[Operation] args = null)
 {
     import std.algorithm : canFind, filter;
     import std.array : array;
@@ -288,7 +288,7 @@ Buffer[] evaluateCUDA(const(Operation)[] ops, Buffer[const(Operation)] args = nu
                     .filter!(x => !canFind(args.keys, x))
                     .array();
 
-    CUDAKernel[const(Operation)] kernels;
+    CUDAKernel[Operation] kernels;
 
     foreach(o; sortedOps)
     {
@@ -319,7 +319,7 @@ Buffer[] evaluateCUDA(const(Operation)[] ops, Buffer[const(Operation)] args = nu
     Returns:
         The result of evaluating $(D op)
 */
-Buffer evaluateCUDA(const(Operation) op, Buffer[const(Operation)] args = null)
+Buffer evaluateCUDA(Operation op, Buffer[Operation] args = null)
 {
     return evaluateCUDA([op], args)[0];
 }

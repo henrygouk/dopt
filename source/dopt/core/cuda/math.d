@@ -133,7 +133,7 @@ private
     alias logKernelCtr = cudaKernelCtr!("log", 1, false);
     alias sqrtKernelCtr = cudaKernelCtr!("sqrt", 1, false);
 
-    CUDAKernel cudaKernelCtr(string opName, int deps = 2, bool infix = true)(const(Operation) op)
+    CUDAKernel cudaKernelCtr(string opName, int deps = 2, bool infix = true)(Operation op)
     {
         static if(deps == 2)
         {
@@ -180,7 +180,7 @@ private
 
     class PointwiseCUDAKernel : CUDAKernel
     {
-        this(string code, const(Operation) op)
+        this(string code, Operation op)
         {
             mKernel = mKernelCache.get(code, new NVRTCKernel("pointwiseKernel", code));
             mKernelCache[code] = mKernel;
@@ -212,17 +212,17 @@ private
 
         static NVRTCKernel[string] mKernelCache;
         NVRTCKernel mKernel;
-        const(Operation) mOp;
+        Operation mOp;
     }
 
-    CUDAKernel matmulKernelCtr(const(Operation) op)
+    CUDAKernel matmulKernelCtr(Operation op)
     {
         return new MatmulKernel(op);
     }
 
     class MatmulKernel : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             mOp = op;
             ashape = mOp.deps[0].outputType.shape.map!(x => cast(int)x).array();
@@ -249,23 +249,23 @@ private
             }
         }
 
-        const(Operation) mOp;
+        Operation mOp;
         int[] ashape;
 		int[] bshape;
 		int[] cshape;
     }
 
-    CUDAKernel sumKernelCtr(const(Operation) op)
+    CUDAKernel sumKernelCtr(Operation op)
     {
         return new SumKernel(op);
     }
 
     class SumKernel : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
-            mOp = sum(mInput, op.attributes["axes"].get!(const(size_t)[]));
+            mOp = sum(mInput, op.attributes["axes"].get!(size_t[]));
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
@@ -281,7 +281,7 @@ private
             output.set(outbuf.as!byte);
         }
 
-        const(Operation) mInput;
-        const(Operation) mOp;
+        Operation mInput;
+        Operation mOp;
     }
 }

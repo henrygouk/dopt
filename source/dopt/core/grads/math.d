@@ -33,12 +33,12 @@ package
 
 private
 {
-    Operation[] matmulGrad(const(Operation) op, Operation parentGrad)
+    Operation[] matmulGrad(Operation op, Operation parentGrad)
     {
         return [matmul(parentGrad, transpose(op.deps[1], [1, 0])), matmul(transpose(op.deps[0], [1, 0]), parentGrad)];
     }
 
-    Operation[] sumGrad(const(Operation) op, Operation parentGrad)
+    Operation[] sumGrad(Operation op, Operation parentGrad)
     {
         if(op.volume == 1)
         {
@@ -46,7 +46,7 @@ private
         }
         else
         {
-            auto axes = op.attributes["axes"].get!(const(size_t)[]);
+            auto axes = op.attributes["axes"].get!(size_t[]);
             auto tmpShape = op.deps[0].shape.dup;
             auto reps = new size_t[tmpShape.length];
             reps[] = 1;
@@ -63,22 +63,22 @@ private
         }
     }
 
-    Operation[] addGrad(const(Operation) op, Operation parentGrad)
+    Operation[] addGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad, parentGrad];
     }
 
-    Operation[] subGrad(const(Operation) op, Operation parentGrad)
+    Operation[] subGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad, neg(parentGrad)];
     }
 
-    Operation[] mulGrad(const(Operation) op, Operation parentGrad)
+    Operation[] mulGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad * op.deps[1], parentGrad * op.deps[0]];
     }
 
-    Operation[] divGrad(const(Operation) op, Operation parentGrad)
+    Operation[] divGrad(Operation op, Operation parentGrad)
     {
         return [
             parentGrad / op.deps[1],
@@ -86,7 +86,7 @@ private
         ];
     }
 
-    Operation[] powGrad(const(Operation) op, Operation parentGrad)
+    Operation[] powGrad(Operation op, Operation parentGrad)
     {
         return [
             parentGrad * op.deps[1] * pow(op.deps[0], op.deps[1] - 1),
@@ -94,7 +94,7 @@ private
         ];
     }
 
-    Operation[] minGrad(const(Operation) op, Operation parentGrad)
+    Operation[] minGrad(Operation op, Operation parentGrad)
     {
         return [
             op.deps[0].eq(op) * parentGrad,
@@ -102,7 +102,7 @@ private
         ];
     }
 
-    Operation[] maxGrad(const(Operation) op, Operation parentGrad)
+    Operation[] maxGrad(Operation op, Operation parentGrad)
     {
         return [
             op.deps[0].eq(op) * parentGrad,
@@ -110,27 +110,27 @@ private
         ];
     }
 
-    Operation[] negGrad(const(Operation) op, Operation parentGrad)
+    Operation[] negGrad(Operation op, Operation parentGrad)
     {
         return [neg(parentGrad)];
     }
 
-    Operation[] absGrad(const(Operation) op, Operation parentGrad)
+    Operation[] absGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad * sgn(op.deps[0])];
     }
 
-    Operation[] expGrad(const(Operation) op, Operation parentGrad)
+    Operation[] expGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad * op];
     }
 
-    Operation[] logGrad(const(Operation) op, Operation parentGrad)
+    Operation[] logGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad / op.deps[0]];
     }
 
-    Operation[] sqrtGrad(const(Operation) op, Operation parentGrad)
+    Operation[] sqrtGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad / op];
     }

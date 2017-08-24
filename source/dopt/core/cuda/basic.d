@@ -23,14 +23,14 @@ package
 
 private
 {
-    CUDAKernel cudaKernelCtr(K)(const(Operation) op)
+    CUDAKernel cudaKernelCtr(K)(Operation op)
     {
         return new K(op);
     }
 
     class Slice : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             mOp = op;
         }
@@ -69,7 +69,7 @@ private
             auto outShape = mOp.outputType.shape;
             size_t inVol = mOp.deps[0].outputType.volume;
             size_t outVol = mOp.outputType.volume;
-            auto offset = mOp.attributes["start"].get!(const(size_t)[]);
+            auto offset = mOp.attributes["start"].get!(size_t[]);
 
             if(inShape.length > 0)
             {
@@ -80,12 +80,12 @@ private
             sliceImpl(inputs[0].ptr, inShape, inVol, output.ptr, outShape, outVol, offset);
         }
 
-        const(Operation) mOp;
+        Operation mOp;
     }
 
     class Pad : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             mOp = op;
         }
@@ -94,8 +94,8 @@ private
         {
             size_t size = 4;
 
-            void padImpl(CUdeviceptr inputptr, const(size_t)[] inShape, size_t inVol,
-                        CUdeviceptr outputptr, const(size_t)[] outShape, size_t outVol, const(size_t)[] offset)
+            void padImpl(CUdeviceptr inputptr, size_t[] inShape, size_t inVol,
+                        CUdeviceptr outputptr, size_t[] outShape, size_t outVol, size_t[] offset)
             {
                 if(inShape.length == 0)
                 {
@@ -124,7 +124,7 @@ private
             auto outShape = mOp.outputType.shape;
             size_t inVol = mOp.deps[0].outputType.volume;
             size_t outVol = mOp.outputType.volume;
-            auto offset = mOp.attributes["before"].get!(const(size_t)[]);
+            auto offset = mOp.attributes["before"].get!(size_t[]);
 
             if(inShape.length > 0)
             {
@@ -137,15 +137,15 @@ private
             padImpl(inputs[0].ptr, inShape, inVol, output.ptr, outShape, outVol, offset);
         }
 
-        const(Operation) mOp;
+        Operation mOp;
     }
 
     class Repeat : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
-            mOp = repeat(mInput, op.attributes["repetitions"].get!(const(size_t)[]));
+            mOp = repeat(mInput, op.attributes["repetitions"].get!(size_t[]));
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
@@ -161,13 +161,13 @@ private
             output.set(outbuf.as!byte);
         }
 
-        const(Operation) mInput;
-        const(Operation) mOp;
+        Operation mInput;
+        Operation mOp;
     }
 
     class Transpose : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             mOp = op;
         }
@@ -192,6 +192,6 @@ private
             }
         }
 
-        const(Operation) mOp;
+        Operation mOp;
     }
 }

@@ -58,7 +58,7 @@ void main(string[] args)
 
     auto network = new NeuralNetwork([layers, layers.crossEntropy(dataSource(labels))]);
 
-    auto updater = sgd(network.loss, cast(Operation[])network.parameters);
+    auto updater = sgd(network.loss, network.parameters);
 
     import std.range : zip;
 

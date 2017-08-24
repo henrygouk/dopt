@@ -32,7 +32,7 @@ package
 
 private
 {
-    bool verifyConvolution(const(Operation) op)
+    bool verifyConvolution(Operation op)
     {
         if(op.deps.length != 2)
         {
@@ -65,7 +65,7 @@ private
         return true;
     }
 
-    TensorType judgeConvolution(const(Operation) op)
+    TensorType judgeConvolution(Operation op)
     {
         auto imgs = op.deps[0];
         auto filters = op.deps[1];
@@ -80,18 +80,18 @@ private
         return TensorType(imgs.outputType.elementType, shape);
     }
 
-    bool verifyMaxpool(const(Operation) op)
+    bool verifyMaxpool(Operation op)
     {
         return op.deps.length == 1
             && op.deps[0].outputType.rank == 4
-            && op.attributes["dims"].peek!(const(size_t)[]) !is null
-            && op.attributes["dims"].get!(const(size_t)[]).length == 2;
+            && op.attributes["dims"].peek!(size_t[]) !is null
+            && op.attributes["dims"].get!(size_t[]).length == 2;
 
     }
 
-    TensorType judgeMaxpool(const(Operation) op)
+    TensorType judgeMaxpool(Operation op)
     {
-        auto poolDims = op.attributes["dims"].get!(const(size_t)[]);
+        auto poolDims = op.attributes["dims"].get!(size_t[]);
         size_t[] shape = new size_t[4];
         shape[0] = op.deps[0].shape[0];
         shape[1] = op.deps[0].shape[1];
@@ -101,15 +101,15 @@ private
         return TensorType(op.deps[0].outputType.elementType, shape);
     }
 
-    bool verifyConvolutionFeaturesGrad(const(Operation) op)
+    bool verifyConvolutionFeaturesGrad(Operation op)
     {
         return true;
     }
 
-    TensorType judgeConvolutionFeaturesGrad(const(Operation) op)
+    TensorType judgeConvolutionFeaturesGrad(Operation op)
     {
         auto parentGrad = op.deps[0];
-        auto dims = op.attributes["featuresShape"].get!(const(size_t)[]);
+        auto dims = op.attributes["featuresShape"].get!(size_t[]);
 
         size_t[] shape = new size_t[4];
         shape[] = dims[];
@@ -117,15 +117,15 @@ private
         return TensorType(parentGrad.outputType.elementType, shape);
     }
 
-    bool verifyConvolutionFiltersGrad(const(Operation) op)
+    bool verifyConvolutionFiltersGrad(Operation op)
     {
         return true;
     }
 
-    TensorType judgeConvolutionFiltersGrad(const(Operation) op)
+    TensorType judgeConvolutionFiltersGrad(Operation op)
     {
         auto parentGrad = op.deps[0];
-        auto dims = op.attributes["filtersShape"].get!(const(size_t)[]);
+        auto dims = op.attributes["filtersShape"].get!(size_t[]);
 
         size_t[] shape = new size_t[4];
         shape[] = dims[];
@@ -133,15 +133,15 @@ private
         return TensorType(parentGrad.outputType.elementType, shape);
     }
 
-    bool verifyMaxpoolGrad(const(Operation) op)
+    bool verifyMaxpoolGrad(Operation op)
     {
         return true;
     }
 
-    TensorType judgeMaxpoolGrad(const(Operation) op)
+    TensorType judgeMaxpoolGrad(Operation op)
     {
         auto parentGrad = op.deps[0];
-        auto dims = op.attributes["featuresShape"].get!(const(size_t)[]);
+        auto dims = op.attributes["featuresShape"].get!(size_t[]);
 
         size_t[] shape = new size_t[4];
         shape[] = dims[];
@@ -149,22 +149,22 @@ private
         return TensorType(parentGrad.outputType.elementType, shape);
     }
 
-    bool verifySoftmax(const(Operation) op)
+    bool verifySoftmax(Operation op)
     {
         return op.deps.length == 1;
     }
 
-    TensorType judgeSoftmax(const(Operation) op)
+    TensorType judgeSoftmax(Operation op)
     {
         return TensorType(op.deps[0].elementType, op.deps[0].shape);
     }
 
-    bool verifySoftmaxGrad(const(Operation) op)
+    bool verifySoftmaxGrad(Operation op)
     {
         return op.deps.length == 2;
     }
 
-    TensorType judgeSoftmaxGrad(const(Operation) op)
+    TensorType judgeSoftmaxGrad(Operation op)
     {
         return TensorType(op.deps[1].elementType, op.deps[1].shape);
     }
@@ -184,7 +184,7 @@ public
         Returns:
             An operation representing convolutions of input imgs with some kernels.
     */
-    Operation convolution(const(Operation) features, const(Operation) filters, string mod = __MODULE__,
+    Operation convolution(Operation features, Operation filters, string mod = __MODULE__,
         size_t line = __LINE__)
     {
         return createOperation("convolution", [features, filters], null, mod, line);
@@ -226,7 +226,7 @@ public
         Returns:
             An operation representing a max pool computation.
     */
-    Operation maxpool(const(Operation) features, const(size_t)[] dims, string mod = __MODULE__, size_t line = __LINE__)
+    Operation maxpool(Operation features, size_t[] dims, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("maxpool", [features], ["dims": Variant(dims)], mod, line);
     }
@@ -263,7 +263,7 @@ public
         Returns:
             The gradient.
     */
-    Operation convolutionFeaturesGrad(const(Operation) parentGrad, const(Operation) op,
+    Operation convolutionFeaturesGrad(Operation parentGrad, Operation op,
         string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("convolutionFeaturesGrad", [parentGrad, op.deps[1]],
@@ -280,7 +280,7 @@ public
         Returns:
             The gradient.
     */
-    Operation convolutionFiltersGrad(const(Operation) parentGrad, const(Operation) op,
+    Operation convolutionFiltersGrad(Operation parentGrad, Operation op,
         string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("convolutionFiltersGrad", [parentGrad, op.deps[0]],
@@ -297,7 +297,7 @@ public
         Returns:
             The gradient.
     */
-    Operation maxpoolGrad(const(Operation) parentGrad, const(Operation) op, string mod = __MODULE__,
+    Operation maxpoolGrad(Operation parentGrad, Operation op, string mod = __MODULE__,
         size_t line = __LINE__)
     {
         return createOperation("maxpoolGrad", [parentGrad, op, op.deps[0]],
@@ -313,7 +313,7 @@ public
         Returns:
             The operation.
     */
-    Operation softmax(const(Operation) inputs, string mod = __MODULE__, size_t line = __LINE__)
+    Operation softmax(Operation inputs, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("softmax", [inputs], null, mod, line);
     }
@@ -335,7 +335,7 @@ public
     /**
         Creates an operation representing the gradient of the softmax function.
     */
-    Operation softmaxGrad(const(Operation) parentGrad, const(Operation) op, string mod = __MODULE__,
+    Operation softmaxGrad(Operation parentGrad, Operation op, string mod = __MODULE__,
         size_t line = __LINE__)
     {
         return createOperation("softmaxGrad", [parentGrad, op], null, mod, line);

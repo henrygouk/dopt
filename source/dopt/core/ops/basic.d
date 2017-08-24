@@ -30,7 +30,7 @@ package
 
 private
 {
-    bool verifySlice(const(Operation) op)
+    bool verifySlice(Operation op)
     {
         if(("start" in op.attributes) is null || ("stop" in op.attributes) is null)
         {
@@ -40,13 +40,13 @@ private
         auto startVar = op.attributes["start"];
         auto stopVar = op.attributes["stop"];
 
-        if(startVar.peek!(const(size_t)[]) is null || stopVar.peek!(const(size_t)[]) is null)
+        if(startVar.peek!(size_t[]) is null || stopVar.peek!(size_t[]) is null)
         {
             return false;
         }
 
-        auto start = startVar.get!(const(size_t)[]);
-        auto stop = stopVar.get!(const(size_t)[]);
+        auto start = startVar.get!(size_t[]);
+        auto stop = stopVar.get!(size_t[]);
 
         return op.deps.length == 1
             && start.length == stop.length
@@ -56,15 +56,15 @@ private
             && zip(start, stop).all!(x => x[0] < x[1]);
     }
 
-    TensorType judgeSlice(const(Operation) op)
+    TensorType judgeSlice(Operation op)
     {
         auto start = op
                     .attributes["start"]
-                    .get!(const(size_t)[]);
+                    .get!(size_t[]);
 
         auto stop = op
                    .attributes["stop"]
-                   .get!(const(size_t)[]);
+                   .get!(size_t[]);
 
         auto shape = zip(start, stop)
                     .map!(x => x[1] - x[0])
@@ -73,7 +73,7 @@ private
         return TensorType(op.deps[0].outputType.elementType, shape);
     }
 
-    bool verifyPad(const(Operation) op)
+    bool verifyPad(Operation op)
     {
         if(("before" in op.attributes) is null || ("after" in op.attributes) is null)
         {
@@ -83,28 +83,28 @@ private
         auto beforeVar = op.attributes["before"];
         auto afterVar = op.attributes["after"];
 
-        if(beforeVar.peek!(const(size_t)[]) is null || afterVar.peek!(const(size_t)[]) is null)
+        if(beforeVar.peek!(size_t[]) is null || afterVar.peek!(size_t[]) is null)
         {
             return false;
         }
 
-        auto before = beforeVar.get!(const(size_t)[]);
-        auto after = afterVar.get!(const(size_t)[]);
+        auto before = beforeVar.get!(size_t[]);
+        auto after = afterVar.get!(size_t[]);
 
         return op.deps.length == 1
             && before.length == after.length
             && before.length == op.deps[0].outputType.rank;
     }
 
-    TensorType judgePad(const(Operation) op)
+    TensorType judgePad(Operation op)
     {
         auto before = op
                      .attributes["before"]
-                     .get!(const(size_t)[]);
+                     .get!(size_t[]);
 
         auto after = op
                     .attributes["after"]
-                    .get!(const(size_t)[]);
+                    .get!(size_t[]);
 
         auto shape = zip(before, after, op.deps[0].outputType.shape)
                     .map!(x => x[0] + x[1] + x[2])
@@ -113,36 +113,36 @@ private
         return TensorType(op.deps[0].outputType.elementType, shape);
     }
 
-    bool verifyReshape(const(Operation) op)
+    bool verifyReshape(Operation op)
     {
         auto newShape = "shape" in op.attributes;
 
         return op.deps.length == 1
             && newShape !is null
-            && newShape.peek!(const(size_t)[]) !is null
-            && newShape.get!(const(size_t)[]).fold!((a, b) => a * b)(cast(size_t)1) == op.deps[0].outputType.volume;
+            && newShape.peek!(size_t[]) !is null
+            && newShape.get!(size_t[]).fold!((a, b) => a * b)(cast(size_t)1) == op.deps[0].outputType.volume;
     }
 
-    TensorType judgeReshape(const(Operation) op)
+    TensorType judgeReshape(Operation op)
     {
-        return TensorType(op.deps[0].outputType.elementType, op.attributes["shape"].get!(const(size_t)[]));
+        return TensorType(op.deps[0].outputType.elementType, op.attributes["shape"].get!(size_t[]));
     }
 
-    bool verifyTranspose(const(Operation) op)
+    bool verifyTranspose(Operation op)
     {
         auto newOrder = "order" in op.attributes;
 
         return op.deps.length == 1
             && newOrder !is null
-            && newOrder.peek!(const(size_t)[]) !is null
-            && newOrder.get!(const(size_t)[]).dup.sort().equal(iota(0, op.deps[0].outputType.rank));
+            && newOrder.peek!(size_t[]) !is null
+            && newOrder.get!(size_t[]).dup.sort().equal(iota(0, op.deps[0].outputType.rank));
     }
 
-    TensorType judgeTranspose(const(Operation) op)
+    TensorType judgeTranspose(Operation op)
     {
         auto order = op
                     .attributes["order"]
-                    .get!(const(size_t)[]);
+                    .get!(size_t[]);
 
         auto newShape = order
                        .map!(x => op.deps[0].outputType.shape[x])
@@ -151,39 +151,39 @@ private
         return TensorType(op.deps[0].outputType.elementType, newShape);
     }
 
-    bool verifyRepeat(const(Operation) op)
+    bool verifyRepeat(Operation op)
     {
         if(("repetitions" in op.attributes) is null)
         {
             return false;
         }
 
-        auto reps = op.attributes["repetitions"].get!(const(size_t)[]);
+        auto reps = op.attributes["repetitions"].get!(size_t[]);
 
         return op.deps.length == 1
             && reps.length == op.deps[0].rank
             && reps.all!(x => x > 0);
     }
 
-    TensorType judgeRepeat(const(Operation) op)
+    TensorType judgeRepeat(Operation op)
     {
-        auto reps = op.attributes["repetitions"].get!(const(size_t)[]);
+        auto reps = op.attributes["repetitions"].get!(size_t[]);
         auto shape = op.deps[0].shape.dup;
         shape[] *= reps[];
 
         return TensorType(op.deps[0].elementType, shape);
     }
 
-    bool verifyVariable(const(Operation) op)
+    bool verifyVariable(Operation op)
     {
         return op.deps.length == 0
             && ("type" in op.attributes) !is null
             && op.attributes["type"].peek!TensorType !is null;
     }
 
-    TensorType judgeVariable(const(Operation) op)
+    TensorType judgeVariable(Operation op)
     {
-        return TensorType(op.attributes["type"].get!(const(TensorType)));
+        return op.attributes["type"].get!TensorType;
     }
 }
 
@@ -200,7 +200,7 @@ public
         Returns:
             The new $(D Operation).
     */
-    Operation slice(const(Operation) input, const(size_t)[] start, const(size_t)[] stop,
+    Operation slice(Operation input, size_t[] start, size_t[] stop,
         string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("slice", [input], ["start": Variant(start), "stop": Variant(stop)], mod, line);
@@ -234,7 +234,7 @@ public
         Returns:
             The new $(D Operation).
     */
-    Operation pad(const(Operation) input, const(size_t)[] before, const(size_t)[] after,
+    Operation pad(Operation input, size_t[] before, size_t[] after,
         string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("pad", [input], ["before": Variant(before), "after": Variant(after)], mod, line);
@@ -267,7 +267,7 @@ public
         Returns:
             The new $(D Operation).
     */
-    Operation reshape(const(Operation) input, const(size_t)[] shape, string mod = __MODULE__, size_t line = __LINE__)
+    Operation reshape(Operation input, size_t[] shape, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("reshape", [input], ["shape": Variant(shape)], mod, line);
     }
@@ -296,7 +296,7 @@ public
         Returns:
             The new $(D Operation).
     */
-    Operation transpose(const(Operation) input, const(size_t)[] order, string mod = __MODULE__, size_t line = __LINE__)
+    Operation transpose(Operation input, size_t[] order, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("transpose", [input], ["order": Variant(order)], mod, line);
     }
@@ -321,7 +321,7 @@ public
         Return:
             The new $(D Operation).
     */
-    Operation repeat(const(Operation) input, const(size_t)[] repetitions, string mod = __MODULE__,
+    Operation repeat(Operation input, size_t[] repetitions, string mod = __MODULE__,
         size_t line = __LINE__)
     {
         enforce(repetitions.length == input.rank,
@@ -365,7 +365,7 @@ public
         Return:
             The new $(D Operation).
     */
-    Operation repeat(const(Operation) input, size_t repetitions, string mod = __MODULE__, size_t line = __LINE__)
+    Operation repeat(Operation input, size_t repetitions, string mod = __MODULE__, size_t line = __LINE__)
     {
         auto flat = input.reshape([input.volume]);
         auto r = flat.repeat([repetitions]);
@@ -425,7 +425,7 @@ public
         Returns:
             The newly created variable
     */
-    Operation float32(const(size_t)[] size = [], float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    Operation float32(size_t[] size = [], float[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.float32, size), defaultVal, mod, line);
     }
@@ -443,7 +443,7 @@ public
         Returns:
             The newly created variable
     */
-    Operation int32(const(size_t)[] size = [], int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
+    Operation int32(size_t[] size = [], int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.int32, size), defaultVal, mod, line);
     }

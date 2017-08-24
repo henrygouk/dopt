@@ -52,7 +52,7 @@ private
         return cast(T)((t > 0) - (t < 0));
     }
 
-    void matmulKernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    void matmulKernel(Operation op, const(Buffer)[] inputs, Buffer output)
     {
         if(op.outputType.elementType == DataType.float32)
         {
@@ -72,7 +72,7 @@ private
         }
     }
 
-    void sumKernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    void sumKernel(Operation op, const(Buffer)[] inputs, Buffer output)
     {
         void run(T)()
         {
@@ -93,7 +93,7 @@ private
                 }
             }
 
-            auto axes = op.attributes["axes"].get!(const(size_t)[]);
+            auto axes = op.attributes["axes"].get!(size_t[]);
             auto shape = op.deps[0].shape.dup;
 
             auto inbuf = inputs[0].as!T;
@@ -168,7 +168,7 @@ private
         string generateSingleKernel(string op, string dtype, string expr)
         {
             return
-                "void " ~ op ~ "Kernel_" ~ dtype ~ "(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+                "void " ~ op ~ "Kernel_" ~ dtype ~ "(Operation op, const(Buffer)[] inputs, Buffer output)
                 {
                     auto ins = inputs.map!(x => x.as!" ~ dtype ~ ").array();
                     auto outs = output.as!" ~ dtype ~ ";
@@ -185,7 +185,7 @@ private
         string generateTypedKernel(string op, string[string] types)
         {
             string ret =
-                "void " ~ op ~ "Kernel(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+                "void " ~ op ~ "Kernel(Operation op, const(Buffer)[] inputs, Buffer output)
                 {
                     switch(op.outputType.elementType)
                     {

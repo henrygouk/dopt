@@ -36,7 +36,7 @@ Layer dataSource(Operation variable)
     Returns:
         A new $(D Layer) representing a linear transform.
 */
-Layer dense(const(Layer) inputs, size_t units, ParamInitializer weightInit = glorotGaussianInit(),
+Layer dense(Layer inputs, size_t units, ParamInitializer weightInit = glorotGaussianInit(),
     ParamInitializer biasInit = constantInit(0.0f))
 {
     //Flatten the input features, if required
@@ -71,7 +71,7 @@ Layer dense(const(Layer) inputs, size_t units, ParamInitializer weightInit = glo
     Returns:
         The new ReLU $(D Layer).
 */
-Layer relu(const(Layer) inputs)
+Layer relu(Layer inputs)
 {
     auto x = inputs.expression;
     auto zeros = float32([], [0.0f]).repeat(x.volume).reshape(x.shape);
@@ -88,7 +88,7 @@ Layer relu(const(Layer) inputs)
     Returns:
         The new softmax $(D Layer).
 */
-Layer softmax(const(Layer) inputs)
+Layer softmax(Layer inputs)
 {
     import dopt.core.ops.nnet : softmax;
 
@@ -107,7 +107,7 @@ Layer softmax(const(Layer) inputs)
     Returns:
         The new cross entropy $(D Layer).
 */
-Layer crossEntropy(const(Layer) inputs, const(Layer) labels)
+Layer crossEntropy(Layer inputs, Layer labels)
 {
     auto x = inputs.expression;
     auto y = labels.expression;
@@ -130,7 +130,7 @@ Layer crossEntropy(const(Layer) inputs, const(Layer) labels)
     Returns:
         A new convolutional $(D Layer).
 */
-Layer convolutional(const(Layer) inputs, size_t numMaps, const(size_t)[] filterDims,
+Layer convolutional(Layer inputs, size_t numMaps, size_t[] filterDims,
     ParamInitializer filterInit = glorotGaussianInit(), ParamInitializer biasInit = constantInit(0.0f))
 {
     auto x = inputs.expression;
@@ -157,7 +157,7 @@ Layer convolutional(const(Layer) inputs, size_t numMaps, const(size_t)[] filterD
     Returns:
         A new max pooling $(D Layer).
 */
-Layer maxPool(const(Layer) inputs, const(size_t)[] poolDims)
+Layer maxPool(Layer inputs, size_t[] poolDims)
 {
     return new Layer(inputs.expression.maxpool(poolDims), [inputs]);
 }

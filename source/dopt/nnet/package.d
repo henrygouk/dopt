@@ -38,7 +38,7 @@
         auto network = new NeuralNetwork([layers, layers.crossEntropy(dataSource(labels))]);
 
         //Create an updater using one of the algorithms in dopt.online
-        auto updater = sgd(network.loss, cast(Operation[])network.parameters);
+        auto updater = sgd(network.loss, network.parameters);
 
         //Train the network using the data we loaded earlier
         foreach(fs, ls; zip(data.trainFeatures.chunks(100), data.trainLabels.chunks(100)))
@@ -83,7 +83,7 @@ class NeuralNetwork
             Params:
                 output = The output layer for the new neural network.
         */
-        this(const(Layer) output)
+        this(Layer output)
         {
             this([output]);
         }
@@ -94,17 +94,17 @@ class NeuralNetwork
             Params:
                 outputs = The output layers for the new neural networks.
         */
-        this(const(Layer)[] outputs)
+        this(Layer[] outputs)
         {
             mOutputs = outputs
                       .map!(x => x.expression)
                       .array();
 
             //Toposort the layers
-            const(Layer)[] sortedLayers;
-            bool[const(Layer)] visited;
+            Layer[] sortedLayers;
+            bool[Layer] visited;
 
-            void toposort(const(Layer) l)
+            void toposort(Layer l)
             {
                 if(visited.get(l, false))
                 {
@@ -154,25 +154,25 @@ class NeuralNetwork
         }
 
         ///
-        const(Operation)[] outputs() const
+        Operation[] outputs()
         {
             return mOutputs;
         }
 
         ///
-        const(Operation) loss() const
+        Operation loss()
         {
             return mLoss;
         }
 
         ///
-        const(Operation)[] losses() const
+        Operation[] losses()
         {
             return mLosses;
         }
 
         ///
-        const(Operation)[] parameters() const
+        Operation[] parameters()
         {
             return mParameters;
         }
@@ -180,10 +180,10 @@ class NeuralNetwork
 
     private
     {
-        const(Operation)[] mOutputs;
-        const(Operation) mLoss;
-        const(Operation)[] mLosses;
-        const(Operation)[] mParameters;
+        Operation[] mOutputs;
+        Operation mLoss;
+        Operation[] mLosses;
+        Operation[] mParameters;
     }
 }
 
@@ -197,34 +197,34 @@ class Layer
     public
     {
         ///
-        this(Operation expr, const(Layer)[] deps = [], Operation[] params = [], Operation[] ls = [])
+        this(Operation expr, Layer[] deps = [], Operation[] params = [], Operation[] ls = [])
         {
-            mDeps = deps;
-            mParameters = params;
-            mLosses = ls;
+            mDeps = deps.dup;
+            mParameters = params.dup;
+            mLosses = ls.dup;
             mExpression = expr;
         }
 
         ///
-        const(Layer)[] deps() const
+        Layer[] deps()
         {
             return mDeps;
         }
 
         ///
-        const(Operation)[] parameters() const
+        Operation[] parameters()
         {
             return mParameters;
         }
 
         ///
-        const(Operation)[] losses() const
+        Operation[] losses()
         {
             return mLosses;
         }
 
         ///
-        const(Operation) expression() const
+        Operation expression()
         {
             return mExpression;
         }
@@ -232,7 +232,7 @@ class Layer
 
     private
     {
-        const(Layer)[] mDeps;
+        Layer[] mDeps;
         Operation[] mParameters;
         Operation[] mLosses;
         Operation mExpression;

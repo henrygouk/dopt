@@ -19,12 +19,12 @@ package
     {
         void registerPointwiseBinary(string opName)
         {
-            bool verifier(const(Operation) op)
+            bool verifier(Operation op)
             {
                 return op.deps.length == 2 && op.deps[0].outputType == op.deps[1].outputType;
             }
 
-            TensorType judge(const(Operation) op)
+            TensorType judge(Operation op)
             {
                 return TensorType(op.deps[0].outputType);
             }
@@ -34,12 +34,12 @@ package
 
         void registerPointwiseUnary(string opName)
         {
-            bool verifier(const(Operation) op)
+            bool verifier(Operation op)
             {
                 return true;
             }
 
-            TensorType judge(const(Operation) op)
+            TensorType judge(Operation op)
             {
                 return TensorType(op.deps[0].outputType);
             }
@@ -74,7 +74,7 @@ private
         string createOpCtor(string opName, size_t numDeps)
         {
             auto params = iota(0, numDeps)
-                        .map!(x => "const(Operation) p" ~ x.to!string)
+                        .map!(x => "Operation p" ~ x.to!string)
                         .joiner(", ")
                         .to!string();
 
@@ -104,7 +104,7 @@ private
         return binctors ~ unctors;
     }
 
-    bool verifyMatmul(const(Operation) op)
+    bool verifyMatmul(Operation op)
     {
         return op.deps.length == 2
             && op.deps[0].outputType.rank == 2
@@ -113,34 +113,34 @@ private
             && op.deps[0].outputType.shape[1] == op.deps[1].outputType.shape[0];
     }
 
-    TensorType judgeMatmul(const(Operation) op)
+    TensorType judgeMatmul(Operation op)
     {
         return TensorType(op.deps[0].outputType.elementType,
             [op.deps[0].outputType.shape[0], op.deps[1].outputType.shape[1]]);
     }
 
-    bool verifySum(const(Operation) op)
+    bool verifySum(Operation op)
     {
         if(op.deps.length != 1)
         {
             return false;
         }
 
-        if(("axes" in op.attributes) is null || op.attributes["axes"].peek!(const(size_t)[]) is null)
+        if(("axes" in op.attributes) is null || op.attributes["axes"].peek!(size_t[]) is null)
         {
             return false;
         }
 
-        auto axes = op.attributes["axes"].get!(const(size_t)[]);
+        auto axes = op.attributes["axes"].get!(size_t[]);
 
         return axes.all!(x => x < op.deps[0].rank) &&
                axes.map!(x => size_t(x)).array().sort().uniq().count() == axes.length;
     }
 
-    TensorType judgeSum(const(Operation) op)
+    TensorType judgeSum(Operation op)
     {
         auto t = op.deps[0].outputType;
-        auto axes = op.attributes["axes"].get!(const(size_t)[]);
+        auto axes = op.attributes["axes"].get!(size_t[]);
 
         auto newShape = t
                        .shape
@@ -165,7 +165,7 @@ mixin(createAllCtors());
     Returns:
         The resulting operation.
 */
-Operation matmul(const(Operation) lhs, const(Operation) rhs, string mod = __MODULE__, size_t line = __LINE__)
+Operation matmul(Operation lhs, Operation rhs, string mod = __MODULE__, size_t line = __LINE__)
 {
     return createOperation("matmul", [lhs, rhs], null, mod, line);
 }
@@ -202,7 +202,7 @@ unittest
     Returns:
         The resulting operation.
 */
-Operation sum(const(Operation) op, const(size_t)[] axes = [], string mod = __MODULE__, size_t line = __LINE__)
+Operation sum(Operation op, size_t[] axes = [], string mod = __MODULE__, size_t line = __LINE__)
 {
     import std.variant : Variant;
 

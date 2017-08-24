@@ -23,7 +23,7 @@ void initialize()
 */
 interface CPUKernel
 {
-    void execute(const(Operation) op, const(Buffer)[] inputs, Buffer output);
+    void execute(Operation op, const(Buffer)[] inputs, Buffer output);
 }
 
 /**
@@ -33,12 +33,12 @@ class CPUKernelDelegate : CPUKernel
 {
     public
     {
-        this(void delegate(const(Operation), const(Buffer)[], Buffer) kern)
+        this(void delegate(Operation, const(Buffer)[], Buffer) kern)
         {
             mKernel = kern;
         }
 
-        void execute(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+        void execute(Operation op, const(Buffer)[] inputs, Buffer output)
         {
             mKernel(op, inputs, output);
         }
@@ -46,7 +46,7 @@ class CPUKernelDelegate : CPUKernel
 
     private
     {
-        void delegate(const(Operation) op, const(Buffer)[], Buffer) mKernel;
+        void delegate(Operation op, const(Buffer)[], Buffer) mKernel;
     }
 }
 
@@ -102,18 +102,18 @@ string[] listAllCPUOperations()
     Returns:
         An array of $(D Buffer) objects, each containing the value of the corresponding element in $(D ops).
 */
-Buffer[] evaluateCPU(const(Operation)[] ops, Buffer[const(Operation)] args = null)
+Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
 {
     import std.algorithm : canFind, filter;
     import std.array : array;
 
     //Toposort the operations by dependency
-    const(Operation)[] sortedOps = topologicalSort(ops)
+    Operation[] sortedOps = topologicalSort(ops)
                                   .filter!(x => !canFind(args.keys, x))
                                   .array();
 
     //Count the number of references to each operation
-    int[const(Operation)] refCounts;
+    int[Operation] refCounts;
 
     foreach(o; sortedOps)
     {
@@ -124,7 +124,7 @@ Buffer[] evaluateCPU(const(Operation)[] ops, Buffer[const(Operation)] args = nul
     }
 
     //Start executing the operations
-    Buffer[const(Operation)] results = args.dup;
+    Buffer[Operation] results = args.dup;
 
     foreach(o; sortedOps)
     {

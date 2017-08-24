@@ -39,14 +39,14 @@ private
             " Error code: " ~ status.to!string);
     }
 
-    CUDAKernel cudaKernelCtr(K)(const(Operation) op)
+    CUDAKernel cudaKernelCtr(K)(Operation op)
     {
         return new K(op);
     }
 
     class ConvolutionBase : CUDAKernel
     {
-        this(const(Operation) op, int[] inShape, int[] filterShape, int[] outShape)
+        this(Operation op, int[] inShape, int[] filterShape, int[] outShape)
         {
             mOp = op;
 
@@ -74,7 +74,7 @@ private
 
         abstract void execute(const(CUDABuffer)[] inputs, CUDABuffer output);
 
-        const(Operation) mOp;
+        Operation mOp;
         cudnnTensorDescriptor_t xDesc;
 		cudnnFilterDescriptor_t wDesc;
 		cudnnTensorDescriptor_t bDesc;
@@ -84,7 +84,7 @@ private
 
     class ConvolutionForward : ConvolutionBase
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto inShape = op.deps[0].outputType.shape.map!(x => cast(int)x).array();
             auto filterShape = op.deps[1].outputType.shape.map!(x => cast(int)x).array();
@@ -108,7 +108,7 @@ private
 
     class ConvolutionFeaturesGrad : ConvolutionBase
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto inShape = op.shape.map!(x => cast(int)x).array();
             auto filterShape = op.deps[1].shape.map!(x => cast(int)x).array();
@@ -132,7 +132,7 @@ private
 
     class ConvolutionFiltersGrad : ConvolutionBase
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto inShape = op.deps[1].outputType.shape.map!(x => cast(int)x).array();
             auto filterShape = op.outputType.shape.map!(x => cast(int)x).array();
@@ -156,9 +156,9 @@ private
 
     class MaxpoolBase : CUDAKernel
     {
-        this(const(Operation) op, int[] inShape, int[]outShape)
+        this(Operation op, int[] inShape, int[]outShape)
         {
-            auto dims = op.attributes["dims"].get!(const(size_t)[]);
+            auto dims = op.attributes["dims"].get!(size_t[]);
             auto poolShape = dims.map!(x => cast(int)x).array();
             auto poolStride = poolShape.dup;
 
@@ -191,7 +191,7 @@ private
 
     class MaxpoolForward : MaxpoolBase
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto inShape = op.deps[0].outputType.shape.map!(x => cast(int)x).array();
 			auto outShape = op.outputType.shape.map!(x => cast(int)x).array();
@@ -212,7 +212,7 @@ private
 
     class MaxpoolGrad : MaxpoolBase
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto inShape = op.deps[2].outputType.shape.map!(x => cast(int)x).array();
 			auto outShape = op.deps[1].outputType.shape.map!(x => cast(int)x).array();
@@ -236,7 +236,7 @@ private
 
     class Softmax : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto shape = op.shape.map!(x => cast(int)x).array();
             auto vol = 1;
@@ -272,7 +272,7 @@ private
 
     class SoftmaxGrad : CUDAKernel
     {
-        this(const(Operation) op)
+        this(Operation op)
         {
             auto shape = op.shape.map!(x => cast(int)x).array();
 

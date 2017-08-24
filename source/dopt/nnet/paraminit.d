@@ -49,7 +49,7 @@ private
         }
     }
 
-    size_t fanIn(const(size_t)[] shape)
+    size_t fanIn(size_t[] shape)
     {
         if(shape.length == 2)
         {
@@ -66,7 +66,7 @@ private
         }
     }
 
-    size_t fanOut(const(size_t)[] shape)
+    size_t fanOut(size_t[] shape)
     {
         if(shape.length == 2)
         {

@@ -20,8 +20,8 @@ void initialize()
     dopt.core.ops.nnet.initialize();
 }
 
-alias Verifier = bool delegate(const Operation);
-alias Judge = TensorType delegate(const(Operation));
+alias Verifier = bool delegate(Operation);
+alias Judge = TensorType delegate(Operation);
 
 /**
 Contains methods to perform procedures specific to the type of an operation
@@ -50,7 +50,7 @@ class Operation
         Returns a string identifying the type of this operation. This is the same string used when registering the
         operation with the registerOperation method.
         */
-        @property string opType() const
+        @property string opType()
         {
             return mOpType;
         }
@@ -58,7 +58,7 @@ class Operation
         /**
         Returns a TensorType object that specifies the type of tensor obtained by evaluating this operation.
         */
-        @property const(TensorType) outputType() const
+        @property TensorType outputType()
         {
             return mOutputType;
         }
@@ -66,7 +66,7 @@ class Operation
         /**
         Returns a list of operands for this operation.
         */
-        @property const(Operation)[] deps() const
+        @property Operation[] deps()
         {
             return mDeps;
         }
@@ -74,7 +74,7 @@ class Operation
         /**
         Returns an associative array that maps strings to operation specific attributes.
         */
-        @property const(Variant[string]) attributes() const
+        @property Variant[string] attributes()
         {
             return mAttributes;
         }
@@ -84,7 +84,7 @@ class Operation
 
         Internally, this just calls the appropriate function from dopt.core.ops.math.
         */
-        Operation opBinary(string op)(const(Operation) rhs, string mod = __MODULE__, size_t line = __LINE__) const
+        Operation opBinary(string op)(Operation rhs, string mod = __MODULE__, size_t line = __LINE__)
         {
             if(rhs.rank == 0 && this.rank != 0)
             {
@@ -117,21 +117,21 @@ class Operation
             }
         }
 
-        Operation opBinary(string op)(int i, string mod = __MODULE__, size_t line = __LINE__) const
+        Operation opBinary(string op)(int i, string mod = __MODULE__, size_t line = __LINE__)
         {
             auto bc = int32([], [i]);
 
             return opBinary!op(bc, mod, line);
         }
 
-        Operation opBinary(string op)(float i, string mod = __MODULE__, size_t line = __LINE__) const
+        Operation opBinary(string op)(float i, string mod = __MODULE__, size_t line = __LINE__)
         {
             auto bc = float32([], [i]);
 
             return opBinary!op(bc, mod, line);
         }
 
-        Operation opBinaryRight(string op, T)(T t, string mod = __MODULE__, size_t line = __LINE__) const
+        Operation opBinaryRight(string op, T)(T t, string mod = __MODULE__, size_t line = __LINE__)
         {
             static if(op == "*" || op == "+")
             {
@@ -143,7 +143,7 @@ class Operation
             }
         }
 
-        Operation opUnary(string op)() const
+        Operation opUnary(string op)()
         {
             static if(op == "-")
             {
@@ -155,7 +155,7 @@ class Operation
             }
         }
 
-        override string toString() const
+        override string toString()
         {
             import std.algorithm : joiner, map;
             import std.conv : to;
@@ -172,32 +172,27 @@ class Operation
             }
         }
 
-        const(Buffer) value() const
+        Buffer value()
         {
             return attributes["default"].get!Buffer;
         }
 
-        Buffer value()
-        {
-            return cast(Buffer)attributes["default"].get!Buffer;
-        }
-
-        auto shape() const
+        auto shape()
         {
             return outputType.shape;
         }
 
-        auto elementType() const
+        auto elementType()
         {
             return outputType.elementType;
         }
 
-        auto volume() const
+        auto volume()
         {
             return outputType.volume;
         }
 
-        auto rank() const
+        auto rank()
         {
             return outputType.rank;
         }
@@ -208,11 +203,11 @@ class Operation
         string mOpType;
         string mModule;
         size_t mLine;
-        const(Operation)[] mDeps;
-        const(Variant[string]) mAttributes;
-        const(TensorType) mOutputType;
+        Operation[] mDeps;
+        Variant[string] mAttributes;
+        TensorType mOutputType;
 
-        this(string opType, const(Operation)[] deps, const(Variant[string]) attribs, string mod, size_t line)
+        this(string opType, Operation[] deps, Variant[string] attribs, string mod, size_t line)
         {
             import std.conv : to;
             
@@ -252,7 +247,7 @@ string[] listAllOperations()
 /**
 Creates an operation of the given type, with the given dependencies and attributes.
 */
-Operation createOperation(string opType, const(Operation)[] deps = [], const(Variant[string]) attribs = null,
+Operation createOperation(string opType, Operation[] deps = [], Variant[string] attribs = null,
     string mod = __MODULE__, size_t line = __LINE__)
 {
     import std.conv : to;
@@ -265,11 +260,11 @@ Operation createOperation(string opType, const(Operation)[] deps = [], const(Var
     return op;
 }
 
-inout(Operation)[] topologicalSort(inout(Operation)[] ops)
+Operation[] topologicalSort(Operation[] ops)
 {
-    inout(Operation)[] sortedOps;
+    Operation[] sortedOps;
 
-    void toposort(inout(Operation) o)
+    void toposort(Operation o)
     {
         import std.algorithm : canFind;
 
@@ -296,7 +291,7 @@ private
 {
     OpDef[string] mOpDefs;
 
-    TensorType makeJudgement(const(Operation) op)
+    TensorType makeJudgement(Operation op)
     {
         auto def = op.opType in mOpDefs;
 

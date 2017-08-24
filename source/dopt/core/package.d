@@ -21,7 +21,7 @@ public
     import dopt.core.types;
 }
 
-alias Evaluator = Buffer[] delegate(const(Operation)[] ops, Buffer[const(Operation)] args);
+alias Evaluator = Buffer[] delegate(Operation[] ops, Buffer[Operation] args);
 
 __gshared Evaluator defaultEvaluator;
 
@@ -54,7 +54,7 @@ shared static this()
     Returns:
         An array of $(D Buffer) objects, each containing the value of the corresponding element in $(D ops).
 */
-Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
+Buffer[] evaluate(Operation[] ops, Buffer[Operation] args = null)
 {
     return defaultEvaluator(ops, args);
 }
@@ -71,7 +71,7 @@ Buffer[] evaluate(const(Operation)[] ops, Buffer[const(Operation)] args = null)
     Returns:
         A $(D Buffer) containing the result of the computation.
 */
-Buffer evaluate(const(Operation) op, Buffer[const(Operation)] args = null)
+Buffer evaluate(Operation op, Buffer[Operation] args = null)
 {
     return evaluate([op], args)[0];
 }

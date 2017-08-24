@@ -19,7 +19,7 @@ package
 
 private
 {
-    Operation[] transposeGrad(const(Operation) op, Operation parentGrad)
+    Operation[] transposeGrad(Operation op, Operation parentGrad)
     {
         import std.algorithm : countUntil, map;
         import std.array : array;
@@ -27,7 +27,7 @@ private
 
         auto order = op
                     .attributes["order"]
-                    .get!(const(size_t)[]);
+                    .get!(size_t[]);
 
         auto newOrder = iota(0, order.length)
                        .map!(x => cast(size_t)order.countUntil(x))
@@ -36,11 +36,11 @@ private
         return [parentGrad.transpose(newOrder)];
     }
 
-    Operation[] sliceGrad(const(Operation) op, Operation parentGrad)
+    Operation[] sliceGrad(Operation op, Operation parentGrad)
     {
-        auto before = op.attributes["start"].get!(const(size_t)[]);
+        auto before = op.attributes["start"].get!(size_t[]);
         auto after = op.deps[0].outputType.shape.dup;
-        after[] -= op.attributes["stop"].get!(const(size_t)[])[];
+        after[] -= op.attributes["stop"].get!(size_t[])[];
 
         return [parentGrad.pad(before, after)];
     }
@@ -66,26 +66,26 @@ private
             [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
     }
 
-    Operation[] padGrad(const(Operation) op, Operation parentGrad)
+    Operation[] padGrad(Operation op, Operation parentGrad)
     {
-        auto start = op.attributes["before"].get!(const(size_t)[]);
+        auto start = op.attributes["before"].get!(size_t[]);
         auto stop = op.deps[0].outputType.shape.dup;
         stop[] += start[];
 
         return [parentGrad.slice(start, stop)];
     }
 
-    Operation[] reshapeGrad(const(Operation) op, Operation parentGrad)
+    Operation[] reshapeGrad(Operation op, Operation parentGrad)
     {
         return [parentGrad.reshape(op.deps[0].outputType.shape)];
     }
 
-    Operation[] repeatGrad(const(Operation) op, Operation parentGrad)
+    Operation[] repeatGrad(Operation op, Operation parentGrad)
     {
         import std.array : array;
         import std.range : iota, roundRobin;
 
-        auto reps = op.attributes["repetitions"].get!(const(size_t)[]);
+        auto reps = op.attributes["repetitions"].get!(size_t[]);
         
         //Add some new dimensions that explicitly represent the repetitions
         auto tmpShape = roundRobin(reps, op.deps[0].shape).array();

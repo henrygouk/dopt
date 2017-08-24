@@ -28,7 +28,7 @@ struct TensorType
     DataType elementType;
     size_t[] shape;
 
-    this(DataType et, const(size_t)[] s)
+    this(DataType et, size_t[] s)
     {
         elementType = et;
         shape = s.dup;

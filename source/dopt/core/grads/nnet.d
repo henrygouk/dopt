@@ -17,7 +17,7 @@ package
 
 private
 {
-    Operation[] convolutionGrad(const(Operation) op, Operation parentGrad)
+    Operation[] convolutionGrad(Operation op, Operation parentGrad)
     {
         return [
             convolutionFeaturesGrad(parentGrad, op),
@@ -25,12 +25,12 @@ private
         ];
     }
 
-    Operation[] maxpoolGrad(const(Operation) op, Operation parentGrad)
+    Operation[] maxpoolGrad(Operation op, Operation parentGrad)
     {
         return [dopt.core.ops.nnet.maxpoolGrad(parentGrad, op)];
     }
 
-    Operation[] softmaxGrad(const(Operation) op, Operation parentGrad)
+    Operation[] softmaxGrad(Operation op, Operation parentGrad)
     {
         return [dopt.core.ops.nnet.softmaxGrad(parentGrad, op)];
     }

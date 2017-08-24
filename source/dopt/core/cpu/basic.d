@@ -17,7 +17,7 @@ package
 
 private
 {
-    void slice(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    void slice(Operation op, const(Buffer)[] inputs, Buffer output)
     {
         size_t size = 4;
 
@@ -51,7 +51,7 @@ private
         auto outShape = op.outputType.shape;
         size_t inVol = op.deps[0].outputType.volume;
         size_t outVol = op.outputType.volume;
-        auto offset = op.attributes["start"].get!(const(size_t)[]);
+        auto offset = op.attributes["start"].get!(size_t[]);
 
         if(inShape.length > 0)
         {
@@ -62,12 +62,12 @@ private
         sliceImpl(inputs[0].as!ubyte, inShape, inVol, output.as!ubyte, outShape, outVol, offset);
     }
 
-    void pad(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    void pad(Operation op, const(Buffer)[] inputs, Buffer output)
     {
         size_t size = 4;
 
-        void padImpl(const(ubyte[]) input, const(size_t)[] inShape, size_t inVol,
-                     ubyte[] output, const(size_t)[] outShape, size_t outVol, const(size_t)[] offset)
+        void padImpl(const(ubyte[]) input, size_t[] inShape, size_t inVol,
+                     ubyte[] output, size_t[] outShape, size_t outVol, size_t[] offset)
         {
             if(inShape.length == 0)
             {
@@ -102,7 +102,7 @@ private
         auto outShape = op.outputType.shape;
         size_t inVol = op.deps[0].outputType.volume;
         size_t outVol = op.outputType.volume;
-        auto offset = op.attributes["before"].get!(const(size_t)[]);
+        auto offset = op.attributes["before"].get!(size_t[]);
 
         if(inShape.length > 0)
         {
@@ -113,7 +113,7 @@ private
         padImpl(inputs[0].as!ubyte, inShape, inVol, output.as!ubyte, outShape, outVol, offset);
     }
 
-    void transpose(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    void transpose(Operation op, const(Buffer)[] inputs, Buffer output)
     {
         import std.exception : enforce;
         enforce(op.outputType.rank <= 2, "transpose is only implemented for rank <= 2");
@@ -121,7 +121,7 @@ private
         //Check whether we actually need to reorder them..
         auto order = op
                     .attributes["order"]
-                    .get!(const(size_t)[]);
+                    .get!(size_t[]);
 
         if(order == [0, 1])
         {
@@ -151,7 +151,7 @@ private
         }
     }
 
-    void repeat(const(Operation) op, const(Buffer)[] inputs, Buffer output)
+    void repeat(Operation op, const(Buffer)[] inputs, Buffer output)
     {
         void run(T)()
         {
@@ -171,7 +171,7 @@ private
             auto inbuf = inputs[0].as!T;
             T[] outbuf;
 
-            foreach_reverse(i, a; op.attributes["repetitions"].get!(const(size_t)[]))
+            foreach_reverse(i, a; op.attributes["repetitions"].get!(size_t[]))
             {
                 vol *= op.deps[0].shape[i];
                 outbuf = new T[inbuf.length * a];

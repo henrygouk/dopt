@@ -13,7 +13,7 @@ import dopt.core.grads.nnet;
 import dopt.core.ops;
 import dopt.core.types;
 
-alias Gradient = Operation[] delegate(const(Operation) op, Operation parentGrad);
+alias Gradient = Operation[] delegate(Operation op, Operation parentGrad);
 
 void initialize()
 {
@@ -36,7 +36,7 @@ void initialize()
     Returns:
         An array of operations that evaluate to the derivative of $(D objective) to each of the elements of $(D wrt).
 */
-Operation[] grad(const(Operation) objective, const(Operation)[] wrt)
+Operation[] grad(Operation objective, Operation[] wrt)
 {
     import std.algorithm : canFind, countUntil, map;
     import std.array : array;
@@ -46,9 +46,9 @@ Operation[] grad(const(Operation) objective, const(Operation)[] wrt)
     enforce(objective.outputType.volume == 1, "The objective must have a volume of one");
     enforce(objective.outputType.elementType == DataType.float32, "The objective must have a floating point type");
 
-    const(Operation)[] ops;
+    Operation[] ops;
 
-    void traverse(const(Operation) op)
+    void traverse(Operation op)
     {
         foreach(d; op.deps)
         {
@@ -64,7 +64,7 @@ Operation[] grad(const(Operation) objective, const(Operation)[] wrt)
     //Topologically sort the operations
     traverse(objective);
 
-    Operation[const(Operation)] grads;
+    Operation[Operation] grads;
 
     //TODO: when I implement a 'ones' operation, replace this line
     grads[objective] = float32(objective.outputType.shape, [1.0f]);

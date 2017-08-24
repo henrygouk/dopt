@@ -23,8 +23,8 @@ import dopt.core.cuda;
          A delegate that is used to actually perform the update steps. The optimised values are stored in the "default"
          attributes of the elements of wrt.
 */
-float delegate(Buffer[const(Operation)] args) sgd(const(Operation) objective, Operation[] wrt,
-    const(Operation) learningRate = float32([], [0.01f]))
+float delegate(Buffer[Operation] args) sgd(Operation objective, Operation[] wrt,
+    Operation learningRate = float32([], [0.01f]))
 {
     import std.algorithm : map;
     import std.array : array;
@@ -36,7 +36,7 @@ float delegate(Buffer[const(Operation)] args) sgd(const(Operation) objective, Op
                   .map!(x => x[0] - learningRate * x[1])
                   .array();
 
-    float update(Buffer[const(Operation)] args)
+    float update(Buffer[Operation] args)
     {
         auto newbufs = evaluate([objective] ~ newvals, args);
 

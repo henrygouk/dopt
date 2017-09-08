@@ -137,6 +137,10 @@ class Operation
             {
                 return opBinary!op(t);
             }
+            else static if(op == "-" && is(T == float))
+            {
+                return float32([], [t]) - this;
+            }
             else
             {
                 static assert(0, "Not implemented.");

@@ -6,7 +6,6 @@
 module dopt.online.sgd;
 
 import dopt.core;
-import dopt.core.cuda;
 
 /**
     Creates a delegate that can be used to perform a step using the stochastic gradient descent update rule.

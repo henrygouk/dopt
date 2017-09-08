@@ -16,6 +16,7 @@ package
 
         registerCPUKernel("matmul", new CPUKernelDelegate(toDelegate(&matmulKernel)));
         registerCPUKernel("sum", new CPUKernelDelegate(toDelegate(&sumKernel)));
+        registerCPUKernel("argmin", new CPUKernelDelegate(toDelegate(&argminKernel)));
     }
 
     mixin(generateKernels());
@@ -127,6 +128,69 @@ private
         }
 
         switch(op.outputType.elementType)
+        {
+            case DataType.float32:
+                run!float();
+                break;
+
+            case DataType.int32:
+                run!int();
+                break;
+
+            default:
+                throw new Exception("Not implemented.");
+        }
+    }
+
+    void argminKernel(Operation op, const(Buffer)[] inputs, Buffer output)
+    {
+        void run(T)()
+        {
+            auto inbuf = inputs[0].as!T;
+            auto outbuf = output.as!int;
+
+            size_t axis = op.attributes["axis"].get!size_t;
+            size_t outer = 1;
+            size_t inner;
+            size_t vol = 1;
+
+            for(size_t i = 0; i < op.deps[0].rank; i++)
+            {
+                if(i < axis)
+                {
+                    outer *= op.deps[0].shape[i];
+                }
+                else if(i > axis)
+                {
+                    vol *= op.deps[0].shape[i];
+                }
+                else
+                {
+                    inner = op.deps[0].shape[i];
+                }
+            }
+
+            auto vals = new T[vol];
+
+            for(size_t o = 0; o < outer; o++)
+            {
+                vals[] = T.max;
+                
+                for(size_t i = 0; i < inner; i++)
+                {
+                    for(size_t j = 0; j < vol; j++)
+                    {
+                        if(inbuf[o * vol * inner + i * vol + j] < vals[j])
+                        {
+                            vals[j] = inbuf[o * vol * inner + i * vol + j];
+                            outbuf[o * vol + j] = cast(int)i;
+                        }
+                    }
+                }
+            }
+        }
+
+        switch(op.deps[0].outputType.elementType)
         {
             case DataType.float32:
                 run!float();

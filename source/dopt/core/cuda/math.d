@@ -78,13 +78,8 @@ package
         mixin(generateRegistrations());
         registerCUDAKernel("matmul", toDelegate(&matmulKernelCtr));
         registerCUDAKernel("sum", toDelegate(&sumKernelCtr));
+        registerCUDAKernel("argmin", toDelegate(&argminKernelCtr));
     }
-
-    static ~this()
-	{
-		import core.sys.posix.dlfcn;
-		dlclose(fh);
-	}
 
     cublasHandle_t mCuBLASHandle;
 }
@@ -266,6 +261,36 @@ private
         {
             mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
             mOp = sum(mInput, op.attributes["axes"].get!(size_t[]));
+        }
+
+        override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+        {
+            import dopt.core.cpu : evaluateCPU;
+
+            auto inbuf = new byte[inputs[0].numBytes];
+            inputs[0].get(inbuf);
+
+            import dopt.core.cpu : evaluate;
+            auto outbuf = evaluateCPU([mOp], [mInput: Buffer(inbuf)])[0];
+
+            output.set(outbuf.as!byte);
+        }
+
+        Operation mInput;
+        Operation mOp;
+    }
+
+    CUDAKernel argminKernelCtr(Operation op)
+    {
+        return new ArgminKernel(op);
+    }
+
+    class ArgminKernel : CUDAKernel
+    {
+        this(Operation op)
+        {
+            mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
+            mOp = argmin(mInput, op.attributes["axis"].get!size_t);
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)

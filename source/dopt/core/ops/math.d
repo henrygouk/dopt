@@ -59,6 +59,7 @@ package
 
         registerOperation("matmul", OpDef(toDelegate(&verifyMatmul), toDelegate(&judgeMatmul)));
         registerOperation("sum", OpDef(toDelegate(&verifySum), toDelegate(&judgeSum)));
+        registerOperation("argmin", OpDef(toDelegate(&verifyArgmin), toDelegate(&judgeArgmin)));
     }
 }
 
@@ -151,6 +152,22 @@ private
 
         return TensorType(t.elementType, newShape);
     }
+
+    bool verifyArgmin(Operation op)
+    {
+        return op.deps.length == 1
+            && ("axis" in op.attributes)
+            && (op.attributes["axis"].peek!size_t !is null)
+            && (op.attributes["axis"].get!size_t < op.deps[0].rank);
+    }
+
+    TensorType judgeArgmin(Operation op)
+    {
+        auto shape = op.deps[0].shape.dup;
+        shape[op.attributes["axis"].get!size_t] = 1;
+
+        return TensorType(DataType.int32, shape);
+    }
 }
 
 mixin(createAllCtors());
@@ -233,4 +250,37 @@ unittest
     assert(s2.evaluate().as!float == [6.0f]);
     assert(s3.evaluate().as!float == [0.0f, 6.0f]);
     assert(s4.evaluate().as!float == [1.0f, 5.0f]);
+}
+
+/**
+    Performs an argmin over the specified dimension.
+
+    Params:
+        input = The operation to perform argmin on.
+        axis = The diension the argmin should be performed over.
+    
+    Returns:
+        The new argmin operation.
+*/
+Operation argmin(Operation input, size_t axis, string mod = __MODULE__, size_t line = __LINE__)
+{
+    import std.variant : Variant;
+
+    return createOperation("argmin", [input], ["axis": Variant(axis)], mod, line);
+}
+
+unittest
+{
+    import dopt.core : evaluate;
+
+    auto a = float32([5], [4.0f, 2.0f, 6.0f, 1.0f, 2.0f]).argmin(0);
+
+    auto b = float32([2, 3], [
+        5.0f, 1.0f, 3.0f,
+        6.0f, 7.0f, 2.0f
+    ]).argmin(1);
+
+    import std.stdio;
+    assert(a.evaluate().as!int == [3]);
+    assert(b.evaluate().as!int == [1, 2]);
 }

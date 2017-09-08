@@ -227,9 +227,11 @@ class CUDAPlan
 
                 foreach(d; o.deps)
                 {
+                    import std.algorithm : canFind;
+
                     //Remove the pointer to this buffer if we don't need it anymore
                     //This will allow the GC to collect it at some point, if required
-                    if(refCounts[d] == 0)
+                    if(refCounts[d] == 0 && !mOutputs.canFind(d))
                     {
                         results.remove(d);
                     }
@@ -242,7 +244,11 @@ class CUDAPlan
             foreach(i, o; mOutputs)
             {
                 rets[i] = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
-                results[o].get(rets[i].as!ubyte);
+                auto cudaBuf = results.get(o, null);
+
+                enforce(cudaBuf !is null, "Internal error");
+
+                cudaBuf.get(rets[i].as!ubyte);
             }
 
             return rets;

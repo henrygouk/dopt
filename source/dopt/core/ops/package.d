@@ -141,6 +141,10 @@ class Operation
             {
                 return float32([], [t]) - this;
             }
+            else static if(op == "/" && is(T == float))
+            {
+                return float32([], [t]) / this;
+            }
             else
             {
                 static assert(0, "Not implemented.");
@@ -274,13 +278,13 @@ Operation[] topologicalSort(Operation[] ops)
 
         foreach(d; o.deps)
         {
-            toposort(d);
+            if(!sortedOps.canFind(d))
+            {
+                toposort(d);
+            }
         }
-
-        if(!sortedOps.canFind(o))
-        {
-            sortedOps ~= o;
-        }
+        
+        sortedOps ~= o;
     }
 
     foreach(o; ops)

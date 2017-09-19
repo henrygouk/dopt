@@ -87,6 +87,8 @@ T[][] loadLabels(T)(string filename)
 
 void main(string[] args)
 {
+	import std.stdio : writeln;
+	
 	import dopt.core;
 	import dopt.nnet;
 	import dopt.online;
@@ -110,14 +112,46 @@ void main(string[] args)
 
 	auto updater = sgd(network.loss, network.parameters);
 
-	foreach(fs, ls; zip(data.trainFeatures.chunks(100), data.trainLabels.chunks(100)))
+	foreach(e; 0 .. 10)
 	{
-		auto loss = updater([
-			features: Buffer(fs.joiner().array()),
-			labels: Buffer(ls.joiner().array())
-		]);
+		float totloss = 0;
+		float tot = 0;
 
-		import std.stdio;
-		writeln(loss);
+		foreach(fs, ls; zip(data.trainFeatures.chunks(100), data.trainLabels.chunks(100)))
+		{
+			auto loss = updater([
+				features: Buffer(fs.joiner().array()),
+				labels: Buffer(ls.joiner().array())
+			]);
+
+			totloss += loss;
+			tot++;
+		}
+
+		writeln(e, ": ", totloss / tot);
 	}
+
+	int correct;
+	int total;
+
+	import std.stdio : writeln;
+
+	foreach(fs, ls; zip(data.testFeatures.chunks(100), data.testLabels.chunks(100)))
+	{
+		auto pred = network.outputs[0].evaluate([
+			features: Buffer(fs.joiner().array())
+		]).as!float;
+
+		foreach(p, t; zip(pred.chunks(10), ls))
+		{
+			if(p.maxIndex == t.maxIndex)
+			{
+				correct++;
+			}
+
+			total++;
+		}
+	}
+
+	writeln(correct / cast(float)total);
 }

@@ -60,6 +60,9 @@ package
         registerOperation("matmul", OpDef(toDelegate(&verifyMatmul), toDelegate(&judgeMatmul)));
         registerOperation("sum", OpDef(toDelegate(&verifySum), toDelegate(&judgeSum)));
         registerOperation("argmin", OpDef(toDelegate(&verifyArgmin), toDelegate(&judgeArgmin)));
+
+        //maxElement and sum are both reduction operations
+        registerOperation("maxElement", OpDef(toDelegate(&verifySum), toDelegate(&judgeSum)));
     }
 }
 
@@ -283,4 +286,31 @@ unittest
     import std.stdio;
     assert(a.evaluate().as!int == [3]);
     assert(b.evaluate().as!int == [1, 2]);
+}
+
+/**
+    Computes a max reduction along the specified axes.
+
+    Params:
+        op = The input to the reduction.
+        axes = The axes the reduction should be performed along.
+
+    Returns:
+        The resulting operation.
+*/
+Operation maxElement(Operation op, size_t[] axes = [], string mod = __MODULE__, size_t line = __LINE__)
+{
+    import std.variant : Variant;
+
+    if(op.rank == 0)
+    {
+        return op.reshape(op.shape);
+    }
+
+    if(axes.length == 0)
+    {
+        axes = iota(0, op.rank).array();
+    }
+    
+    return createOperation("maxElement", [op], ["axes": Variant(axes)], mod, line);
 }

@@ -377,7 +377,7 @@ package
                 return "float";
             
             case DataType.int32:
-                return "int32";
+                return "int";
 
             default:
                 import std.conv : to;

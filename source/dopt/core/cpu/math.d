@@ -16,6 +16,7 @@ package
 
         registerCPUKernel("matmul", new CPUKernelDelegate(toDelegate(&matmulKernel)));
         registerCPUKernel("sum", new CPUKernelDelegate(toDelegate(&sumKernel)));
+        registerCPUKernel("maxElement", new CPUKernelDelegate(toDelegate(&maxElementKernel)));
         registerCPUKernel("argmin", new CPUKernelDelegate(toDelegate(&argminKernel)));
     }
 
@@ -81,8 +82,12 @@ private
 
             void process(const(T)[] inbuf, T[] outbuf, size_t highstride, size_t lowstride)
             {
-                //I still don't really understand how this works
-                for(size_t o = 0; o < outbuf.length / lowstride; o++)
+                import std.array : array;
+                import std.range : iota;
+                import std.parallelism : parallel;
+
+                //for(size_t o = 0; o < outbuf.length / lowstride; o++)
+                foreach(o; iota(0, outbuf.length / lowstride).array().parallel)
                 {
                     outbuf[o * lowstride .. (o + 1) * lowstride] = 0;
 
@@ -90,6 +95,77 @@ private
                     {
                         outbuf[o * lowstride .. (o + 1) * lowstride] +=
                             inbuf[o * highstride + i * lowstride .. o * highstride + (i + 1) * lowstride];
+                    }
+                }
+            }
+
+            auto axes = op.attributes["axes"].get!(size_t[]);
+            auto shape = op.deps[0].shape.dup;
+
+            auto inbuf = inputs[0].as!T;
+            T[] outbuf;
+
+            foreach(axis; axes)
+            {
+                //auto axis = axes[0];
+                auto newvol = shape.fold!((a, b) => a * b)(size_t(1)) / shape[axis];
+                size_t lowstride;
+                
+                if(axis == shape.length - 1)
+                {
+                    lowstride = 1;
+                }
+                else
+                {
+                    lowstride = shape[axis + 1 .. $].fold!((a, b) => a * b)(size_t(1));
+                }
+
+                size_t highstride = lowstride * shape[axis];
+
+                outbuf = new T[newvol];
+                process(inbuf, outbuf, highstride, lowstride);
+                inbuf = outbuf;
+
+                shape[axis] = 1;
+            }
+
+            output.as!T[] = outbuf[];
+        }
+
+        switch(op.outputType.elementType)
+        {
+            case DataType.float32:
+                run!float();
+                break;
+
+            case DataType.int32:
+                run!int();
+                break;
+
+            default:
+                throw new Exception("Not implemented.");
+        }
+    }
+
+    void maxElementKernel(Operation op, const(Buffer)[] inputs, Buffer output)
+    {
+        void run(T)()
+        {
+            import std.algorithm : fold, max, sort;
+
+            void process(const(T)[] inbuf, T[] outbuf, size_t highstride, size_t lowstride)
+            {
+                for(size_t o = 0; o < outbuf.length / lowstride; o++)
+                {
+                    outbuf[o * lowstride .. (o + 1) * lowstride] = -T.max;
+
+                    for(size_t i = 0; i < highstride / lowstride; i++)
+                    {
+                        for(size_t j = 0; j < lowstride; j++)
+                        {
+                            outbuf[o * lowstride + j] = max(outbuf[o * lowstride + j],
+                                inbuf[o * highstride + i * lowstride + j]);
+                        }
                     }
                 }
             }

@@ -157,7 +157,12 @@ private
         {
             void process(const(T)[] inbuf, T[] outbuf, size_t reps, size_t vol)
             {
-                for(size_t i = 0; i < inbuf.length; i += vol)
+                import std.array : array;
+                import std.range : iota;
+                import std.parallelism : parallel;
+
+                //for(size_t i = 0; i < inbuf.length; i += vol)
+                foreach(i; iota(0, inbuf.length, vol).array().parallel)
                 {
                     for(size_t o = i * reps; o < (i + vol) * reps; o += vol)
                     {

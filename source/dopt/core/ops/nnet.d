@@ -86,7 +86,6 @@ private
             && op.deps[0].outputType.rank == 4
             && op.attributes["dims"].peek!(size_t[]) !is null
             && op.attributes["dims"].get!(size_t[]).length == 2;
-
     }
 
     TensorType judgeMaxpool(Operation op)
@@ -217,6 +216,25 @@ public
     }
 
     /**
+        Creates a transposed convolution operation (also known, incorrectly, as deconvolution).
+
+        Params:
+            features = The feature maps.
+            filters = The filters to be convolved with the feature maps.
+        
+        Returns:
+            The operation.
+    */
+    Operation convolutionTranspose(Operation features, Operation filters, string mod = __MODULE__,
+        size_t line = __LINE__)
+    {
+        auto outShape = features.shape.dup;
+        outShape[] += filters.shape[] - 1;
+
+        return convolutionFeaturesGrad(features, filters, outShape, mod, line);
+    }
+
+    /**
         Creates a max pool operation that performs the computation required to implement a max pooling layer.
 
         Params:
@@ -258,16 +276,17 @@ public
 
         Params:
             parentGrad = Gradient of some functions w.r.t. the convolution operation.
-            op = The operation being differentiated.
+            filters = The filters of the convolution operation.
+            featuresShape = The shape of the features fed into the convolution operations.
         
         Returns:
             The gradient.
     */
-    Operation convolutionFeaturesGrad(Operation parentGrad, Operation op,
+    Operation convolutionFeaturesGrad(Operation parentGrad, Operation filters, size_t[] featuresShape,
         string mod = __MODULE__, size_t line = __LINE__)
     {
-        return createOperation("convolutionFeaturesGrad", [parentGrad, op.deps[1]],
-            ["featuresShape": Variant(op.deps[0].shape)], mod, line);
+        return createOperation("convolutionFeaturesGrad", [parentGrad, filters],
+            ["featuresShape": Variant(featuresShape)], mod, line);
     }
 
     /**
@@ -275,16 +294,17 @@ public
 
         Params:
             parentGrad = Gradient of some functions w.r.t. the convolution operation.
-            op = The operation being differentiated.
+            features = The features provided to the convolution operation.
+            filtersShape = The shape of the filters provided to the convolution operation.
         
         Returns:
             The gradient.
     */
-    Operation convolutionFiltersGrad(Operation parentGrad, Operation op,
+    Operation convolutionFiltersGrad(Operation parentGrad, Operation features, size_t[] filtersShape,
         string mod = __MODULE__, size_t line = __LINE__)
     {
-        return createOperation("convolutionFiltersGrad", [parentGrad, op.deps[0]],
-            ["filtersShape": Variant(op.deps[1].outputType.shape)], mod, line);
+        return createOperation("convolutionFiltersGrad", [parentGrad, features],
+            ["filtersShape": Variant(filtersShape)], mod, line);
     }
 
     /**

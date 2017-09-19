@@ -10,6 +10,7 @@ package
         import std.functional : toDelegate;
         
         registerGradient("convolution", toDelegate(&convolutionGrad));
+        registerGradient("convolutionFeaturesGrad", toDelegate(&convolutionFeaturesGradGrad));
         registerGradient("maxpool", toDelegate(&maxpoolGrad));
         registerGradient("softmax", toDelegate(&softmaxGrad));
     }
@@ -20,8 +21,16 @@ private
     Operation[] convolutionGrad(Operation op, Operation parentGrad)
     {
         return [
-            convolutionFeaturesGrad(parentGrad, op),
-            convolutionFiltersGrad(parentGrad, op)
+            convolutionFeaturesGrad(parentGrad, op.deps[1], op.deps[0].shape),
+            convolutionFiltersGrad(parentGrad, op.deps[0], op.deps[1].shape)
+        ];
+    }
+
+    Operation[] convolutionFeaturesGradGrad(Operation op, Operation parentGrad)
+    {
+        return [
+            convolution(parentGrad, op.deps[1]),
+            convolutionFiltersGrad(parentGrad, op.deps[0], op.deps[1].shape)
         ];
     }
 

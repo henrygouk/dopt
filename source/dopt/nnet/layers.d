@@ -98,6 +98,21 @@ Layer softmax(Layer inputs)
 }
 
 /**
+    Creates a layer representing the logistic activation function.
+
+    Params:
+        inputs = The input to the new layer.
+
+    Returns:
+        The new logistic $(D Layer).
+Layer logistic(Layer inputs)
+{
+    auto x = inputs.expression;
+
+    return new Layer(1.0f / (1.0f + exp(-x)), [inputs]);
+}
+
+/**
     Creates a cross entropy loss layer.
 
     Params:

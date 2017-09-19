@@ -208,7 +208,7 @@ ParamInitializer heUniformInit()
 {
     void init(Operation param)
     {
-        fillGaussian(param.value.as!float, 0, sqrt(6.0f / (param.shape.fanIn)));
+        fillUniform(param.value.as!float, 0, sqrt(6.0f / (param.shape.fanIn)));
     }
 
     return &init;
@@ -231,7 +231,7 @@ ParamInitializer heGaussianInit()
 {
     void init(Operation param)
     {
-        fillGaussian(param.value.as!float, 0, sqrt(6.0f / (param.shape.fanIn )));
+        fillGaussian(param.value.as!float, 0, sqrt(2.0f / (param.shape.fanIn )));
     }
 
     return &init;

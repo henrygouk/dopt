@@ -85,11 +85,21 @@ class NVRTCKernel
         {
             void*[] argPtrs = new void*[args.length];
 
-            for(size_t i = 0; i < args.length; i++)
+            string genCode()
             {
-                argPtrs[i] = cast(void *)&args[i];
+                import std.conv : to;
+                string ret;
+
+                for(size_t i = 0; i < args.length; i++)
+                {
+                    ret ~= "argPtrs[" ~ i.to!string ~ "] = cast(void *)&args[" ~ i.to!string ~ "];";
+                }
+
+                return ret;
             }
 
+            mixin(genCode());
+            
             cuLaunchKernel(
                 mKernel,
                 numBlocks[0], numBlocks[1], numBlocks[2],

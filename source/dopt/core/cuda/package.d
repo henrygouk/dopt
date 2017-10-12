@@ -17,6 +17,7 @@ import dopt.core.cuda.basic;
 import dopt.core.cuda.nvrtc;
 import dopt.core.cuda.math;
 import dopt.core.cuda.nnet;
+import dopt.core.cuda.random;
 import dopt.core.ops;
 import dopt.core.types;
 
@@ -45,6 +46,7 @@ void initialize()
     dopt.core.cuda.nvrtc.initialize();
     dopt.core.cuda.math.initialize();
     dopt.core.cuda.nnet.initialize();
+    dopt.core.cuda.random.initialize();
 }
 
 /**
@@ -76,16 +78,19 @@ class CUDABuffer
             Params:
                 numBytes = The number of bytes to be allocated on the CUDA device.
         */
-        this(size_t numBytes)
+        static CUDABuffer create(size_t numBytes)
         {
-            mNumBytes = numBytes;
-            enforce(cuMemAlloc(&mPtr, mNumBytes) == CUDA_SUCCESS, "CUDA memory allocation failed");
-            enforce(cuMemsetD8(mPtr, 0, mNumBytes) == CUDA_SUCCESS, "CUDA default buffer initialisation failed");
+            CUDABuffer ret = new CUDABuffer();
+            ret.mNumBytes = numBytes;
+            enforce(cuMemAlloc(&(ret.mPtr), ret.mNumBytes) == CUDA_SUCCESS, "CUDA memory allocation failed");
+            enforce(cuMemsetD8(ret.mPtr, 0, ret.mNumBytes) == CUDA_SUCCESS, "CUDA default buffer initialisation failed");
+
+            return ret;
         }
 
-        ~this()
+        static void destroy(CUDABuffer buf)
         {
-            cuMemFree(mPtr);
+            enforce(cuMemFree(buf.mPtr) == CUDA_SUCCESS, "Failed to free CUDA device memory.");
         }
 
         /**
@@ -139,6 +144,16 @@ class CUDABuffer
     {
         size_t mNumBytes;
         CUdeviceptr mPtr;
+
+        this()
+        {
+            //
+        }
+
+        void zero()
+        {
+            enforce(cuMemsetD8(mPtr, 0, mNumBytes) == CUDA_SUCCESS, "CUDA zero buffer failed");
+        }
     }
 }
 
@@ -154,14 +169,73 @@ class CUDAPlan
 {
     public
     {
+        long[string] profiler;
+
+        this(Operation[] outputs)
+        {
+            import std.algorithm : canFind, filter;
+            import std.array : array;
+
+            auto sortedOps = topologicalSort(outputs);
+
+            foreach(o; sortedOps)
+            {
+                if(o.opType == "variable" || o.opType == "reshape")
+                {
+                    continue;
+                }
+                
+                auto k = mKernelCtrs.get(o.opType, null);
+
+                enforce(k !is null, "Could not construct a CUDA kernel for operation of type '" ~ o.opType ~ "'");
+
+                mKernels[o] = k(o);
+            }
+
+            mOps = sortedOps.array;
+            mOutputs = outputs.array;
+
+            foreach(o; mOps)
+            {
+                //For reshape operations, we will just reuse the buffer of o.deps[0]
+                if(o.opType != "reshape")
+                {
+                    results[o] = CUDABuffer.create(o.volume * o.elementType.sizeOf);
+                }
+                else
+                {
+                    results[o] = results[o.deps[0]];
+                }
+            }
+
+            results.rehash();
+        }
+
+        Buffer[] execute(Buffer[Operation] args = null)
+        {
+            auto rets = new Buffer[mOutputs.length];
+
+            foreach(i, o; mOutputs)
+            {
+                rets[i] = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
+            }
+
+            execute(args, rets);
+
+            return rets;
+        }
+        
         /**
             Executes the plan.
 
             Params:
                 args = A set of variable assignments.
         */
-        Buffer[] execute(Buffer[Operation] args = null)
+        void execute(Buffer[Operation] args, Buffer[] rets)
         {
+            import std.datetime : StopWatch;
+            StopWatch sw;
+
             //Make sure all the args are variable assignments
             foreach(o; args.keys)
             {
@@ -169,49 +243,36 @@ class CUDAPlan
                     "All assignments in args must be for Operations with an opType of 'variable'");
             }
 
-            //Convert the args into CUDABuffer objects
-            CUDABuffer[Operation] results;
-
+            //Load the args into their buffers
             foreach(k, v; args)
             {
-                auto buf = new CUDABuffer(v.as!ubyte.length);
-                buf.set(v.as!ubyte);
-
-                results[k] = buf;
-            }
-
-            //Count the number of references to each operation
-            int[Operation] refCounts;
-
-            foreach(o; mOps)
-            {
-                foreach(d; o.deps)
-                {
-                    refCounts[d]++;
-                }
+                results[k].set(v.as!ubyte);
             }
 
             //Iterate through each operation and execute it
             foreach(o; mOps)
             {
-                //Check for some easy optimizations
-                if(o.opType == "variable" && !(o in mKernels))
+                if(o.opType == "variable")
                 {
-                    auto buf = cast(Buffer)o.value;
-                    auto cbuf = new CUDABuffer(buf.as!ubyte.length);
-                    cbuf.set(buf.as!ubyte);
-                    results[o] = cbuf;
-                    continue;
-                }
-                else if(o.opType == "reshape" && !(o in mKernels))
-                {
-                    results[o] = results[o.deps[0]];
-                    continue;
-                }
+                    if(!(o in args))
+                    {
+                        sw.reset();
+                        sw.start();
 
-                //Allocate a buffer for the output of this operation
-                auto output = new CUDABuffer(o.outputType.volume * o.outputType.elementType.sizeOf());
-                results[o] = output;
+                        auto buf = cast(Buffer)o.value;
+                        results[o].set(buf.as!ubyte);
+
+                        sw.stop();
+
+                        profiler["variable"] = profiler.get("variable", 0) + sw.peek.usecs;
+                    }
+                    
+                    continue;
+                }
+                else if(o.opType == "reshape")
+                {
+                    continue;
+                }
 
                 //Get the input buffers
                 CUDABuffer[] inputs;
@@ -219,39 +280,48 @@ class CUDAPlan
                 foreach(d; o.deps)
                 {
                     inputs ~= results[d];
-                    refCounts[d]--;
                 }
 
                 //Execute the operation
-                mKernels[o].execute(inputs, output);
+                sw.reset();
+                sw.start();
+                results[o].zero();
+                mKernels[o].execute(inputs, results[o]);
+                sw.stop();
 
-                foreach(d; o.deps)
-                {
-                    import std.algorithm : canFind;
-
-                    //Remove the pointer to this buffer if we don't need it anymore
-                    //This will allow the GC to collect it at some point, if required
-                    if(refCounts[d] == 0 && !mOutputs.canFind(d))
-                    {
-                        results.remove(d);
-                    }
-                }
+                profiler[o.opType] = profiler.get(o.opType, 0) + sw.peek.usecs;
             }
-
-            //Convert the results into regular Buffer objects
-            Buffer[] rets = new Buffer[mOutputs.length];
 
             foreach(i, o; mOutputs)
             {
-                rets[i] = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
-                auto cudaBuf = results.get(o, null);
-
-                enforce(cudaBuf !is null, "Internal error");
-
-                cudaBuf.get(rets[i].as!ubyte);
+                results[o].get(rets[i].as!ubyte);
             }
 
-            return rets;
+            //import std.stdio;
+            //writeln(profiler);
+        }
+
+        ~this()
+        {
+            cleanup();
+        }
+
+        void cleanup()
+        {
+            if(clean)
+            {
+                return;
+            }
+
+            foreach(o; mOps)
+            {
+                if(o.opType != "reshape")
+                {
+                    CUDABuffer.destroy(results[o]);
+                }
+            }
+
+            clean = true;
         }
     }
 
@@ -260,15 +330,8 @@ class CUDAPlan
         Operation[] mOutputs;
         Operation[] mOps;
         CUDAKernel[Operation] mKernels;
-
-        this(Operation[] ops, Operation[] outputs, CUDAKernel[Operation] kernels)
-        {
-            import std.array : array;
-
-            mOps = ops.array;
-            mOutputs = outputs.array;
-            mKernels = kernels;
-        }
+        CUDABuffer[Operation] results;
+        bool clean = false;
     }
 }
 
@@ -287,32 +350,13 @@ class CUDAPlan
 */
 Buffer[] evaluateCUDA(Operation[] ops, Buffer[Operation] args = null)
 {
-    import std.algorithm : canFind, filter;
-    import std.array : array;
-
-    auto sortedOps = topologicalSort(ops)
-                    .filter!(x => !canFind(args.keys, x))
-                    .array();
-
-    CUDAKernel[Operation] kernels;
-
-    foreach(o; sortedOps)
-    {
-        if(o.opType == "variable" || o.opType == "reshape")
-        {
-            continue;
-        }
-        
-        auto k = mKernelCtrs.get(o.opType, null);
-
-        enforce(k !is null, "Could not construct a CUDA kernel for operation of type '" ~ o.opType ~ "'");
-
-        kernels[o] = k(o);
-    }
-
-    auto p = new CUDAPlan(sortedOps, ops, kernels);
+    auto p = new CUDAPlan(ops);
     
-    return p.execute(args);
+    auto ret = p.execute(args);
+
+    p.cleanup();
+
+    return ret;
 }
 
 /**

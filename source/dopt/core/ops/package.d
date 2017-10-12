@@ -11,6 +11,7 @@ public
     import dopt.core.ops.basic;
     import dopt.core.ops.math;
     import dopt.core.ops.nnet;
+    import dopt.core.ops.random;
 }
 
 void initialize()
@@ -18,6 +19,7 @@ void initialize()
     dopt.core.ops.basic.initialize();
     dopt.core.ops.math.initialize();
     dopt.core.ops.nnet.initialize();
+    dopt.core.ops.random.initialize();
 }
 
 alias Verifier = bool delegate(Operation);
@@ -276,12 +278,14 @@ Operation[] topologicalSort(Operation[] ops)
     {
         import std.algorithm : canFind;
 
+        if(sortedOps.canFind(o))
+        {
+            return;
+        }
+
         foreach(d; o.deps)
         {
-            if(!sortedOps.canFind(d))
-            {
-                toposort(d);
-            }
+            toposort(d);
         }
         
         sortedOps ~= o;

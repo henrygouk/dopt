@@ -144,25 +144,70 @@ private
     {
         this(Operation op)
         {
-            mInput = variable(TensorType(op.deps[0].elementType, op.deps[0].shape));
-            mOp = repeat(mInput, op.attributes["repetitions"].get!(size_t[]));
+            mOp = op;
+
+            if(mRepeatKernel is null)
+            {
+                mRepeatKernel = new NVRTCKernel("repeatBlocks", `
+extern "C" __global__ void repeatBlocks(const char *inbuf, size_t elemSize, size_t len, char *outbuf, size_t reps)
+{
+    size_t i = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if(i < elemSize * reps * len)
+    {
+        size_t e = i % elemSize;
+        size_t l = i / (elemSize * reps);
+        outbuf[i] = inbuf[l * elemSize + e];
+    }
+}
+                `);
+            }
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
-            import dopt.core.cpu : evaluateCPU;
+            void process(CUDABuffer inbuf, CUDABuffer outbuf, size_t elemSize, size_t len, size_t reps)
+            {
+                uint n = cast(uint)(elemSize * len * reps);
+                uint numThreads = 512;
+			    uint numBlocks = (cast(uint)n + numThreads) / numThreads;
+                mRepeatKernel.execute(numBlocks, numThreads, inbuf.ptr, elemSize, len, outbuf.ptr, reps);
+            }
 
-            auto inbuf = new byte[inputs[0].numBytes];
-            inputs[0].get(inbuf);
+            //Iterate over each axis, from smallest stride to largest stride
+            size_t elemSize = sizeOf(mOp.elementType);
+            auto inbuf = cast(CUDABuffer)inputs[0];
+            CUDABuffer outbuf;
 
-            import dopt.core.cpu : evaluate;
-            auto outbuf = evaluateCPU([mOp], [mInput: Buffer(inbuf)])[0];
+            foreach_reverse(i, a; mOp.attributes["repetitions"].get!(size_t[]))
+            {
+                elemSize *= mOp.deps[0].shape[i];
 
-            output.set(outbuf.as!byte);
+                if(a == 1)
+                {
+                    continue;
+                }
+                
+                outbuf = CUDABuffer.create(inbuf.numBytes * a);
+                
+                process(inbuf, outbuf, elemSize, inbuf.numBytes / elemSize, a);
+
+                elemSize *= a;
+
+                if(inbuf.ptr != inputs[0].ptr)
+                {
+                    CUDABuffer.destroy(inbuf);
+                }
+
+                inbuf = outbuf;
+            }
+
+            cuMemcpy(output.ptr, outbuf.ptr, output.numBytes);
+            CUDABuffer.destroy(outbuf);
         }
 
-        Operation mInput;
         Operation mOp;
+        static NVRTCKernel mRepeatKernel;
     }
 
     class Transpose : CUDAKernel

@@ -27,6 +27,10 @@ package
         registerOperation("maxpoolGrad", OpDef(toDelegate(&verifyMaxpoolGrad), toDelegate(&judgeMaxpoolGrad)));
         registerOperation("softmax", OpDef(toDelegate(&verifySoftmax), toDelegate(&judgeSoftmax)));
         registerOperation("softmaxGrad", OpDef(toDelegate(&verifySoftmaxGrad), toDelegate(&judgeSoftmaxGrad)));
+        registerOperation("addBias", OpDef(toDelegate(&verifyAddBias), toDelegate(&judgeAddBias)));
+        registerOperation("addBiasGrad", OpDef(toDelegate(&verifyAddBiasGrad), toDelegate(&judgeAddBiasGrad)));
+        registerOperation("batchNormTrain", OpDef(toDelegate(&verifyBatchNormTrain), toDelegate(&judgeBatchNormTrain)));
+        registerOperation("batchNormGrad", OpDef(toDelegate(&verifyBatchNormGrad), toDelegate(&judgeBatchNormGrad)));
     }
 }
 
@@ -57,11 +61,6 @@ private
             return false;
         }
 
-        if(imgs.shape[2] < filters.shape[2] || imgs.shape[3] < filters.shape[3])
-        {
-            return false;
-        }
-
         return true;
     }
 
@@ -70,10 +69,13 @@ private
         auto imgs = op.deps[0];
         auto filters = op.deps[1];
 
+        auto padding = op.attributes["padding"].get!(size_t[]);
+        auto stride = op.attributes["stride"].get!(size_t[]);
+
         auto batchSize = imgs.outputType.shape[0];
         auto outputChannels = filters.outputType.shape[0];
-        auto newHeight = imgs.outputType.shape[2] - filters.outputType.shape[2] + 1;
-        auto newWidth = imgs.outputType.shape[3] - filters.outputType.shape[3] + 1;
+        auto newHeight = (imgs.outputType.shape[2] + 2 * padding[0] - filters.outputType.shape[2]) / stride[0] + 1;
+        auto newWidth = (imgs.outputType.shape[3] + 2 * padding[1] - filters.outputType.shape[3]) / stride[1] + 1;
 
         auto shape = [batchSize, outputChannels, newHeight, newWidth];
 
@@ -167,6 +169,46 @@ private
     {
         return TensorType(op.deps[1].elementType, op.deps[1].shape);
     }
+
+    bool verifyAddBias(Operation op)
+    {
+        return true;
+    }
+
+    TensorType judgeAddBias(Operation op)
+    {
+        return op.deps[0].outputType;
+    }
+
+    bool verifyAddBiasGrad(Operation op)
+    {
+        return true;
+    }
+
+    TensorType judgeAddBiasGrad(Operation op)
+    {
+        return TensorType(op.deps[0].elementType, [op.deps[0].shape[1]]);
+    }
+
+    bool verifyBatchNormTrain(Operation op)
+    {
+        return true;
+    }
+
+    TensorType judgeBatchNormTrain(Operation op)
+    {
+        return op.deps[0].outputType;
+    }
+
+    bool verifyBatchNormGrad(Operation op)
+    {
+        return true;
+    }
+
+    TensorType judgeBatchNormGrad(Operation op)
+    {
+        return TensorType(op.deps[0].elementType, [op.deps[0].volume + op.deps[1].volume + op.deps[2].volume]);
+    }
 }
 
 public
@@ -183,10 +225,11 @@ public
         Returns:
             An operation representing convolutions of input imgs with some kernels.
     */
-    Operation convolution(Operation features, Operation filters, string mod = __MODULE__,
-        size_t line = __LINE__)
+    Operation convolution(Operation features, Operation filters, size_t[] padding = [0, 0], size_t[] stride = [1, 1],
+        string mod = __MODULE__, size_t line = __LINE__)
     {
-        return createOperation("convolution", [features, filters], null, mod, line);
+        return createOperation("convolution", [features, filters],
+            ["padding": Variant(padding), "stride": Variant(stride)], mod, line);
     }
 
     ///
@@ -225,13 +268,15 @@ public
         Returns:
             The operation.
     */
-    Operation convolutionTranspose(Operation features, Operation filters, string mod = __MODULE__,
-        size_t line = __LINE__)
+    Operation convolutionTranspose(Operation features, Operation filters, size_t[] padding = [0, 0],
+        size_t[] stride = [1, 1], string mod = __MODULE__, size_t line = __LINE__)
     {
         auto outShape = features.shape.dup;
-        outShape[] += filters.shape[] - 1;
+        outShape[2 .. $] -= 1;
+        outShape[2 .. $] *= stride[];
+        outShape[2 .. $] += filters.shape[2 .. $] - 2 * padding[];
 
-        return convolutionFeaturesGrad(features, filters, outShape, mod, line);
+        return convolutionFeaturesGrad(features, filters, outShape, padding, stride, mod, line);
     }
 
     /**
@@ -283,10 +328,11 @@ public
             The gradient.
     */
     Operation convolutionFeaturesGrad(Operation parentGrad, Operation filters, size_t[] featuresShape,
-        string mod = __MODULE__, size_t line = __LINE__)
+        size_t[] padding, size_t[] stride, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("convolutionFeaturesGrad", [parentGrad, filters],
-            ["featuresShape": Variant(featuresShape)], mod, line);
+            ["featuresShape": Variant(featuresShape), "padding": Variant(padding), "stride": Variant(stride)],
+            mod, line);
     }
 
     /**
@@ -301,10 +347,11 @@ public
             The gradient.
     */
     Operation convolutionFiltersGrad(Operation parentGrad, Operation features, size_t[] filtersShape,
-        string mod = __MODULE__, size_t line = __LINE__)
+        size_t[] padding, size_t[] stride, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("convolutionFiltersGrad", [parentGrad, features],
-            ["filtersShape": Variant(filtersShape)], mod, line);
+            ["filtersShape": Variant(filtersShape), "padding": Variant(padding), "stride": Variant(stride)],
+            mod, line);
     }
 
     /**
@@ -359,5 +406,27 @@ public
         size_t line = __LINE__)
     {
         return createOperation("softmaxGrad", [parentGrad, op], null, mod, line);
+    }
+
+    Operation addBias(Operation input, Operation bias, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("addBias", [input, bias], null, mod, line);
+    }
+
+    Operation addBiasGrad(Operation parentGrad, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("addBiasGrad", [parentGrad], null, mod, line);
+    }
+
+    Operation batchNormTrain(Operation input, Operation scale, Operation bias, string mod = __MODULE__,
+        size_t line = __LINE__)
+    {
+        return createOperation("batchNormTrain", [input, scale, bias], null, mod, line);
+    }
+
+    Operation batchNormGrad(Operation parentGrad, Operation input, Operation scale, string mod = __MODULE__,
+        size_t line = __LINE__)
+    {
+        return createOperation("batchNormGrad", [parentGrad, input, scale], null, mod, line);
     }
 }

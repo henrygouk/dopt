@@ -6,6 +6,7 @@
 module dopt.online.adam;
 
 import dopt.core;
+import dopt.online;
 
 /**
     Creates a delegate that can be used to perform a step using the ADAM update rule.
@@ -14,24 +15,29 @@ import dopt.core;
     differentiable w.r.t. all elements of wrt. The returned delegate performs minimisation.
 
     Params:
-        objective = Operation representing the loss function to be minimised.
-        wrt = an array of Operations that we want the derivative of objective with respect to.
-        alpha = the step size.
-        beta1 = fading factor for the first moment of the gradient.
-        beta2 = fading factor for the second moment of the gradient.
-        eps = to prevent division by zero.
+        outputs = An array of outputs. The first element of this array is the objective function to be minimised.
+        wrt = An array of Operations that we want the derivative of objective with respect to.
+        projs = Projection functions that can be applied when updating the values of elements in $(D wrt).
+        alpha = The step size.
+        beta1 = Fading factor for the first moment of the gradient.
+        beta2 = Fading factor for the second moment of the gradient.
+        eps = To prevent division by zero.
 
     Returns:
-         A delegate that is used to actually perform the update steps. The optimised values are stored in the "default"
-         attributes of the elements of wrt.
+         A delegate that is used to actually perform the update steps. The optimised values are stored in the
+         $(D value) properties of the elements of $(D wrt). The delegate returns the values computed for each element of the
+         $(D outputs) array. This can be useful for keeping track of several different performance metrics in a
+         prequential manner.
 */
-float delegate(Buffer[Operation] args) adam(Operation objective, Operation[] wrt,
+Buffer[] delegate(Buffer[Operation] args) adam(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
     Operation alpha = float32([], [0.001f]), Operation beta1 = float32([], [0.9f]),
     Operation beta2 = float32([], [0.999f]), Operation eps = float32([], [1e-8]))
 {
     import std.algorithm : map;
     import std.array : array;
     import std.range : zip;
+
+    auto objective = outputs[0];
 
     auto grads = grad(objective, wrt);
     auto means = wrt.map!(x => float32(x.shape)).array();
@@ -53,29 +59,34 @@ float delegate(Buffer[Operation] args) adam(Operation objective, Operation[] wrt
                    .map!(x => beta2 * x[1] + (1.0f - beta2) * x[0] * x[0])
                    .array();
 
-    auto meanHats = newMeans
-                   .map!(x => x / (1.0f - beta1))
-                   .array();
-
-    auto varHats = newVars
-                  .map!(x => x / (1.0f - beta2))
-                  .array();
-
-    auto newvals = zip(wrt, meanHats, varHats)
+    auto newvals = zip(wrt, newMeans, newVars)
                   .map!(x => x[0] - eta * (x[1] / (sqrt(x[2]) + eps)))
                   .array();
 
-    float update(Buffer[Operation] args)
+    //Apply projections
+    for(size_t i = 0; i < newvals.length; i++)
     {
-        auto newbufs = evaluate([objective] ~ newvals ~ newMeans ~ newVars ~ [nb1, nb2], args);
-
-        foreach(b, w; zip(newbufs[1 .. $], wrt ~ means ~ vars ~ [b1, b2]))
+        if(wrt[i] in projs)
         {
-            auto wrtbuf = w.value.as!byte;
-            wrtbuf[] = b.as!byte[];
+            newvals[i] = projs[wrt[i]](newvals[i]);
         }
+    }
 
-        return newbufs[0].as!float[0];
+    auto updatePlan = new CUDAPlan(outputs ~ newvals ~ newMeans ~ newVars ~ [nb1, nb2]);
+
+    import std.range : chain;
+
+    auto newbufs = chain(wrt, means, vars, [b1, b2])
+                  .map!(x => x.value)
+                  .array();
+
+    newbufs = outputs.map!(x => Buffer(new float[x.volume])).array() ~ newbufs;
+
+    Buffer[] update(Buffer[Operation] args)
+    {
+        updatePlan.execute(args, newbufs);
+
+        return newbufs[0 .. outputs.length];
     }
 
     return &update;
@@ -105,7 +116,7 @@ unittest
     auto y = float32([]);
 
     //Create an SGD updater
-    auto updater = adam((yhat - y) * (yhat - y), [m, c], float32([], [1.0f]));
+    auto updater = adam([(yhat - y) * (yhat - y)], [m, c], null, float32([], [1.0f]));
 
     //Iterate for a while
     float loss;
@@ -117,7 +128,7 @@ unittest
         loss = updater([
             x: Buffer(xdata[j .. j + 1]),
             y: Buffer(ydata[j .. j + 1])
-        ]);
+        ])[0].as!float[0];
     }
 
     //Print the loss after 500 iterations. Let the user decide whether it's good enough to be considered a pass.

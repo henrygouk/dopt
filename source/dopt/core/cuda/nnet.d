@@ -413,7 +413,13 @@ private
                 mode = CUDNN_BATCHNORM_SPATIAL;
             }
 
-            auto shape = op.deps[0].shape.map!(x => cast(int)x).array();
+            import std.range;
+
+            auto shape = op.deps[0].shape
+                        .chain(repeat(1))
+                        .map!(x => cast(int)x)
+                        .take(4)
+                        .array();
 
             cudnnCreateTensorDescriptor(&xDesc).cudnnCheck();
             cudnnCreateTensorDescriptor(&bnDesc).cudnnCheck();
@@ -457,7 +463,13 @@ private
                 mode = CUDNN_BATCHNORM_SPATIAL;
             }
 
-            auto shape = op.deps[1].shape.map!(x => cast(int)x).array();
+            import std.range;
+
+            auto shape = op.deps[1].shape
+                        .chain(repeat(1))
+                        .map!(x => cast(int)x)
+                        .take(4)
+                        .array();
 
             cudnnCreateTensorDescriptor(&xDesc).cudnnCheck();
             cudnnCreateTensorDescriptor(&bnDesc).cudnnCheck();

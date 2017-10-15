@@ -61,6 +61,7 @@ private
             {
                 mOp = op;
                 curandCreateGenerator(&mGen, CURAND_RNG_PSEUDO_DEFAULT);
+                curandSetPseudoRandomGeneratorSeed(mGen, cast(ulong)unpredictableSeed());
             }
 
             ~this()
@@ -70,7 +71,6 @@ private
 
             override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
             {
-                curandSetPseudoRandomGeneratorSeed(mGen, cast(ulong)unpredictableSeed());
                 curandGenerateUniform(mGen, cast(float *)output.ptr, mOp.volume);
             }
         }

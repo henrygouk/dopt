@@ -243,7 +243,7 @@ public
             1.0f, 1.0f, 1.0f, 0.0f, 0.0f
         ]);
 
-        auto filters = float32([1, 1, 1, 3], [
+        auto filters = float32([1, 1, 1, 2], [
             -1.0f, 1.0f
         ]);
 
@@ -252,9 +252,9 @@ public
         auto edges = result.evaluateCUDA().as!float;
 
         assert(edges == [
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f
         ]);
     }
 

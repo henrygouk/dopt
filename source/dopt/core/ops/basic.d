@@ -408,6 +408,10 @@ public
         {
             defaultVal = new ubyte[bufSize];
         }
+        else
+        {
+            enforce(defaultVal.length == bufSize, "The length of defaultVal does not match type.volume.");
+        }
 
         return createOperation("variable", [], ["type": Variant(type), "default": Variant(Buffer(defaultVal))], mod, line);
     }

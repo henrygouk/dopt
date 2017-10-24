@@ -4,6 +4,7 @@ import dopt;
 
 public
 {
+    import dopt.nnet.layers.batchnorm;
     import dopt.nnet.layers.conv;
     import dopt.nnet.layers.datasource;
     import dopt.nnet.layers.dense;

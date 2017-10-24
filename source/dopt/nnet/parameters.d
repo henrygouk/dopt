@@ -12,11 +12,11 @@
         
         $(D fan_in = shape[1] * shape[2] * shape[3]), $(D fan_out = shape[0] * shape[2] * shape[3])
 */
-module dopt.nnet.paraminit;
+module dopt.nnet.parameters;
 
 import std.math;
 
-import dopt.core;
+import dopt;
 
 /**
     Used to initialize a parameter in the neural network.
@@ -82,6 +82,24 @@ private
             throw new Exception("Cannot compute fan-out for a parameter tensor of rank " ~ shape.length.to!string);
         }
     }
+}
+
+/**
+    Encapsulates information about network parameters.
+
+    This can be used to keep track of per-parameter loss functions (e.g., weight decay), and also projection functions
+    that can be applied using constrained optimisation methods.
+*/
+struct Parameter
+{
+    ///An "variable" operation.
+    Operation symbol;
+
+    ///Used for applying loss terms to this parameter (e.g., weight decay)
+    Operation loss;
+
+    ///A projection operation that can enforce some constraint
+    Projection projection;
 }
 
 /**

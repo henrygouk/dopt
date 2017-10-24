@@ -98,19 +98,21 @@ void main(string[] args)
     auto features = float32([100, 1, 28, 28]);
 	auto labels = float32([100, 10]);
 
-	auto layers = dataSource(features)
-				 .convolutional(32, [5, 5])
-				 .relu()
-				 .maxPool([2, 2])
-				 .convolutional(32, [5, 5])
-				 .relu()
-				 .maxPool([2, 2])
-				 .dense(10)
-				 .softmax();
+	auto preds = dataSource(features)
+				.conv2D(32, [5, 5])
+				.relu()
+				.maxPool([2, 2])
+				.conv2D(32, [5, 5])
+				.relu()
+				.maxPool([2, 2])
+				.dense(10)
+				.softmax();
 
-	auto network = new NeuralNetwork([layers, layers.crossEntropy(dataSource(labels))]);
+	auto network = new Network([features], [preds]);
 
-	auto updater = sgd(network.loss, network.parameters);
+	auto lossSym = crossEntropy(preds.trainOutput, labels) + network.paramLoss;
+
+	auto updater = adam([lossSym], network.params, null);
 
 	foreach(e; 0 .. 10)
 	{
@@ -124,7 +126,7 @@ void main(string[] args)
 				labels: Buffer(ls.joiner().array())
 			]);
 
-			totloss += loss;
+			totloss += loss[0].as!float[0];
 			tot++;
 		}
 

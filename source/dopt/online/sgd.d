@@ -6,6 +6,7 @@
 module dopt.online.sgd;
 
 import dopt.core;
+import dopt.online;
 
 /**
     Creates a delegate that can be used to perform a step using the stochastic gradient descent update rule.
@@ -22,12 +23,14 @@ import dopt.core;
          A delegate that is used to actually perform the update steps. The optimised values are stored in the "default"
          attributes of the elements of wrt.
 */
-float delegate(Buffer[Operation] args) sgd(Operation objective, Operation[] wrt,
+Updater sgd(Operation[] outputs, Operation[] wrt,
     Operation learningRate = float32([], [0.01f]))
 {
     import std.algorithm : map;
     import std.array : array;
     import std.range : zip;
+
+    auto objective = outputs[0];
 
     auto grads = grad(objective, wrt);
 
@@ -35,17 +38,17 @@ float delegate(Buffer[Operation] args) sgd(Operation objective, Operation[] wrt,
                   .map!(x => x[0] - learningRate * x[1])
                   .array();
 
-    float update(Buffer[Operation] args)
+    Buffer[] update(Buffer[Operation] args)
     {
-        auto newbufs = evaluate([objective] ~ newvals, args);
+        auto newbufs = evaluate(outputs ~ newvals, args);
 
-        foreach(b, w; zip(newbufs[1 .. $], wrt))
+        foreach(b, w; zip(newbufs[outputs.length .. $], wrt))
         {
             auto wrtbuf = cast(byte[])w.attributes["default"].get!Buffer.as!byte;
             wrtbuf[] = b.as!byte[];
         }
 
-        return newbufs[0].as!float[0];
+        return newbufs[0 .. outputs.length];
     }
 
     return &update;
@@ -75,7 +78,7 @@ unittest
     auto y = float32([]);
 
     //Create an SGD updater
-    auto updater = sgd((yhat - y) * (yhat - y), [m, c]);
+    auto updater = sgd([(yhat - y) * (yhat - y)], [m, c]);
 
     //Iterate for a while
     float loss;
@@ -87,7 +90,7 @@ unittest
         loss = updater([
             x: Buffer(xdata[j .. j + 1]),
             y: Buffer(ydata[j .. j + 1])
-        ]);
+        ])[0].as!float[0];
     }
 
     //Print the loss after 500 iterations. Let the user decide whether it's good enough to be considered a pass.

@@ -29,7 +29,7 @@ import dopt.online;
          $(D outputs) array. This can be useful for keeping track of several different performance metrics in a
          prequential manner.
 */
-Buffer[] delegate(Buffer[Operation] args) adam(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
+Updater adam(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
     Operation alpha = float32([], [0.001f]), Operation beta1 = float32([], [0.9f]),
     Operation beta2 = float32([], [0.999f]), Operation eps = float32([], [1e-8]))
 {
@@ -80,7 +80,7 @@ Buffer[] delegate(Buffer[Operation] args) adam(Operation[] outputs, Operation[] 
                   .map!(x => x.value)
                   .array();
 
-    newbufs = outputs.map!(x => Buffer(new float[x.volume])).array() ~ newbufs;
+    newbufs = outputs.map!(x => Buffer(new ubyte[x.volume * x.elementType.sizeOf])).array() ~ newbufs;
 
     Buffer[] update(Buffer[Operation] args)
     {
@@ -115,7 +115,7 @@ unittest
     auto yhat = m * x + c;
     auto y = float32([]);
 
-    //Create an SGD updater
+    //Create an ADAM updater
     auto updater = adam([(yhat - y) * (yhat - y)], [m, c], null, float32([], [1.0f]));
 
     //Iterate for a while
@@ -131,7 +131,7 @@ unittest
         ])[0].as!float[0];
     }
 
-    //Print the loss after 500 iterations. Let the user decide whether it's good enough to be considered a pass.
+    //Print the loss after 200 iterations. Let the user decide whether it's good enough to be considered a pass.
     import std.stdio : writeln;
     writeln(
         "Adam loss: ", loss, "    ",

@@ -12,7 +12,7 @@ public
     import dopt.online.sgd;
 }
 
-import dopt.core.ops;
+import dopt.core;
 
 /**
     Used for performing projected gradient descent.
@@ -20,3 +20,8 @@ import dopt.core.ops;
     The delegate should take a new value for some tensor, and project it back into the feasible set.
 */
 alias Projection = Operation delegate(Operation);
+
+/**
+    A delegate that can be used to perform the update step for an online optimisation algorithm.
+*/
+alias Updater = Buffer[] delegate(Buffer[Operation] args);

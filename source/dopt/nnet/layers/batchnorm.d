@@ -5,6 +5,7 @@ module dopt.nnet.layers.batchnorm;
 
 import dopt;
 
+///
 Layer batchNorm(Layer input)
 {
     auto x = input.output;

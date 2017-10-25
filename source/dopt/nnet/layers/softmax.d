@@ -5,6 +5,7 @@ module dopt.nnet.layers.softmax;
 
 import dopt;
 
+///
 Layer softmax(Layer input)
 {
     import dopt.core.ops.nnet : softmax;

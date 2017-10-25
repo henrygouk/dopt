@@ -5,6 +5,7 @@ module dopt.nnet.layers.dropout;
 
 import dopt;
 
+///
 Layer dropout(Layer input, float dropProb)
 {
     import std.array : array;

@@ -6,6 +6,7 @@ module dopt.nnet.layers.relu;
 import dopt;
 import dopt.nnet.layers.util;
 
+///
 Layer relu(Layer input)
 {
     Operation reluImpl(Operation x)

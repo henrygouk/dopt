@@ -51,6 +51,7 @@
 <url><loc>http://127.0.0.1/dopt/core/grads.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/grads/grad.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/batchnorm.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/layers/batchnorm/batchNorm.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/conv.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/conv/conv2D.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/conv/Conv2DOptions.html</loc></url>
@@ -60,9 +61,13 @@
 <url><loc>http://127.0.0.1/dopt/nnet/layers/dense/dense.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/dense/DenseOptions.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/dropout.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/layers/dropout/dropout.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/maxpool.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/layers/maxpool/maxPool.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/relu.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/layers/relu/relu.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/softmax.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/layers/softmax/softmax.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/Layer.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/Layer.this.html</loc></url>

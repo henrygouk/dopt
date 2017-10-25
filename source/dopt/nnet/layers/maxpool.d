@@ -6,6 +6,7 @@ module dopt.nnet.layers.maxpool;
 import dopt;
 import dopt.nnet.layers.util;
 
+///
 Layer maxPool(Layer input, size_t[] dims)
 {
     import dopt.core.ops.nnet : maxpool;

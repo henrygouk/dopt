@@ -108,7 +108,7 @@ void main(string[] args)
 				.dense(10)
 				.softmax();
 
-	auto network = new Network([features], [preds]);
+	auto network = new DAGNetwork([features], [preds]);
 
 	auto lossSym = crossEntropy(preds.trainOutput, labels) + network.paramLoss;
 

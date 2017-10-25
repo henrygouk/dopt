@@ -5,7 +5,7 @@ import std.array;
 
 import dopt;
 
-class Network
+class DAGNetwork
 {
     public
     {

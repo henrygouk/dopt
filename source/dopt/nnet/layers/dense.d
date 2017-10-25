@@ -1,8 +1,14 @@
+/**
+    Authors: Henry Gouk
+*/
 module dopt.nnet.layers.dense;
 
 import dopt;
 import dopt.nnet.layers.util;
 
+/**
+    Encapsulates additional options for dense layers.
+*/
 class DenseOptions
 {
     this()
@@ -23,6 +29,34 @@ class DenseOptions
     ));
 }
 
+///
+unittest
+{
+    //Create a DenseOptions object with the default parameters
+    auto opts = new DenseOptions()
+               .weightsInit(heGaussianInit())
+               .biasInit(constantInit(0.0f))
+               .weightProj(null)
+               .biasProj(null)
+               .weightDecay(0.0f)
+               .useBias(true);
+    
+    //Options can also be read back again later
+    assert(opts.weightDecay == 0.0f);
+    assert(opts.useBias == true);
+}
+
+/**
+    Creates a fully connected (AKA, dense) layer.
+
+    Params:
+        input = The previous layer in the network.
+        numOutputs = The number of units in this layer.
+        opts = Additional options with sensible default values.
+    
+    Returns:
+        The new layer.
+*/
 Layer dense(Layer input, size_t numOutputs, DenseOptions opts = new DenseOptions())
 {
     auto x = input.output;

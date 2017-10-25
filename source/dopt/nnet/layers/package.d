@@ -1,3 +1,6 @@
+/**
+    Authors: Henry Gouk
+*/
 module dopt.nnet.layers;
 
 import dopt;
@@ -14,10 +17,22 @@ public
     import dopt.nnet.layers.softmax;
 }
 
+/**
+    Encapsulates the expressions and parameter information that defines a network layer.
+*/
 class Layer
 {
     public
     {
+        /**
+            Constructs a new layer.
+
+            Params:
+                deps = Other $(D Layer) objects that this layer depends on.
+                outExpr = The output expression to use at test time.
+                trainOutExpr = The output expression to use at train time.
+                params = Any parameters managed by this layer.
+        */
         this(Layer[] deps, Operation outExpr, Operation trainOutExpr, Parameter[] params)
         {
             mDeps = deps.dup;

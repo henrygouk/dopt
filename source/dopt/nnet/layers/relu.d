@@ -1,3 +1,6 @@
+/**
+    Authors: Henry Gouk
+*/
 module dopt.nnet.layers.relu;
 
 import dopt;

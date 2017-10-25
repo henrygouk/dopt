@@ -1,8 +1,14 @@
+/**
+    Authors: Henry Gouk
+*/
 module dopt.nnet.layers.conv;
 
 import dopt;
 import dopt.nnet.layers.util;
 
+/**
+    Encapsulates the additional options for a $(D Layer) created with conv2D.
+*/
 class Conv2DOptions
 {
     this()
@@ -15,6 +21,7 @@ class Conv2DOptions
         _weightDecay = 0.0f;
 
     }
+
     mixin(dynamicProperties(
         "size_t[]", "padding",
         "size_t[]", "stride",
@@ -27,16 +34,37 @@ class Conv2DOptions
     ));
 }
 
+///
 unittest
 {
+    //Creates a Conv2DOptions object with the default parameter values
     auto opts = new Conv2DOptions()
-               .padding([1, 1])
-               .stride([2, 2]);
+               .padding([0, 0])
+               .stride([1, 1])
+               .filterInit(heGaussianInit())
+               .biasInit(constantInit(0.0f))
+               .filterProj(null)
+               .biasProj(null)
+               .weightDecay(0.0f)
+               .useBias(true);
     
-    assert(opts.padding == [1, 1]);
-    assert(opts.stride == [2, 2]);
+    //The fields can also be accessed again later
+    assert(opts.padding == [0, 0]);
+    assert(opts.stride == [1, 1]);
 }
 
+/**
+    Creates a convolutional layer typically found in a convnet used for image classification.
+
+    Params:
+        input = The previous (i.e., input) layer.
+        outputChannels = The number of feature maps that this layer should produce.
+        filterDims = The size of the kernels that should be convolved with the inputs.
+        opts = Additional options, with sensible defaults.
+    
+    Returns:
+        The new convolutional $(D Layer).
+*/
 Layer conv2D(Layer input, size_t outputChannels, size_t[] filterDims, Conv2DOptions opts = new Conv2DOptions())
 {
     auto padding = opts.padding;

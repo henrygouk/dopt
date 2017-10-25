@@ -99,6 +99,7 @@ var symbols = [
 {name: 'dopt.online.sgd.sgd', kind: "functiondeclaration", path: './dopt/online/sgd/sgd.html', attributes: []},
 {name: 'dopt.core', kind: "module", path: './dopt/core.html', attributes: []},
 {name: 'dopt.core.evaluate', kind: "functiondeclaration", path: './dopt/core/evaluate.html', attributes: []},
+{name: 'dopt.nnet', kind: "module", path: './dopt/nnet.html', attributes: []},
 {name: 'dopt.online', kind: "module", path: './dopt/online.html', attributes: []},
 {name: 'dopt.online.Projection', kind: "aliasdeclaration", path: './dopt/online/Projection.html', attributes: []},
 {name: 'dopt.online.Updater', kind: "aliasdeclaration", path: './dopt/online/Updater.html', attributes: []},

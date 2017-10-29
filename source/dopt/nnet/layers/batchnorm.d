@@ -8,10 +8,13 @@ import dopt;
 ///
 Layer batchNorm(Layer input)
 {
+    import std.array : array;
+    import std.range : repeat;
+
     auto x = input.output;
     auto xTr = input.trainOutput;
 
-    auto gamma = float32([1, x.shape[1], 1, 1]);
+    auto gamma = float32([1, x.shape[1], 1, 1], repeat(1.0f, x.shape[1]).array());
     auto beta = float32([x.shape[1]]);
 
     auto y = x.batchNormTrain(gamma, beta);

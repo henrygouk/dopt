@@ -1,6 +1,8 @@
 dopt
 ====
 
+[![DUB](https://img.shields.io/dub/v/dopt.svg)]()
+
 A numerical optimisation and deep learning framework for D.
 
 Current features include:
@@ -12,12 +14,13 @@ Current features include:
 * Stochastic gradient descent
 * Neural network primitives
 * Neural network construction utilities
-* Framework to add third party operations and their derivatives, and the ability register implementations for both the CPU and CUDA backends.
+* Framework to add third party operations and their derivatives, and the ability register implementations for both the CPU and CUDA backends
+* Online optimisation algorithms: SGD and ADAM
 
 The project is still in the early stages, and some things might not work properly yet. Some planned future features include:
 
 * The ability to add optimisation passes to the CPU and CUDA backends.
-* More sophisticated online optimisation algorithms (SGD+momentum, AdaGrad, ADAM, etc)
+* More online optimisation algorithms (SGD+momentum, AdaGrad, etc)
 
 Docs
 ----

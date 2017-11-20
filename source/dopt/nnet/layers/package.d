@@ -39,11 +39,6 @@ class Layer
             mParams = params.dup;
             mOutput = outExpr;
             mTrainOutput = trainOutExpr;
-
-            import std.exception : enforce;
-
-            enforce(mOutput.shape == mTrainOutput.shape,
-                "The shapes of the output and trainOutput expressions must be the same");
         }
 
         Layer[] deps()

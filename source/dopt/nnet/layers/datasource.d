@@ -14,3 +14,8 @@ Layer dataSource(Operation var)
 {
     return new Layer(null, var, var, null);
 }
+
+Layer dataSource(Operation var, Operation trainVar)
+{
+    return new Layer(null, var, trainVar, null);
+}

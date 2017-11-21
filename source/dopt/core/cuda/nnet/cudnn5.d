@@ -1,4 +1,4 @@
-module dopt.core.cuda.nnet;
+module dopt.core.cuda.nnet.cudnn5;
 
 import std.algorithm;
 import std.array;
@@ -8,13 +8,13 @@ import dopt.core.cuda;
 import dopt.core.ops;
 
 import derelict.cuda;
-import derelict.cudnn;
+import derelict.cudnn5;
 
 package
 {
-    void initialize()
+    void initializeCuDNN5()
     {
-        DerelictCuDNN.load();
+        DerelictCuDNN5.load();
         
         registerCUDAKernel("convolution", toDelegate(&cudaKernelCtr!ConvolutionForward));
         registerCUDAKernel("convolutionFeaturesGrad", toDelegate(&cudaKernelCtr!ConvolutionFeaturesGrad));
@@ -77,7 +77,8 @@ private
                 inShape[3]).cudnnCheck();
             cudnnSetFilter4dDescriptor(wDesc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, filterShape[0], filterShape[1],
                 filterShape[2], filterShape[3]).cudnnCheck();
-            cudnnSetConvolution2dDescriptor(convDesc, padH, padW, strideY, strideX, 1, 1, CUDNN_CONVOLUTION).cudnnCheck();
+            cudnnSetConvolution2dDescriptor_v5(convDesc, padH, padW, strideY, strideX, 1, 1, CUDNN_CONVOLUTION,
+                CUDNN_DATA_FLOAT).cudnnCheck();
             cudnnSetTensor4dDescriptor(yDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outShape[0], outShape[1],
                 outShape[2], outShape[3]).cudnnCheck();
         }

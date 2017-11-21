@@ -1,4 +1,4 @@
-module source.dopt.core.cuda.nnet.cudnn7;
+module dopt.core.cuda.nnet.cudnn7;
 
 import std.algorithm;
 import std.array;
@@ -68,8 +68,7 @@ private
             strideY = cast(int)stride[0];
             strideX = cast(int)stride[1];
 
-            import std.variant : variant;
-            auto dilation = op.attributes.get("dilation", Variant([1LU, 1LU])).get(size_t[]);
+            auto dilation = [1LU, 1LU];
             int dilY = cast(int)dilation[0];
             int dilX = cast(int)dilation[1];
 

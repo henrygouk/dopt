@@ -3,7 +3,7 @@
 	"authors": [
 		"Henry Gouk"
 	],
-	"description": "A numerical optimisation framework",
+	"description": "A numerical optimisation and deep learning framework",
 	"copyright": "Copyright © 2017, Henry Gouk",
 	"license": "BSD 3-clause",
 	"dependencies": {

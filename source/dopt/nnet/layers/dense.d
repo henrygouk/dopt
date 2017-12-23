@@ -34,7 +34,7 @@ unittest
 {
     //Create a DenseOptions object with the default parameters
     auto opts = new DenseOptions()
-               .weightsInit(heGaussianInit())
+               .weightInit(heGaussianInit())
                .biasInit(constantInit(0.0f))
                .weightProj(null)
                .biasProj(null)

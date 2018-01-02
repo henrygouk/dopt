@@ -301,9 +301,6 @@ class CUDAPlan
             {
                 results[o].get(rets[i].as!ubyte);
             }
-
-            import std.stdio;
-            writeln(profiler);
         }
 
         ~this()

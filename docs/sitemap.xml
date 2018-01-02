@@ -46,7 +46,6 @@
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDAKernel.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDAKernel.execute.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDAPlan.html</loc></url>
-<url><loc>http://127.0.0.1/dopt/core/cuda/CUDAPlan.execute.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/deregisterCUDAKernel.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/evaluateCUDA.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/evaluateCUDA.html</loc></url>
@@ -120,6 +119,7 @@
 <url><loc>http://127.0.0.1/dopt/online/sgd.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/online/sgd/sgd.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/compile.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/evaluate.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/evaluate.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet.html</loc></url>

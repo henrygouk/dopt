@@ -9,15 +9,13 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script></d
 <a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Class CUDAPlan</h1><p>A Plan stores all the resources (preallocated buffers, custom CUDA kernels) required to evaluate nodes from the
     Operation graph.
 </p><div class="prototype"><code class="lang-d"><div class="single-prototype"><span class="kwd">class</span> <span class="typ">CUDAPlan</span>
+<br>&nbsp;&nbsp;: <span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core<wbr/></span><span class="pun">.</span><span class="typ">Plan</span>
 <span class="pun">;</span></div></code></div><section><p>An instance of Plan can be constructed using the <code class="lang-d"><span class="pln">compileCUDA</span></code> function. The primary use case for a CUDAPlan is when the
     same set of operations are likely to be evaluated more than once. This prevents the dopt CUDA runtime from
     reallocating and optimising the CUDA kernels every time the same set of operations is to be executed.
 </p>
 </section>
-<section><h2>Methods</h2><table>
-<col class="caption"/>
-<tr><th>Name</th><th>Description</th></tr><tr><td><a href="../../../dopt/core/cuda/CUDAPlan.execute.html" class="[&quot;public&quot;]"><code>execute</code></a></td><td>Executes the plan.
-</td></tr></table></section>
+
 </div><footer><div id="license-info"><p>Henry Gouk
 </p>
 

@@ -24,7 +24,7 @@ The project is still in the early stages, and some things might not work properl
 Docs
 ----
 
-Documentation can be found [here](https://henrygouk.github.io/dopt/).
+Documentation can be found [here](https://henrygouk.github.io/dopt/). A brief outline of how to use this framework for deep learning is provided [here](https://henrygouk.github.io/dopt/dopt/nnet.html).
 
 Using
 -----

@@ -1,6 +1,6 @@
 /**
     This package contains implementations of common online optimisation algorithms, with a particular bias towards
-    those commonly used in machine learning/deep learning.
+    those commonly used in large scale machine learning/deep learning.
 
     Authors: Henry Gouk
 */

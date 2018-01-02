@@ -47,7 +47,7 @@ Updater sgd(Operation[] outputs, Operation[] wrt,
                   .map!(x => x[0] - x[1])
                   .array();
 
-    auto updatePlan = new CUDAPlan(outputs ~ newvals ~ newMomentum);
+    auto updatePlan = compile(outputs ~ newvals ~ newMomentum);
 
     import std.range : chain;
 

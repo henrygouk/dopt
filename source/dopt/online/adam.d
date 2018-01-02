@@ -72,7 +72,7 @@ Updater adam(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
         }
     }
 
-    auto updatePlan = new CUDAPlan(outputs ~ newvals ~ newMeans ~ newVars ~ [nb1, nb2]);
+    auto updatePlan = compile(outputs ~ newvals ~ newMeans ~ newVars ~ [nb1, nb2]);
 
     import std.range : chain;
 

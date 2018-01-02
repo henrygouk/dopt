@@ -78,7 +78,7 @@ Updater amsgrad(Operation[] outputs, Operation[] wrt, Projection[Operation] proj
         }
     }
 
-    auto updatePlan = new CUDAPlan(outputs ~ newvals ~ newMeans ~ newVars ~ newVarhats ~ [nb1, nb2]);
+    auto updatePlan = compile(outputs ~ newvals ~ newMeans ~ newVars ~ newVarhats ~ [nb1, nb2]);
 
     import std.range : chain;
 

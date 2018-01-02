@@ -116,12 +116,12 @@ unittest
     auto y = float32([]);
 
     //Create an ADAM updater
-    auto updater = adam([(yhat - y) * (yhat - y)], [m, c], null, float32([], [1.0f]));
+    auto updater = adam([(yhat - y) * (yhat - y)], [m, c], null, float32([], [0.1f]));
 
     //Iterate for a while
     float loss;
 
-    for(size_t i = 0; i < 200; i++)
+    for(size_t i = 0; i < 300; i++)
     {
         size_t j = i % 100;
 

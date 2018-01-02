@@ -18,13 +18,14 @@ import dopt.online;
         objective = Operation representing the loss function to be minimised.
         wrt = an array of Operations that we want the derivative of objective with respect to.
         learningRate = the value used to scale the size of the gradient used in the update rule
+        momentumRate = scaling factor for the previous update
 
     Returns:
          A delegate that is used to actually perform the update steps. The optimised values are stored in the "default"
          attributes of the elements of wrt.
 */
 Updater sgd(Operation[] outputs, Operation[] wrt,
-    Operation learningRate = float32([], [0.01f]))
+    Operation learningRate = float32([], [0.01f]), Operation momentumRate = float32([], [0.0f]))
 {
     import std.algorithm : map;
     import std.array : array;
@@ -34,19 +35,31 @@ Updater sgd(Operation[] outputs, Operation[] wrt,
 
     auto grads = grad(objective, wrt);
 
-    auto newvals = zip(wrt, grads)
-                  .map!(x => x[0] - learningRate * x[1])
+    auto momentum = grads
+                   .map!(x => float32(x.shape))
+                   .array();
+    
+    auto newMomentum = zip(grads, momentum)
+                      .map!(x => x[1] * momentumRate + learningRate * x[0])
+                      .array();
+
+    auto newvals = zip(wrt, newMomentum)
+                  .map!(x => x[0] - x[1])
                   .array();
+
+    auto updatePlan = new CUDAPlan(outputs ~ newvals ~ newMomentum);
+
+    import std.range : chain;
+
+    auto newbufs = chain(wrt, momentum)
+                  .map!(x => x.value)
+                  .array();
+
+    newbufs = outputs.map!(x => Buffer(new ubyte[x.volume * x.elementType.sizeOf])).array() ~ newbufs;
 
     Buffer[] update(Buffer[Operation] args)
     {
-        auto newbufs = evaluate(outputs ~ newvals, args);
-
-        foreach(b, w; zip(newbufs[outputs.length .. $], wrt))
-        {
-            auto wrtbuf = cast(byte[])w.attributes["default"].get!Buffer.as!byte;
-            wrtbuf[] = b.as!byte[];
-        }
+        updatePlan.execute(args, newbufs);
 
         return newbufs[0 .. outputs.length];
     }
@@ -78,12 +91,12 @@ unittest
     auto y = float32([]);
 
     //Create an SGD updater
-    auto updater = sgd([(yhat - y) * (yhat - y)], [m, c]);
+    auto updater = sgd([(yhat - y) * (yhat - y)], [m, c], float32([], [0.001f]), float32([], [0.9f]));
 
     //Iterate for a while
     float loss;
 
-    for(size_t i = 0; i < 500; i++)
+    for(size_t i = 0; i < 300; i++)
     {
         size_t j = i % 100;
 

@@ -122,7 +122,7 @@ unittest
     auto y = float32([]);
 
     //Create an AMSGrad updater
-    auto updater = amsgrad([(yhat - y) * (yhat - y)], [m, c], null, float32([], [1.0f]));
+    auto updater = amsgrad([(yhat - y) * (yhat - y)], [m, c], null, float32([], [0.1f]));
 
     //Iterate for a while
     float loss;

@@ -89,6 +89,32 @@ string[] listAllCPUOperations()
     return mKernels.keys.dup ~ ["constant", "variable", "reshape"];
 }
 
+class CPUPlan : Plan
+{
+    public
+    {
+        this(Operation[] outputs)
+        {
+            super(outputs);
+        }
+    }
+
+    protected
+    {
+        override void executeImpl(Buffer[Operation] args, Buffer[] rets)
+        {
+            auto tmpRets = evaluateCPU(mOutputs, args);
+
+            import std.range : zip;
+
+            foreach(t, r; zip(tmpRets, rets))
+            {
+                r.as!ubyte[] = t.as!ubyte[];
+            }
+        }
+    }
+}
+
 /**
     Evaluates an several nodes from the operation graph using the CPU.
 
@@ -114,6 +140,11 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
 
     //Count the number of references to each operation
     int[Operation] refCounts;
+
+    foreach(o; ops)
+    {
+        refCounts[o]++;
+    }
 
     foreach(o; sortedOps)
     {

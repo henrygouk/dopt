@@ -18,8 +18,7 @@ import dopt.core.cuda.nvrtc;
 import dopt.core.cuda.math;
 import dopt.core.cuda.nnet;
 import dopt.core.cuda.random;
-import dopt.core.ops;
-import dopt.core.types;
+import dopt.core;
 
 import derelict.cuda;
 
@@ -165,7 +164,7 @@ class CUDABuffer
     same set of operations are likely to be evaluated more than once. This prevents the dopt CUDA runtime from
     reallocating and optimising the CUDA kernels every time the same set of operations is to be executed.
 */
-class CUDAPlan
+class CUDAPlan : Plan
 {
     public
     {
@@ -175,6 +174,8 @@ class CUDAPlan
         {
             import std.algorithm : canFind, filter;
             import std.array : array;
+
+            super(outputs);
 
             auto sortedOps = topologicalSort(outputs);
 
@@ -193,7 +194,6 @@ class CUDAPlan
             }
 
             mOps = sortedOps.array;
-            mOutputs = outputs.array;
 
             foreach(o; mOps)
             {
@@ -216,27 +216,33 @@ class CUDAPlan
             results.rehash();
         }
 
-        Buffer[] execute(Buffer[Operation] args = null)
+        ~this()
         {
-            auto rets = new Buffer[mOutputs.length];
+            cleanup();
+        }
 
-            foreach(i, o; mOutputs)
+        void cleanup()
+        {
+            if(clean)
             {
-                rets[i] = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
+                return;
             }
 
-            execute(args, rets);
+            foreach(o; mOps)
+            {
+                if(o.opType != "reshape")
+                {
+                    CUDABuffer.destroy(results[o]);
+                }
+            }
 
-            return rets;
+            clean = true;
         }
-        
-        /**
-            Executes the plan.
+    }
 
-            Params:
-                args = A set of variable assignments.
-        */
-        void execute(Buffer[Operation] args, Buffer[] rets)
+    protected
+    {
+        override void executeImpl(Buffer[Operation] args, Buffer[] rets)
         {
             import std.datetime : StopWatch;
             StopWatch sw;
@@ -302,34 +308,10 @@ class CUDAPlan
                 results[o].get(rets[i].as!ubyte);
             }
         }
-
-        ~this()
-        {
-            cleanup();
-        }
-
-        void cleanup()
-        {
-            if(clean)
-            {
-                return;
-            }
-
-            foreach(o; mOps)
-            {
-                if(o.opType != "reshape")
-                {
-                    CUDABuffer.destroy(results[o]);
-                }
-            }
-
-            clean = true;
-        }
     }
 
     private
     {
-        Operation[] mOutputs;
         Operation[] mOps;
         CUDAKernel[Operation] mKernels;
         CUDABuffer[Operation] results;

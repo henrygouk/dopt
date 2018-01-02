@@ -23,6 +23,8 @@ package
         registerCUDAKernel("maxpoolGrad", toDelegate(&cudaKernelCtr!MaxpoolGrad));
         registerCUDAKernel("softmax", toDelegate(&cudaKernelCtr!Softmax));
         registerCUDAKernel("softmaxGrad", toDelegate(&cudaKernelCtr!SoftmaxGrad));
+        registerCUDAKernel("relu", toDelegate(&cudaKernelCtr!ReLU));
+        registerCUDAKernel("reluGrad", toDelegate(&cudaKernelCtr!ReLUGrad));
         registerCUDAKernel("addBias", toDelegate(&cudaKernelCtr!AddBias));
         registerCUDAKernel("addBiasGrad", toDelegate(&cudaKernelCtr!AddBiasGrad));
         registerCUDAKernel("batchNormTrain", toDelegate(&cudaKernelCtr!BatchNormTrain));
@@ -397,6 +399,80 @@ private
         }
 
         cudnnTensorDescriptor_t desc;
+    }
+
+    class ReLU : CUDAKernel
+    {
+        this(Operation op)
+        {
+            auto shape = op.shape.map!(x => cast(int)x).array();
+
+			cudnnCreateTensorDescriptor(&desc).cudnnCheck();
+			cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1],
+                reduce!"a * b"(1, shape[2 .. $]), 1).cudnnCheck();
+            
+            cudnnCreateActivationDescriptor(&actDesc).cudnnCheck();
+            cudnnSetActivationDescriptor(actDesc, CUDNN_ACTIVATION_RELU, CUDNN_PROPAGATE_NAN, 0.0).cudnnCheck();
+        }
+
+        ~this()
+        {
+            cudnnDestroyTensorDescriptor(desc).cudnnCheck();
+            cudnnDestroyActivationDescriptor(actDesc).cudnnCheck();
+        }
+
+        override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+        {
+            float alpha = 1.0;
+			float beta = 0.0;
+            auto x = cast(void *)inputs[0].ptr;
+            auto y = cast(void *)output.ptr;
+
+			cudnnActivationForward(handle, actDesc, &alpha, desc, x, &beta, desc, y).cudnnCheck();
+
+            cuCtxSynchronize();
+        }
+
+        cudnnTensorDescriptor_t desc;
+        cudnnActivationDescriptor_t actDesc;
+    }
+
+    class ReLUGrad : CUDAKernel
+    {
+        this(Operation op)
+        {
+            auto shape = op.shape.map!(x => cast(int)x).array();
+
+			cudnnCreateTensorDescriptor(&desc).cudnnCheck();
+			cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1],
+                reduce!"a * b"(1, shape[2 .. $]), 1).cudnnCheck();
+            
+            cudnnCreateActivationDescriptor(&actDesc).cudnnCheck();
+            cudnnSetActivationDescriptor(actDesc, CUDNN_ACTIVATION_RELU, CUDNN_PROPAGATE_NAN, 0.0).cudnnCheck();
+        }
+
+        ~this()
+        {
+            cudnnDestroyTensorDescriptor(desc).cudnnCheck();
+            cudnnDestroyActivationDescriptor(actDesc).cudnnCheck();
+        }
+
+        override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+        {
+            float alpha = 1.0;
+			float beta = 0.0;
+            auto dy = cast(void *)inputs[0].ptr;
+            auto y = cast(void *)inputs[1].ptr;
+            auto x = cast(void *)inputs[2].ptr;
+            auto dx = cast(void *)output.ptr;
+
+			cudnnActivationBackward(handle, actDesc, &alpha, desc, y, desc, dy, desc, x, &beta, desc, dx).cudnnCheck();
+
+            cuCtxSynchronize();
+        }
+
+        cudnnTensorDescriptor_t desc;
+        cudnnActivationDescriptor_t actDesc;
     }
 
     class AddBias : CUDAKernel

@@ -27,6 +27,8 @@ package
         registerOperation("maxpoolGrad", OpDef(toDelegate(&verifyMaxpoolGrad), toDelegate(&judgeMaxpoolGrad)));
         registerOperation("softmax", OpDef(toDelegate(&verifySoftmax), toDelegate(&judgeSoftmax)));
         registerOperation("softmaxGrad", OpDef(toDelegate(&verifySoftmaxGrad), toDelegate(&judgeSoftmaxGrad)));
+        registerOperation("relu", OpDef(toDelegate(&verifyRelu), toDelegate(&judgeRelu)));
+        registerOperation("reluGrad", OpDef(toDelegate(&verifyReluGrad), toDelegate(&judgeReluGrad)));
         registerOperation("addBias", OpDef(toDelegate(&verifyAddBias), toDelegate(&judgeAddBias)));
         registerOperation("addBiasGrad", OpDef(toDelegate(&verifyAddBiasGrad), toDelegate(&judgeAddBiasGrad)));
         registerOperation("batchNormTrain", OpDef(toDelegate(&verifyBatchNormTrain), toDelegate(&judgeBatchNormTrain)));
@@ -166,6 +168,26 @@ private
     }
 
     TensorType judgeSoftmaxGrad(Operation op)
+    {
+        return TensorType(op.deps[1].elementType, op.deps[1].shape);
+    }
+
+    bool verifyRelu(Operation op)
+    {
+        return op.deps.length == 1;
+    }
+
+    TensorType judgeRelu(Operation op)
+    {
+        return TensorType(op.deps[0].elementType, op.deps[0].shape);
+    }
+
+    bool verifyReluGrad(Operation op)
+    {
+        return op.deps.length == 3;
+    }
+
+    TensorType judgeReluGrad(Operation op)
     {
         return TensorType(op.deps[1].elementType, op.deps[1].shape);
     }
@@ -406,6 +428,26 @@ public
         size_t line = __LINE__)
     {
         return createOperation("softmaxGrad", [parentGrad, op], null, mod, line);
+    }
+
+    /**
+        Creates an operation representing the computation required for a ReLU layer.
+
+        Params:
+            inputs = The inputs to the ReLU function.
+        
+        Returns:
+            The operation.
+    */
+    Operation relu(Operation inputs, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("relu", [inputs], null, mod, line);
+    }
+
+    Operation reluGrad(Operation parentGrad, Operation op, string mod = __MODULE__,
+        size_t line = __LINE__)
+    {
+        return createOperation("reluGrad", [parentGrad, op, op.deps[0]], null, mod, line);
     }
 
     Operation addBias(Operation input, Operation bias, string mod = __MODULE__, size_t line = __LINE__)

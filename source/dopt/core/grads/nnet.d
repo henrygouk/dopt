@@ -13,6 +13,7 @@ package
         registerGradient("convolutionFeaturesGrad", toDelegate(&convolutionFeaturesGradGrad));
         registerGradient("maxpool", toDelegate(&maxpoolGrad));
         registerGradient("softmax", toDelegate(&softmaxGrad));
+        registerGradient("relu", toDelegate(&reluGrad));
         registerGradient("addBias", toDelegate(&addBiasGrad));
         registerGradient("batchNormTrain", toDelegate(&batchNormGrad));
     }
@@ -50,6 +51,11 @@ private
     Operation[] softmaxGrad(Operation op, Operation parentGrad)
     {
         return [dopt.core.ops.nnet.softmaxGrad(parentGrad, op)];
+    }
+
+    Operation[] reluGrad(Operation op, Operation parentGrad)
+    {
+        return [dopt.core.ops.nnet.reluGrad(parentGrad, op)];
     }
 
     Operation[] addBiasGrad(Operation op, Operation parentGrad)

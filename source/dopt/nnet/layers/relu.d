@@ -13,12 +13,9 @@ Layer relu(Layer input)
 {
     Operation reluImpl(Operation x)
     {
-        import std.array : array;
-        import std.range : repeat;
-
-        auto zeros = float32Constant(x.shape, repeat(0.0f, x.volume).array());
+        import dopt.core.ops.nnet : relu;
         
-        return max(x, zeros);
+        return relu(x);
     }
 
     return new Layer([input], reluImpl(input.output), reluImpl(input.trainOutput), null);

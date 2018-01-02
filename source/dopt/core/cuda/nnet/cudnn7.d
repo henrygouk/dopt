@@ -105,8 +105,12 @@ private
 		cudnnTensorDescriptor_t yDesc;
     }
 
+    private static CUDABuffer mWorkspace;
+
     class ConvolutionForward : ConvolutionBase
     {
+		private cudnnConvolutionFwdAlgo_t mAlgo;
+
         this(Operation op)
         {
             auto inShape = op.deps[0].outputType.shape.map!(x => cast(int)x).array();
@@ -114,6 +118,23 @@ private
             auto outShape = op.outputType.shape.map!(x => cast(int)x).array();
 
             super(op, inShape, filterShape, outShape);
+
+			cudnnConvolutionFwdAlgoPerf_t[9] algoPerfs;
+			int numAlgos;
+			cudnnFindConvolutionForwardAlgorithm(handle, xDesc, wDesc, convDesc, yDesc, cast(int)algoPerfs.length, &numAlgos, algoPerfs.ptr);
+
+			if(mWorkspace !is null && algoPerfs[0].memory > mWorkspace.numBytes)
+			{
+				CUDABuffer.destroy(mWorkspace);
+				mWorkspace = null;
+			}
+
+			if(mWorkspace is null)
+			{
+				mWorkspace = CUDABuffer.create(algoPerfs[0].memory);
+			}
+
+			mAlgo = algoPerfs[0].algo;
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
@@ -124,7 +145,9 @@ private
             float alpha = 1;
             float beta = 0;
 
-            cudnnConvolutionForward(handle, &alpha, xDesc, x, wDesc, w, convDesc, 0, null, 0, &beta, yDesc, y)
+			auto ws = cast(void *)(mWorkspace.ptr);
+			auto wss = mWorkspace.numBytes;
+            cudnnConvolutionForward(handle, &alpha, xDesc, x, wDesc, w, convDesc, mAlgo, ws, wss, &beta, yDesc, y)
             .cudnnCheck();
 
             cuCtxSynchronize();
@@ -133,6 +156,8 @@ private
 
     class ConvolutionFeaturesGrad : ConvolutionBase
     {
+		private cudnnConvolutionBwdDataAlgo_t mAlgo;
+
         this(Operation op)
         {
             auto inShape = op.shape.map!(x => cast(int)x).array();
@@ -140,6 +165,23 @@ private
             auto outShape = op.deps[0].shape.map!(x => cast(int)x).array();
 
             super(op, inShape, filterShape, outShape);
+
+			cudnnConvolutionBwdDataAlgoPerf_t[9] algoPerfs;
+			int numAlgos;
+			cudnnFindConvolutionBackwardDataAlgorithm(handle, wDesc, yDesc, convDesc, xDesc, cast(int)algoPerfs.length, &numAlgos, algoPerfs.ptr);
+
+			if(mWorkspace !is null && algoPerfs[0].memory > mWorkspace.numBytes)
+			{
+				CUDABuffer.destroy(mWorkspace);
+				mWorkspace = null;
+			}
+
+			if(mWorkspace is null)
+			{
+				mWorkspace = CUDABuffer.create(algoPerfs[0].memory);
+			}
+
+			mAlgo = algoPerfs[0].algo;
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
@@ -150,7 +192,7 @@ private
             float alpha = 1;
             float beta = 0;
 
-            cudnnConvolutionBackwardData(handle, &alpha, wDesc, w, yDesc, dy, convDesc, 0, null, 0, &beta, xDesc, dx)
+            cudnnConvolutionBackwardData(handle, &alpha, wDesc, w, yDesc, dy, convDesc, mAlgo, cast(void *)mWorkspace.ptr, mWorkspace.numBytes, &beta, xDesc, dx)
             .cudnnCheck();
 
             cuCtxSynchronize();
@@ -159,6 +201,8 @@ private
 
     class ConvolutionFiltersGrad : ConvolutionBase
     {
+		private cudnnConvolutionBwdFilterAlgo_t mAlgo;
+
         this(Operation op)
         {
             auto inShape = op.deps[1].outputType.shape.map!(x => cast(int)x).array();
@@ -166,6 +210,23 @@ private
             auto outShape = op.deps[0].outputType.shape.map!(x => cast(int)x).array();
 
             super(op, inShape, filterShape, outShape);
+
+			cudnnConvolutionBwdFilterAlgoPerf_t[9] algoPerfs;
+			int numAlgos;
+			cudnnFindConvolutionBackwardFilterAlgorithm(handle, xDesc, yDesc, convDesc, wDesc, cast(int)algoPerfs.length, &numAlgos, algoPerfs.ptr);
+
+			if(mWorkspace !is null && algoPerfs[0].memory > mWorkspace.numBytes)
+			{
+				CUDABuffer.destroy(mWorkspace);
+				mWorkspace = null;
+			}
+
+			if(mWorkspace is null)
+			{
+				mWorkspace = CUDABuffer.create(algoPerfs[0].memory);
+			}
+
+			mAlgo = algoPerfs[0].algo;
         }
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
@@ -176,7 +237,7 @@ private
             float alpha = 1;
             float beta = 0;
 
-            cudnnConvolutionBackwardFilter(handle, &alpha, xDesc, x, yDesc, dy, convDesc, 0, null, 0, &beta, wDesc,
+            cudnnConvolutionBackwardFilter(handle, &alpha, xDesc, x, yDesc, dy, convDesc, mAlgo, cast(void *)mWorkspace.ptr, mWorkspace.numBytes, &beta, wDesc,
                 dw).cudnnCheck();
 
             cuCtxSynchronize();

@@ -25,6 +25,7 @@ package
         registerOperation("transpose", OpDef(toDelegate(&verifyTranspose), toDelegate(&judgeTranspose)));
         registerOperation("repeat", OpDef(toDelegate(&verifyRepeat), toDelegate(&judgeRepeat)));
         registerOperation("variable", OpDef(toDelegate(&verifyVariable), toDelegate(&judgeVariable)));
+        registerOperation("constant", OpDef(toDelegate(&verifyVariable), toDelegate(&judgeVariable)));
     }
 }
 
@@ -450,5 +451,61 @@ public
     Operation int32(size_t[] size = [], int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.int32, size), defaultVal, mod, line);
+    }
+
+    /**
+        Creates a constant with the given type.
+
+        Params:
+            type = The type of the constant
+            val = The value of the constant. The array should store the elements in row major order.
+
+        Returns:
+            The newly created constant
+    */
+    Operation constant(TensorType type, void[] val, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        auto bufSize = type.volume * sizeOf(type.elementType);
+
+        if(val is null)
+        {
+            val = new ubyte[bufSize];
+        }
+        else
+        {
+            enforce(val.length == bufSize, "The length of val does not match type.volume.");
+        }
+
+        return createOperation("constant", [], ["type": Variant(type), "default": Variant(Buffer(val))], mod, line);
+    }
+
+    /**
+        Creates a constant with the given shape and float32 values.
+
+        Params:
+            size = The shape of the constant
+            val = The value of the constant. The array should store the elements in row major order.
+
+        Returns:
+            The newly created constant
+    */
+    Operation float32Constant(size_t[] size, float[] val, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return constant(TensorType(DataType.float32, size), val, mod, line);
+    }
+
+    /**
+        Creates a constant with the given shape and int32 values.
+
+        Params:
+            size = The shape of the constant
+            val = The value of the constant. The array should store the elements in row major order.
+
+        Returns:
+            The newly created constant
+    */
+    Operation int32Constant(size_t[] size, int[] val, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return constant(TensorType(DataType.int32, size), val, mod, line);
     }
 }

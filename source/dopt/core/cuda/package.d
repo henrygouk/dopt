@@ -99,7 +99,7 @@ class CUDABuffer
             Params:
                 buf = An array of data to be copied to the device.
         */
-        void set(void[] buf)
+        void set(const void[] buf)
         {
             enforce(buf.length == mNumBytes, "input buffer is the wrong length.");
 			enforce(cuMemcpyHtoD(mPtr, buf.ptr, buf.length) == CUDA_SUCCESS, "Failed to set contents of CUDA buffer");
@@ -180,7 +180,7 @@ class CUDAPlan
 
             foreach(o; sortedOps)
             {
-                if(o.opType == "variable" || o.opType == "reshape")
+                if(o.opType == "variable" || o.opType == "reshape" || o.opType == "constant")
                 {
                     continue;
                 }
@@ -198,13 +198,18 @@ class CUDAPlan
             foreach(o; mOps)
             {
                 //For reshape operations, we will just reuse the buffer of o.deps[0]
-                if(o.opType != "reshape")
+                if(o.opType == "reshape")
                 {
-                    results[o] = CUDABuffer.create(o.volume * o.elementType.sizeOf);
+                    results[o] = results[o.deps[0]];
                 }
                 else
                 {
-                    results[o] = results[o.deps[0]];
+                    results[o] = CUDABuffer.create(o.volume * o.elementType.sizeOf);
+
+                    if(o.opType == "constant")
+                    {
+                        results[o].set(o.value.as!ubyte);
+                    }
                 }
             }
 
@@ -269,7 +274,7 @@ class CUDAPlan
                     
                     continue;
                 }
-                else if(o.opType == "reshape")
+                else if(o.opType == "reshape" || o.opType == "constant")
                 {
                     continue;
                 }
@@ -297,8 +302,8 @@ class CUDAPlan
                 results[o].get(rets[i].as!ubyte);
             }
 
-            //import std.stdio;
-            //writeln(profiler);
+            import std.stdio;
+            writeln(profiler);
         }
 
         ~this()

@@ -86,7 +86,7 @@ void deregisterCPUKernel(string opName)
 */
 string[] listAllCPUOperations()
 {
-    return mKernels.keys.dup ~ ["variable", "reshape"];
+    return mKernels.keys.dup ~ ["constant", "variable", "reshape"];
 }
 
 /**
@@ -133,6 +133,11 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
 
         //Check for some easy optimizations
         if(o.opType == "variable" && !("variable" in mKernels))
+        {
+            results[o] = cast(Buffer)o.attributes["default"].get!Buffer;
+            continue;
+        }
+        else if(o.opType == "constant" && !("constant" in mKernels))
         {
             results[o] = cast(Buffer)o.attributes["default"].get!Buffer;
             continue;

@@ -1,0 +1,86 @@
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Function amsgrad</title>
+<link rel="stylesheet" href="../../../css/style.min.css"/>
+<script type="text/javascript" src="../../../js/script.min.js"></script></head><body onload="setupDdox();"><header></header><nav id="main-nav"><div><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
+<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script></div><ul class="tree-view"><li class="tree-view "><div class="package ">dopt</div><ul class="tree-view"><li class="tree-view collapsed"><div class="package "><a href="../../../dopt/core.html">core</a></div><ul class="tree-view"><li class="tree-view collapsed"><div class="package "><a href="../../../dopt/core/ops.html">ops</a></div><ul class="tree-view"><li><div class="module "><a href="../../../dopt/core/ops/basic.html">basic</a></div></li><li><div class="module "><a href="../../../dopt/core/ops/math.html">math</a></div></li><li><div class="module "><a href="../../../dopt/core/ops/nnet.html">nnet</a></div></li><li><div class="module "><a href="../../../dopt/core/ops/random.html">random</a></div></li></ul></li><li><div class="module "><a href="../../../dopt/core/cpu.html">cpu</a></div></li><li><div class="module "><a href="../../../dopt/core/cuda.html">cuda</a></div></li><li><div class="module "><a href="../../../dopt/core/grads.html">grads</a></div></li></ul></li><li class="tree-view collapsed"><div class="package "><a href="../../../dopt/nnet.html">nnet</a></div><ul class="tree-view"><li class="tree-view collapsed"><div class="package "><a href="../../../dopt/nnet/layers.html">layers</a></div><ul class="tree-view"><li><div class="module "><a href="../../../dopt/nnet/layers/batchnorm.html">batchnorm</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/conv.html">conv</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/datasource.html">datasource</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/dense.html">dense</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/dropout.html">dropout</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/maxpool.html">maxpool</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/relu.html">relu</a></div></li><li><div class="module "><a href="../../../dopt/nnet/layers/softmax.html">softmax</a></div></li></ul></li><li><div class="module "><a href="../../../dopt/nnet/losses.html">losses</a></div></li><li><div class="module "><a href="../../../dopt/nnet/networks.html">networks</a></div></li><li><div class="module "><a href="../../../dopt/nnet/parameters.html">parameters</a></div></li></ul></li><li class="tree-view "><div class="package "><a href="../../../dopt/online.html">online</a></div><ul class="tree-view"><li><div class="module "><a href="../../../dopt/online/adam.html">adam</a></div></li><li><div class="module selected"><a href="../../../dopt/online/amsgrad.html">amsgrad</a></div></li><li><div class="module "><a href="../../../dopt/online/sgd.html">sgd</a></div></li></ul></li></ul></li></ul></div><p id="main-nav-footer">Built with
+<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Function amsgrad</h1><p>Creates a delegate that can be used to perform a step using the AMSGrad update rule.
+</p><div class="prototype"><code class="lang-d"><div class="single-prototype">
+{null} <span class="pln">amsgrad
+<span class="pun">()</span><span class="pun">;</span></div></code></div><section><p>This function relies on automatic differentiation, so the objective (which must have a volume of 1) must be
+    differentiable w.r.t. all elements of wrt. The returned delegate performs minimisation.
+</p>
+</section>
+
+<section><h2>Parameters</h2>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="outputs">outputs</td><td> An array of outputs. The first element of this array is the objective function to be minimised.</td></tr>
+<tr><td id="wrt">wrt</td><td> An array of Operations that we want the derivative of objective with respect to.</td></tr>
+<tr><td id="projs">projs</td><td> Projection functions that can be applied when updating the values of elements in <code class="lang-d"><span class="pln">wrt</span></code>.</td></tr>
+<tr><td id="alpha">alpha</td><td> The step size.</td></tr>
+<tr><td id="beta1">beta1</td><td> Fading factor for the first moment of the gradient.</td></tr>
+<tr><td id="beta2">beta2</td><td> Fading factor for the second moment of the gradient.</td></tr>
+<tr><td id="eps">eps</td><td> To prevent division by zero.</td></tr>
+</table>
+</section>
+<section><h2>Returns</h2>
+<p>A delegate that is used to actually perform the update steps. The optimised values are stored in the
+         <code class="lang-d"><span class="pln">value</span></code> properties of the elements of <code class="lang-d"><span class="pln">wrt</span></code>. The delegate returns the values computed for each element of the
+         <code class="lang-d"><span class="pln">outputs</span></code> array. This can be useful for keeping track of several different performance metrics in a
+         prequential manner.
+</p>
+</section>
+<section><h2>Example</h2>
+
+<pre class="code"><code class="lang-d"><span class="kwd">import </span><span class="pln">std<wbr/></span><span class="pun">.</span><span class="pln">random </span><span class="pun">: </span><span class="pln">uniform</span><span class="pun">;
+
+</span><span class="com">//Generate some points
+</span><span class="kwd">auto </span><span class="pln">xdata </span><span class="pun">= </span><span class="kwd">new </span><span class="typ">float</span><span class="pun">[</span><span class="lit">100</span><span class="pun">];
+</span><span class="kwd">auto </span><span class="pln">ydata </span><span class="pun">= </span><span class="kwd">new </span><span class="typ">float</span><span class="pun">[</span><span class="lit">100</span><span class="pun">];
+
+</span><span class="kwd">foreach</span><span class="pun">(</span><span class="pln">i</span><span class="pun">; </span><span class="lit">0 </span><span class="pun">.. </span><span class="lit">100</span><span class="pun">)
+{
+    </span><span class="pln">xdata</span><span class="pun">[</span><span class="pln">i</span><span class="pun">] = </span><span class="pln">uniform</span><span class="pun">(-</span><span class="lit">10.0f</span><span class="pun">, </span><span class="lit">10.0f</span><span class="pun">);
+    </span><span class="pln">ydata</span><span class="pun">[</span><span class="pln">i</span><span class="pun">] = </span><span class="lit">3.0f </span><span class="pun">* </span><span class="pln">xdata</span><span class="pun">[</span><span class="pln">i</span><span class="pun">] + </span><span class="lit">2.0f</span><span class="pun">;
+}
+
+</span><span class="com">//Create the model
+</span><span class="kwd">auto </span><span class="pln">x </span><span class="pun">= </span><span class="pln">float32</span><span class="pun">([]);
+</span><span class="kwd">auto </span><span class="pln">m </span><span class="pun">= </span><span class="pln">float32</span><span class="pun">([]);
+</span><span class="kwd">auto </span><span class="pln">c </span><span class="pun">= </span><span class="pln">float32</span><span class="pun">([]);
+
+</span><span class="kwd">auto </span><span class="pln">yhat </span><span class="pun">= </span><span class="pln">m </span><span class="pun">* </span><span class="pln">x </span><span class="pun">+ </span><span class="pln">c</span><span class="pun">;
+</span><span class="kwd">auto </span><span class="pln">y </span><span class="pun">= </span><span class="pln">float32</span><span class="pun">([]);
+
+</span><span class="com">//Create an AMSGrad updater
+</span><span class="kwd">auto </span><span class="pln">updater </span><span class="pun">= </span><span class="pln">amsgrad</span><span class="pun">([(</span><span class="pln">yhat </span><span class="pun">- </span><span class="pln">y</span><span class="pun">) * (</span><span class="pln">yhat </span><span class="pun">- </span><span class="pln">y</span><span class="pun">)], [</span><span class="pln">m</span><span class="pun">, </span><span class="pln">c</span><span class="pun">], </span><span class="kwd">null</span><span class="pun">, </span><span class="pln">float32</span><span class="pun">([], [</span><span class="lit">0.1f</span><span class="pun">]));
+
+</span><span class="com">//Iterate for a while
+</span><span class="typ">float </span><span class="pln">loss</span><span class="pun">;
+
+</span><span class="kwd">for</span><span class="pun">(</span><span class="pln">size_t i </span><span class="pun">= </span><span class="lit">0</span><span class="pun">; </span><span class="pln">i </span><span class="pun">&lt; </span><span class="lit">300</span><span class="pun">; </span><span class="pln">i</span><span class="pun">++)
+{
+    </span><span class="pln">size_t j </span><span class="pun">= </span><span class="pln">i </span><span class="pun">% </span><span class="lit">100</span><span class="pun">;
+
+    </span><span class="pln">loss </span><span class="pun">= </span><span class="pln">updater</span><span class="pun">([
+        </span><span class="pln">x</span><span class="pun">: </span><span class="typ">Buffer</span><span class="pun">(</span><span class="pln">xdata</span><span class="pun">[</span><span class="pln">j </span><span class="pun">.. </span><span class="pln">j </span><span class="pun">+ </span><span class="lit">1</span><span class="pun">]),
+        </span><span class="pln">y</span><span class="pun">: </span><span class="typ">Buffer</span><span class="pun">(</span><span class="pln">ydata</span><span class="pun">[</span><span class="pln">j </span><span class="pun">.. </span><span class="pln">j </span><span class="pun">+ </span><span class="lit">1</span><span class="pun">])
+    ])[</span><span class="lit">0</span><span class="pun">]<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float</span><span class="pun">[</span><span class="lit">0</span><span class="pun">];
+}
+
+</span><span class="com">//Print the loss after 200 iterations. Let the user decide whether it's good enough to be considered a pass.
+</span><span class="kwd">import </span><span class="pln">std<wbr/></span><span class="pun">.</span><span class="pln">stdio </span><span class="pun">: </span><span class="pln">writeln</span><span class="pun">;
+</span><span class="pln">writeln</span><span class="pun">(
+    </span><span class="str">"AMSGrad loss: "</span><span class="pun">, </span><span class="pln">loss</span><span class="pun">, </span><span class="str">"    "</span><span class="pun">,
+    </span><span class="str">"m="</span><span class="pun">, </span><span class="pln">m<wbr/></span><span class="pun">.</span><span class="pln">value<wbr/></span><span class="pun">.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float</span><span class="pun">[</span><span class="lit">0</span><span class="pun">], </span><span class="str">", "</span><span class="pun">,
+    </span><span class="str">"c="</span><span class="pun">, </span><span class="pln">c<wbr/></span><span class="pun">.</span><span class="pln">value<wbr/></span><span class="pun">.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float</span><span class="pun">[</span><span class="lit">0</span><span class="pun">], </span><span class="str">"    "</span><span class="pun">,
+    </span><span class="str">"(expected m=3, c=2)"</span><span class="pun">);
+</span></code></pre>
+</section>
+</div><footer><div id="license-info"><p>Henry Gouk
+</p>
+
+
+</div></footer></div></body></html>

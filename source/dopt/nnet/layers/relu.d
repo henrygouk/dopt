@@ -1,4 +1,6 @@
 /**
+    Contains an implementation of the ReLU activation function.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.relu;

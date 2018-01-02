@@ -1,4 +1,6 @@
 /**
+    Contains some utilities for constructing graphs for common loss functions.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.losses;

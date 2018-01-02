@@ -1,5 +1,5 @@
 /**
-    Contains constructors for common neural network operations.
+    Contains common neural network operations.
 
     These operations are currently only implemented for the CUDA backend.
 

@@ -1,4 +1,6 @@
 /**
+    Contains an implementation of convolutional layers.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.conv;

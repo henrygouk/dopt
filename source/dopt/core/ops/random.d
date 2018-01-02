@@ -1,3 +1,8 @@
+/**
+    Contains functions for generating random numbers.
+
+    Authors: Henry Gouk
+*/
 module dopt.core.ops.random;
 
 import dopt.core.ops;

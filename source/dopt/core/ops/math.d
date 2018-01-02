@@ -1,5 +1,5 @@
 /**
-    Contains constructors for common math operations.
+    Contains common maths operations.
 
     Authors: Henry Gouk
 */

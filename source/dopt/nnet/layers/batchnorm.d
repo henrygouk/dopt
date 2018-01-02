@@ -1,4 +1,6 @@
 /**
+    Contains an implementation of batch normalisation.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.batchnorm;

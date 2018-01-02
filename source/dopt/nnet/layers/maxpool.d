@@ -1,4 +1,5 @@
 /**
+    Contains an implementation of max pooling.
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.maxpool;

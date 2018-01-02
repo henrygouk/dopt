@@ -1,5 +1,5 @@
 /**
-    Contains operations for creating variables and manipulating shapes.
+    Contains functions for creating variable nodes and subsequently manipulating their shapes.
 
     Authors: Henry Gouk
 */

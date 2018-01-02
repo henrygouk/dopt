@@ -1,4 +1,6 @@
 /**
+    Contains an implementation of the softmat activation function.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.softmax;

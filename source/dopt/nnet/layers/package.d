@@ -1,4 +1,6 @@
 /**
+    Contains generic utilities for working with $(D Layer) objects.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.layers;

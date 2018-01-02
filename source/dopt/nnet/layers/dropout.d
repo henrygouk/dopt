@@ -1,4 +1,6 @@
 /**
+    Contains an implementation of dropout.
+
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.dropout;

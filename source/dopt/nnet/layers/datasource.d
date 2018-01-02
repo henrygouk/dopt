@@ -1,4 +1,6 @@
 /**
+    Allows one to provide input to a network via a dopt variable.
+    
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.datasource;

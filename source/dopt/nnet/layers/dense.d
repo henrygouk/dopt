@@ -1,4 +1,5 @@
 /**
+    Contains an implementation of dense (i.e., fully connected) layers.
     Authors: Henry Gouk
 */
 module dopt.nnet.layers.dense;

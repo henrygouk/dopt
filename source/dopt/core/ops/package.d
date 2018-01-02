@@ -1,3 +1,8 @@
+/**
+    This package facilitates the construction of various nodes in the operation graph.
+
+    Authors: Henry Gouk
+*/
 module dopt.core.ops;
 
 import std.array;

@@ -11,16 +11,15 @@ Current features include:
 * Basic arithmetic and mathematical operations (add, sub, mul, div, abs, log, exp, ...)
 * Basic matrix operations (multiplication, transpose)
 * Reverse-mode automatic differentiation
-* Stochastic gradient descent
 * Neural network primitives
 * Neural network construction utilities
 * Framework to add third party operations and their derivatives, and the ability register implementations for both the CPU and CUDA backends
-* Online optimisation algorithms: SGD and ADAM
+* Online optimisation algorithms: SGD, ADAM, AMSGrad, and more to come!
 
 The project is still in the early stages, and some things might not work properly yet. Some planned future features include:
 
-* The ability to add optimisation passes to the CPU and CUDA backends.
-* More online optimisation algorithms (SGD+momentum, AdaGrad, etc)
+* The ability to add optimisation passes to the CPU and CUDA backends
+* More utilities for training deep networks (data loaders, standard training loops, etc)
 
 Docs
 ----

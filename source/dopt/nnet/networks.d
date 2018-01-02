@@ -1,4 +1,8 @@
 /**
+    Provides a useful tools for constructing neural networks.
+
+    Currently only directed acyclic graphs are supported.
+
     Authors: Henry Gouk
 */
 module dopt.nnet.networks;

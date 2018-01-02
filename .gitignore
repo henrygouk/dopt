@@ -6,3 +6,4 @@ __dummy.html
 __test__*__
 libdopt.a
 dopt-test-library
+dub.selections.json

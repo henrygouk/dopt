@@ -95,11 +95,11 @@ class Operation
         {
             if(rhs.rank == 0 && this.rank != 0)
             {
-                return this.opBinary!op(rhs.repeat(this.volume).reshape(this.shape));
+                return this.opBinary!op(rhs.repeat(this.volume, mod, line).reshape(this.shape, mod, line), mod, line);
             }
             else if(this.rank == 0 && rhs.rank != 0)
             {
-                return this.repeat(rhs.volume).reshape(rhs.shape).opBinary!op(rhs);
+                return this.repeat(rhs.volume, mod, line).reshape(rhs.shape, mod, line).opBinary!op(rhs, mod, line);
             }
 
             static if(op == "+")
@@ -213,7 +213,7 @@ class Operation
         }
     }
 
-    private
+    public
     {
         string mOpType;
         string mModule;

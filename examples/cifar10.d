@@ -64,8 +64,10 @@ Layer vggBlock(Layer input, size_t channels)
 {
     return input
           .conv2D(channels, [3, 3], new Conv2DOptions().padding([1, 1]))
+		  .batchNorm()
           .relu()
           .conv2D(channels, [3, 3], new Conv2DOptions().padding([1, 1]))
+		  .batchNorm()
           .relu()
           .maxPool([2, 2]);
 }
@@ -93,13 +95,13 @@ void main(string[] args)
     auto network = new DAGNetwork([features], [preds]);
 
     auto lossSym = crossEntropy(preds.trainOutput, labels) + network.paramLoss;
+	auto testLoss = crossEntropy(preds.output, labels);
 
 	auto learningRate = float32([], [0.0001f]);
-	auto updater = adam([lossSym], network.params, null, learningRate);
+	auto updater = adam([lossSym], network.params, network.paramProj, learningRate);
 
 	foreach(e; 0 .. 120)
 	{
-		float totloss = 0;
 		float tot = 0;
 
 		if(e == 100)
@@ -109,43 +111,39 @@ void main(string[] args)
 
 		foreach(fs, ls; zip(data.trainFeatures.chunks(100), data.trainLabels.chunks(100)))
 		{
-			auto loss = updater([
+			updater([
 				features: Buffer(fs.joiner().array()),
 				labels: Buffer(ls.joiner().array())
 			]);
 
-			totloss += loss[0].as!float[0];
 			tot++;
 
             write("  ", tot, "/500    \r");
             stdout.flush();
 		}
 
-		writeln();
-		writeln(e, ": ", totloss / tot);
-	}
+		int correct;
+		int total;
 
-	int correct;
-	int total;
+		import std.stdio : writeln;
 
-	import std.stdio : writeln;
-
-	foreach(fs, ls; zip(data.testFeatures.chunks(100), data.testLabels.chunks(100)))
-	{
-		auto pred = network.outputs[0].evaluate([
-			features: Buffer(fs.joiner().array())
-		]).as!float;
-
-		foreach(p, t; zip(pred.chunks(10), ls))
+		foreach(fs, ls; zip(data.testFeatures.chunks(100), data.testLabels.chunks(100)))
 		{
-			if(p.maxIndex == t.maxIndex)
+			auto pred = network.outputs[0].evaluate([
+				features: Buffer(fs.joiner().array())
+			]).as!float;
+
+			foreach(p, t; zip(pred.chunks(10), ls))
 			{
-				correct++;
+				if(p.maxIndex == t.maxIndex)
+				{
+					correct++;
+				}
+
+				total++;
 			}
-
-			total++;
 		}
-	}
 
-	writeln(correct / cast(float)total);
+		writeln(e + 1, ": ", correct / cast(float)total);
+	}
 }

@@ -369,9 +369,9 @@ public
     Operation repeat(Operation input, size_t repetitions, string mod = __MODULE__, size_t line = __LINE__)
     {
         auto flat = input.reshape([input.volume]);
-        auto r = flat.repeat([repetitions]);
+        auto r = flat.repeat([repetitions], mod, line);
         
-        return r.reshape([repetitions] ~ input.shape);
+        return r.reshape([repetitions] ~ input.shape, mod, line);
     }
 
     ///

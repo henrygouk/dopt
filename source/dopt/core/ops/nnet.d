@@ -33,6 +33,8 @@ package
         registerOperation("addBiasGrad", OpDef(toDelegate(&verifyAddBiasGrad), toDelegate(&judgeAddBiasGrad)));
         registerOperation("batchNormTrain", OpDef(toDelegate(&verifyBatchNormTrain), toDelegate(&judgeBatchNormTrain)));
         registerOperation("batchNormGrad", OpDef(toDelegate(&verifyBatchNormGrad), toDelegate(&judgeBatchNormGrad)));
+        registerOperation("batchNormInference", OpDef(toDelegate(&verifyBatchNormInference),
+            toDelegate(&judgeBatchNormInference)));
     }
 }
 
@@ -219,7 +221,7 @@ private
 
     TensorType judgeBatchNormTrain(Operation op)
     {
-        return op.deps[0].outputType;
+        return TensorType(op.deps[0].elementType, [op.deps[0].volume + 2 * op.deps[0].shape[1]]);
     }
 
     bool verifyBatchNormGrad(Operation op)
@@ -230,6 +232,16 @@ private
     TensorType judgeBatchNormGrad(Operation op)
     {
         return TensorType(op.deps[0].elementType, [op.deps[0].volume + op.deps[1].volume + op.deps[2].volume]);
+    }
+
+    bool verifyBatchNormInference(Operation op)
+    {
+        return true;
+    }
+
+    TensorType judgeBatchNormInference(Operation op)
+    {
+        return op.deps[0].outputType;
     }
 }
 
@@ -460,15 +472,30 @@ public
         return createOperation("addBiasGrad", [parentGrad], null, mod, line);
     }
 
-    Operation batchNormTrain(Operation input, Operation scale, Operation bias, string mod = __MODULE__,
-        size_t line = __LINE__)
+    Operation[] batchNormTrain(Operation input, Operation scale, Operation bias, Operation mean, Operation var,
+        double momentum, string mod = __MODULE__, size_t line = __LINE__)
     {
-        return createOperation("batchNormTrain", [input, scale, bias], null, mod, line);
+        auto bnop = createOperation("batchNormTrain", [input, scale, bias, mean, var], ["momentum" : Variant(momentum)]
+            , mod, line);
+        
+        //bnop has the running mean/variance packed after the actual forward prop value
+
+        return [
+            bnop.slice([0], [input.volume]).reshape(input.shape),
+            bnop.slice([input.volume], [input.volume + input.shape[1]]),
+            bnop.slice([input.volume + input.shape[1]], [input.volume + 2 * input.shape[1]])
+        ];
     }
 
     Operation batchNormGrad(Operation parentGrad, Operation input, Operation scale, string mod = __MODULE__,
         size_t line = __LINE__)
     {
         return createOperation("batchNormGrad", [parentGrad, input, scale], null, mod, line);
+    }
+
+    Operation batchNormInference(Operation input, Operation scale, Operation bias, Operation mean, Operation var,
+        string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return createOperation("batchNormInference", [input, scale, bias, mean, var], null, mod, line);
     }
 }

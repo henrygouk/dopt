@@ -166,6 +166,12 @@ extern "C" __global__ void repeatBlocks(const char *inbuf, size_t elemSize, size
 
         override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
+            if(inputs[0].numBytes == output.numBytes)
+            {
+                cuMemcpy(output.ptr, inputs[0].ptr, output.numBytes);
+                return;
+            }
+
             void process(CUDABuffer inbuf, CUDABuffer outbuf, size_t elemSize, size_t len, size_t reps)
             {
                 uint n = cast(uint)(elemSize * len * reps);

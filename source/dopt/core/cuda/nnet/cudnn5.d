@@ -29,6 +29,7 @@ package
         registerCUDAKernel("addBiasGrad", toDelegate(&cudaKernelCtr!AddBiasGrad));
         registerCUDAKernel("batchNormTrain", toDelegate(&cudaKernelCtr!BatchNormTrain));
         registerCUDAKernel("batchNormGrad", toDelegate(&cudaKernelCtr!BatchNormGrad));
+        registerCUDAKernel("batchNormInference", toDelegate(&cudaKernelCtr!BatchNormInference));
 
         cudnnCreate(&handle);
     }
@@ -477,11 +478,11 @@ private
         cudnnTensorDescriptor_t dbDesc;
     }
 
-    class BatchNormTrain : CUDAKernel
+    abstract class BatchNormBase : CUDAKernel
     {
         this(Operation op)
         {
-            if(op.rank == 2)
+            if(op.deps[0].rank == 2)
             {
                 mode = CUDNN_BATCHNORM_PER_ACTIVATION;
             }
@@ -512,57 +513,48 @@ private
             cudnnDestroyTensorDescriptor(bnDesc).cudnnCheck();
         }
 
-        override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
-        {
-            float alpha = 1.0f;
-            float beta = 0.0f;
-
-            cudnnBatchNormalizationForwardTraining(handle, mode, &alpha, &beta, xDesc,
-                cast(void *)inputs[0].ptr, xDesc, cast(void *)output.ptr, bnDesc, cast(void *)inputs[1].ptr,
-                cast(void *)inputs[2].ptr, 0, null, null, 1e-5f, null, null).cudnnCheck();
-        }
-
         cudnnBatchNormMode_t mode;
         cudnnTensorDescriptor_t xDesc;
         cudnnTensorDescriptor_t bnDesc;
     }
 
-    class BatchNormGrad : CUDAKernel
+    class BatchNormTrain : BatchNormBase
     {
         this(Operation op)
         {
-            if(op.deps[1].rank == 2)
-            {
-                mode = CUDNN_BATCHNORM_PER_ACTIVATION;
-            }
-            else
-            {
-                mode = CUDNN_BATCHNORM_SPATIAL;
-            }
-
-            import std.range;
-
-            auto shape = op.deps[1].shape
-                        .chain(repeat(1))
-                        .map!(x => cast(int)x)
-                        .take(4)
-                        .array();
-
-            cudnnCreateTensorDescriptor(&xDesc).cudnnCheck();
-            cudnnCreateTensorDescriptor(&bnDesc).cudnnCheck();
-
-            cudnnSetTensor4dDescriptor(xDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1], shape[2],
-                shape[3]).cudnnCheck();
-            cudnnDeriveBNTensorDescriptor(bnDesc, xDesc, mode).cudnnCheck();
+            super(op);
+            mMomentum = 1.0 - op.attributes["momentum"].get!double;
         }
 
-        ~this()
+        void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
-            cudnnDestroyTensorDescriptor(xDesc).cudnnCheck();
-            cudnnDestroyTensorDescriptor(bnDesc).cudnnCheck();
+            float alpha = 1.0f;
+            float beta = 0.0f;
+
+            //We're going to pack the running mean/variance after the BN forward prop. Let the higher level
+            //API slice them out into different nodes.
+            auto mean = output.ptr + inputs[0].numBytes;
+            auto var = mean + (output.numBytes - inputs[0].numBytes) / 2;
+
+            cuMemcpy(mean, inputs[3].ptr, inputs[3].numBytes);
+            cuMemcpy(var, inputs[4].ptr, inputs[4].numBytes);
+
+            cudnnBatchNormalizationForwardTraining(handle, mode, &alpha, &beta, xDesc,
+                cast(void *)inputs[0].ptr, xDesc, cast(void *)output.ptr, bnDesc, cast(void *)inputs[1].ptr,
+                cast(void *)inputs[2].ptr, mMomentum, cast(void *)mean, cast(void *)var, 1e-5f, null, null).cudnnCheck();
         }
 
-        override void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+        double mMomentum;
+    }
+
+    class BatchNormGrad : BatchNormBase
+    {
+        this(Operation op)
+        {
+            super(op);
+        }
+
+        void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
         {
             float alpha = 1.0f;
             float beta = 0.0f;
@@ -575,9 +567,23 @@ private
                 cast(void *)inputs[1].ptr, xDesc, cast(void *)inputs[0].ptr, xDesc, dx, bnDesc,
                 cast(void *)inputs[2].ptr, dscale, dbias, 1e-5f, null, null);
         }
+    }
 
-        cudnnBatchNormMode_t mode;
-        cudnnTensorDescriptor_t xDesc;
-        cudnnTensorDescriptor_t bnDesc;
+    class BatchNormInference : BatchNormBase
+    {
+        this(Operation op)
+        {
+            super(op);
+        }
+
+        void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+        {
+            float alpha = 1.0f;
+            float beta = 0.0f;
+
+            cudnnBatchNormalizationForwardInference(handle, mode, &alpha, &beta, xDesc, cast(void *)inputs[0].ptr,
+                xDesc, cast(void *)output.ptr, bnDesc, cast(void *)inputs[1].ptr, cast(void *)inputs[2].ptr,
+                cast(void *)inputs[3].ptr, cast(void *)inputs[4].ptr, 1e-5).cudnnCheck();
+        }
     }
 }

@@ -65,7 +65,8 @@ private
 
     Operation[] batchNormGrad(Operation op, Operation parentGrad)
     {
-        auto packedGrads = dopt.core.ops.nnet.batchNormGrad(parentGrad, op.deps[0], op.deps[1]);
+        auto trimmedGrad = parentGrad.slice([0], [op.deps[0].volume]).reshape(op.deps[0].shape);
+        auto packedGrads = dopt.core.ops.nnet.batchNormGrad(trimmedGrad, op.deps[0], op.deps[1]);
         packedGrads = packedGrads.reshape([packedGrads.volume]);
 
         auto v0 = op.deps[0].volume;
@@ -75,7 +76,9 @@ private
         return [
             packedGrads.slice([0], [v0]).reshape(op.deps[0].shape),
             packedGrads.slice([v0], [v0 + v1]).reshape(op.deps[1].shape),
-            packedGrads.slice([v0 + v1], [v0 + v1 + v2]).reshape(op.deps[2].shape)
+            packedGrads.slice([v0 + v1], [v0 + v1 + v2]).reshape(op.deps[2].shape),
+            float32(op.deps[3].shape),
+            float32(op.deps[4].shape)
         ];
     }
 }

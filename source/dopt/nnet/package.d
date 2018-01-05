@@ -37,7 +37,7 @@
     used to construct an updater:
 
     ---
-    auto updater = sgd([trainLoss], network.params);
+    auto updater = sgd([trainLoss], network.params, network.paramProj);
     ---
 
     Finally, one can call this updater with some actual training data:

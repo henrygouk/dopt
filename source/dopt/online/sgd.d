@@ -24,7 +24,7 @@ import dopt.online;
          A delegate that is used to actually perform the update steps. The optimised values are stored in the "default"
          attributes of the elements of wrt.
 */
-Updater sgd(Operation[] outputs, Operation[] wrt,
+Updater sgd(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
     Operation learningRate = float32([], [0.01f]), Operation momentumRate = float32([], [0.0f]))
 {
     import std.algorithm : map;
@@ -46,6 +46,15 @@ Updater sgd(Operation[] outputs, Operation[] wrt,
     auto newvals = zip(wrt, newMomentum)
                   .map!(x => x[0] - x[1])
                   .array();
+
+    //Apply projections
+    for(size_t i = 0; i < newvals.length; i++)
+    {
+        if(wrt[i] in projs)
+        {
+            newvals[i] = projs[wrt[i]](newvals[i]);
+        }
+    }
 
     auto updatePlan = compile(outputs ~ newvals ~ newMomentum);
 
@@ -91,7 +100,7 @@ unittest
     auto y = float32([]);
 
     //Create an SGD updater
-    auto updater = sgd([(yhat - y) * (yhat - y)], [m, c], float32([], [0.001f]), float32([], [0.9f]));
+    auto updater = sgd([(yhat - y) * (yhat - y)], [m, c], null, float32([], [0.001f]), float32([], [0.9f]));
 
     //Iterate for a while
     float loss;

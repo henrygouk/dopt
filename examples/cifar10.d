@@ -12,85 +12,23 @@ dub.json:
 +/
 module cifar10;
 
-import std.algorithm;
-import std.array;
-import std.file;
-import std.range;
-import std.stdio;
-import std.typecons;
-
-auto loadCIFAR10(string path)
-{
-	auto batches = ["data_batch_1.bin",
-		 			"data_batch_2.bin",
-					"data_batch_3.bin",
-					"data_batch_4.bin",
-					"data_batch_5.bin",
-					"test_batch.bin"].map!(x => path ~ "/" ~ x).array();
-
-	alias T = float;
-	T[][] features;
-	T[][] labels;
-
-	foreach(b; batches)
-	{
-		ubyte[] raw = cast(ubyte[])read(b);
-
-		for(size_t i = 0; i < 10_000; i++)
-		{
-			auto f = raw[1 .. 32 * 32 * 3 + 1]
-				.map!(x => (cast(T)x - 128.0f) / 48.0f)
-				.array();
-
-			auto ls = new T[10];
-			ls[] = 0;
-			ls[raw[0]] = 1.0f;
-			labels ~= ls;
-			features ~= f;
-
-			raw = raw[32 * 32 * 3 + 1 .. $];
-		}
-	}
-
-	return tuple!("trainFeatures", "trainLabels", "testFeatures", "testLabels")
-				 (features[0 .. 50_000], labels[0 .. 50_000], features[50_000 .. $], labels[50_000 .. $]);
-}
-	
-import dopt.core;
-import dopt.nnet;
-import dopt.online;
-
-Layer vggBlock(Layer input, size_t channels)
-{
-    return input
-          .conv2D(channels, [3, 3], new Conv2DOptions().padding([1, 1]))
-		  .batchNorm()
-          .relu()
-          .conv2D(channels, [3, 3], new Conv2DOptions().padding([1, 1]))
-		  .batchNorm()
-          .relu()
-          .maxPool([2, 2]);
-}
-
 void main(string[] args)
 {
+	import std.algorithm : joiner, maxIndex;
+	import std.array : array;
+	import std.range : zip, chunks;
+	import std.stdio : stdout, write, writeln;
+
+	import dopt.core;
+	import dopt.nnet;
+	import dopt.online;
+
     auto data = loadCIFAR10(args[1]);
 
     auto features = float32([100, 3, 32, 32]);
     auto labels = float32([100, 10]);
 
-    auto preds = dataSource(features)
-                .vggBlock(64)
-                .vggBlock(128)
-                .vggBlock(256)
-                .vggBlock(512)
-                .vggBlock(512)
-                .dense(512)
-                .relu()
-                .dense(512)
-                .relu()
-                .dense(10)
-                .softmax();
+    auto preds = vgg16(features, [512, 512, 10]).softmax();
     
     auto network = new DAGNetwork([features], [preds]);
 
@@ -124,8 +62,6 @@ void main(string[] args)
 
 		int correct;
 		int total;
-
-		import std.stdio : writeln;
 
 		foreach(fs, ls; zip(data.testFeatures.chunks(100), data.testLabels.chunks(100)))
 		{

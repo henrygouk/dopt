@@ -7,7 +7,7 @@ Layer vgg16(Operation features, size_t[] denseLayerSizes = [4096, 4096, 1000], b
 {
     auto sizes = [64, 64, -1, 128, 128, -1, 256, 256, 256, -1, 512, 512, 512, -1, 512, 512, 512];
 
-    return makeExtractor(features, sizes, 0.3f, bn)
+    return makeExtractor(features, sizes, 0.2f, bn)
           .makeTop(denseLayerSizes, 0.5f, bn);
 }
 
@@ -15,7 +15,7 @@ Layer vgg19(Operation features, size_t[] denseLayerSizes = [4096, 4096, 1000], b
 {
     auto sizes = [64, 64, -1, 128, 128, -1, 256, 256, 256, 256, -1, 512, 512, 512, 512, -1, 512, 512, 512, 512];
 
-    return makeExtractor(features, sizes, 0.3f, bn)
+    return makeExtractor(features, sizes, 0.2f, bn)
           .makeTop(denseLayerSizes, 0.5f, bn);
 }
 

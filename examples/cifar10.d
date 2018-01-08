@@ -28,7 +28,7 @@ void main(string[] args)
     auto features = float32([100, 3, 32, 32]);
     auto labels = float32([100, 10]);
 
-    auto preds = vgg16(features, [512, 512, 10]).softmax();
+    auto preds = vgg19(features, [512, 512, 10], false).softmax();
     
     auto network = new DAGNetwork([features], [preds]);
 

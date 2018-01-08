@@ -26,6 +26,7 @@
 <url><loc>http://127.0.0.1/dopt/core/ops/nnet/convolutionTranspose.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/nnet/maxpool.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/nnet/maxpoolGrad.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/ops/nnet/relu.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/nnet/softmax.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/nnet/softmaxGrad.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/random.html</loc></url>
@@ -68,6 +69,7 @@
 <url><loc>http://127.0.0.1/dopt/core/ops/registerOperation.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/batchnorm.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/batchnorm/batchNorm.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/layers/batchnorm/BatchNormOptions.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/conv.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/conv/conv2D.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/layers/conv/Conv2DOptions.html</loc></url>

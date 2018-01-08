@@ -41,7 +41,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script></d
     used to construct an updater:
 </p>
 
-<pre class="code"><code class="lang-d"><span class="kwd">auto </span><span class="pln">updater </span><span class="pun">= </span><span class="pln">sgd</span><span class="pun">([</span><span class="pln">trainLoss</span><span class="pun">], </span><span class="pln">network<wbr/></span><span class="pun">.</span><span class="pln">params</span><span class="pun">);</span></code></pre>
+<pre class="code"><code class="lang-d"><span class="kwd">auto </span><span class="pln">updater </span><span class="pun">= </span><span class="pln">sgd</span><span class="pun">([</span><span class="pln">trainLoss</span><span class="pun">], </span><span class="pln">network<wbr/></span><span class="pun">.</span><span class="pln">params</span><span class="pun">, </span><span class="pln">network<wbr/></span><span class="pun">.</span><span class="pln">paramProj</span><span class="pun">);</span></code></pre>
 
 <p>    Finally, one can call this updater with some actual training data:
 </p>

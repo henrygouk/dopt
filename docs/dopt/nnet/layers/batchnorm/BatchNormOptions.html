@@ -1,20 +1,30 @@
 <!DOCTYPE html><html><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Function batchNorm</title>
+<title>Class BatchNormOptions</title>
 <link rel="stylesheet" href="../../../../css/style.min.css"/>
 <script type="text/javascript" src="../../../../js/script.min.js"></script></head><body onload="setupDdox();"><header></header><nav id="main-nav"><div><noscript><p style="color: red">The search functionality needs JavaScript enabled</p></noscript><div id="symbolSearchPane" style="display: none"><form action="#" method="GET">
 <input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/></form><ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../../../../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../../../../";
 document.getElementById('symbolSearchPane').style.display = 'block';</script></div><ul class="tree-view"><li class="tree-view "><div class="package ">dopt</div><ul class="tree-view"><li class="tree-view collapsed"><div class="package "><a href="../../../../dopt/core.html">core</a></div><ul class="tree-view"><li class="tree-view collapsed"><div class="package "><a href="../../../../dopt/core/ops.html">ops</a></div><ul class="tree-view"><li><div class="module "><a href="../../../../dopt/core/ops/basic.html">basic</a></div></li><li><div class="module "><a href="../../../../dopt/core/ops/math.html">math</a></div></li><li><div class="module "><a href="../../../../dopt/core/ops/nnet.html">nnet</a></div></li><li><div class="module "><a href="../../../../dopt/core/ops/random.html">random</a></div></li></ul></li><li><div class="module "><a href="../../../../dopt/core/cpu.html">cpu</a></div></li><li><div class="module "><a href="../../../../dopt/core/cuda.html">cuda</a></div></li><li><div class="module "><a href="../../../../dopt/core/grads.html">grads</a></div></li></ul></li><li class="tree-view "><div class="package "><a href="../../../../dopt/nnet.html">nnet</a></div><ul class="tree-view"><li class="tree-view "><div class="package "><a href="../../../../dopt/nnet/layers.html">layers</a></div><ul class="tree-view"><li><div class="module selected"><a href="../../../../dopt/nnet/layers/batchnorm.html">batchnorm</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/conv.html">conv</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/datasource.html">datasource</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/dense.html">dense</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/dropout.html">dropout</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/maxpool.html">maxpool</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/relu.html">relu</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/layers/softmax.html">softmax</a></div></li></ul></li><li><div class="module "><a href="../../../../dopt/nnet/losses.html">losses</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/networks.html">networks</a></div></li><li><div class="module "><a href="../../../../dopt/nnet/parameters.html">parameters</a></div></li></ul></li><li class="tree-view collapsed"><div class="package "><a href="../../../../dopt/online.html">online</a></div><ul class="tree-view"><li><div class="module "><a href="../../../../dopt/online/adam.html">adam</a></div></li><li><div class="module "><a href="../../../../dopt/online/amsgrad.html">amsgrad</a></div></li><li><div class="module "><a href="../../../../dopt/online/sgd.html">sgd</a></div></li></ul></li></ul></li></ul></div><p id="main-nav-footer">Built with
-<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Function batchNorm</h1><p></p><div class="prototype"><code class="lang-d"><div class="single-prototype">
-<a href="../../../../dopt/nnet/layers/Layer.html"><span class="typ">Layer</span></a> <span class="pln">batchNorm</span>
-<span class="pun">(</span>
-<br/>
-&nbsp;&nbsp;<a href="../../../../dopt/nnet/layers/Layer.html"><span class="typ">Layer</span></a> <span class="pln">input</span><span class="pun">,</span>
-<br/>
-&nbsp;&nbsp;<a href="../../../../dopt/nnet/layers/batchnorm/BatchNormOptions.html"><span class="typ">BatchNormOptions</span></a> <span class="pln">opts</span> <span class="pun">=</span> <span class="kwd">new </span><span class="typ">BatchNormOptions</span>
-<br/>
-<span class="pun">)</span><span class="pun">;</span></div></code></div>
+<a href="https://github.com/MartinNowak/scod">scod</a></p></nav><div id="main-contents"><div><h1>Class BatchNormOptions</h1><p>Encapsulates additional options for batchnorm layers.
+</p><div class="prototype"><code class="lang-d"><div class="single-prototype"><span class="kwd">class</span> <span class="typ">BatchNormOptions</span>
+<span class="pun">;</span></div></code></div>
+<section><h2>Example</h2>
+
+<pre class="code"><code class="lang-d"><span class="com">//Create a BatchNormOptions object with the default parameters
+</span><span class="kwd">auto </span><span class="pln">opts </span><span class="pun">= </span><span class="kwd">new </span><span class="typ">BatchNormOptions</span><span class="pun">()
+           <wbr/>.</span><span class="pln">gammaInit</span><span class="pun">(</span><span class="pln">constantInit</span><span class="pun">(</span><span class="lit">1.0f</span><span class="pun">))
+           <wbr/>.</span><span class="pln">betaInit</span><span class="pun">(</span><span class="pln">constantInit</span><span class="pun">(</span><span class="lit">0.0f</span><span class="pun">))
+           <wbr/>.</span><span class="pln">gammaProj</span><span class="pun">(</span><span class="kwd">null</span><span class="pun">)
+           <wbr/>.</span><span class="pln">gammaProj</span><span class="pun">(</span><span class="kwd">null</span><span class="pun">)
+           <wbr/>.</span><span class="pln">gammaDecay</span><span class="pun">(</span><span class="lit">0.0f</span><span class="pun">)
+           <wbr/>.</span><span class="pln">momentum</span><span class="pun">(</span><span class="lit">0.99f</span><span class="pun">);
+
+</span><span class="com">//Options can also be read back again later
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">opts<wbr/></span><span class="pun">.</span><span class="pln">gammaDecay </span><span class="pun">== </span><span class="lit">0.0f</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">opts<wbr/></span><span class="pun">.</span><span class="pln">momentum </span><span class="pun">== </span><span class="lit">0.99f</span><span class="pun">);
+</span></code></pre>
+</section>
 </div><footer><div id="license-info"><p>Henry Gouk
 </p>
 

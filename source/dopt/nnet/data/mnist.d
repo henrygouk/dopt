@@ -27,7 +27,7 @@ Dataset loadMNIST(string path)
         T[][] result = new T[][numInstances];
 
         //Convert the ubytes to floats
-        T[] features = raw.map!(x => cast(T)x / cast(T)255.0).array();
+        T[] features = raw.map!(x => cast(T)x).array();
 
         //Iterate over each instance and set the references to the correct slice
         for(size_t i = 0; i < numInstances; i++)

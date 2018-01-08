@@ -7,8 +7,50 @@ module dopt.nnet.layers.batchnorm;
 
 import dopt;
 
+import dopt.nnet.layers.util;
+
+/**
+    Encapsulates additional options for batchnorm layers.
+*/
+class BatchNormOptions
+{
+    this()
+    {
+        _gammaInit = constantInit(1.0f);
+        _betaInit = constantInit(0.0f);
+        _gammaDecay = 0;
+        _momentum = 0.99f;
+    }
+
+    mixin(dynamicProperties(
+        "ParamInitializer", "gammaInit",
+        "ParamInitializer", "betaInit",
+        "Projection", "gammaProj",
+        "Projection", "betaProj",
+        "float", "gammaDecay",
+        "float", "momentum"
+    ));
+}
+
 ///
-Layer batchNorm(Layer input, double momentum = 0.99)
+unittest
+{
+    //Create a BatchNormOptions object with the default parameters
+    auto opts = new BatchNormOptions()
+               .gammaInit(constantInit(1.0f))
+               .betaInit(constantInit(0.0f))
+               .gammaProj(null)
+               .gammaProj(null)
+               .gammaDecay(0.0f)
+               .momentum(0.99f);
+    
+    //Options can also be read back again later
+    assert(opts.gammaDecay == 0.0f);
+    assert(opts.momentum == 0.99f);
+}
+
+///
+Layer batchNorm(Layer input, BatchNormOptions opts = new BatchNormOptions())
 {
     /*Appologies to anyone trying to understand how I've implemented BN---this is a bit hacky!
       What we're doing is packing the running mean/variance estimate provided during the training
@@ -24,12 +66,16 @@ Layer batchNorm(Layer input, double momentum = 0.99)
     auto x = input.output;
     auto xTr = input.trainOutput;
 
-    auto gamma = float32([1, x.shape[1], 1, 1], repeat(1.0f, x.shape[1]).array());
+    auto gamma = float32([1, x.shape[1], 1, 1]);
     auto beta = float32([x.shape[1]]);
+
+    opts._gammaInit(gamma);
+    opts._betaInit(beta);
+
     auto mean = float32([x.shape[1]]);
     auto var = float32([x.shape[1]], repeat(1.0f, x.shape[1]).array());
 
-    auto bnop = xTr.batchNormTrain(gamma, beta, mean, var, momentum);
+    auto bnop = xTr.batchNormTrain(gamma, beta, mean, var, opts._momentum);
     auto yTr = bnop[0];
     auto meanUpdateSym = bnop[1];
     auto varUpdateSym = bnop[2];
@@ -47,8 +93,8 @@ Layer batchNorm(Layer input, double momentum = 0.99)
     }
 
     return new Layer([input], y, yTr, [
-        Parameter(gamma, null, null),
-        Parameter(beta, null, null),
+        Parameter(gamma, opts._gammaDecay == 0.0f ? null : opts._gammaDecay * sum(gamma * gamma), opts._gammaProj),
+        Parameter(beta, null, opts._betaProj),
         Parameter(mean, null, &meanUpdater),
         Parameter(var, null, &varUpdater)
     ]);

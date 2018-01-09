@@ -1,14 +1,6 @@
 #!/usr/bin/env dub
-/+
-dub.json:
-{
-    "name": "mnist",
-    "dependencies": {
-        "dopt": {
-            "path": "../"
-        }
-    }
-}
+/+ dub.sdl:
+dependency "dopt" path=".."
 +/
 module mnist;
 

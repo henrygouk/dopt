@@ -1,14 +1,6 @@
 #!/usr/bin/env dub
-/+
-dub.json:
-{
-    "name": "cifar10",
-    "dependencies": {
-        "dopt": {
-            "path": "../"
-        }
-    }
-}
+/+ dub.sdl:
+dependency "dopt" path=".."
 +/
 module cifar10;
 

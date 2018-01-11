@@ -2,11 +2,10 @@
 /+ dub.sdl:
 dependency "dopt" path=".."
 +/
-module mnist;
+module mnistlogit;
 
 /*
-	This example trains a small convolutional network on the MNIST dataset of hand-written images. The network used is
-	very small by today's standards, but MNIST is a very easy dataset so this does not really matter.
+	This example trains a logistic regression model on the MNIST dataset of hand-written images.
 
 	The MNIST dataset contains small monochrome images of hand-written digits, and the goal is to determine which digit
 	each image contains.
@@ -33,40 +32,29 @@ void main(string[] args)
 
 	//Create the variables nodes required to pass data into the operation graph
 	size_t batchSize = 100;
-    auto features = float32([batchSize, 1, 28, 28]);
+    auto features = float32([batchSize, 28 * 28]);
 	auto labels = float32([batchSize, 10]);
 
-	//Construct a small convolutional network
-	auto preds = dataSource(features)
-				.conv2D(32, [5, 5])
-				.relu()
-				.maxPool([2, 2])
-				.conv2D(32, [5, 5])
-				.relu()
-				.maxPool([2, 2])
-				.dense(10)
-				.softmax();
-
-	//Construct the DAGNetwork object that can be used to collate all the parameters and loss terms
-	auto network = new DAGNetwork([features], [preds]);
+	//Construct a logistic regression model
+    auto W = float32([28 * 28, 10]);
+    auto b = float32([10]);
+    auto linComb = matmul(features, W) + b.repeat(batchSize);
+	auto numerator = exp(linComb - linComb.maxElement());
+    auto denominator = numerator.sum([1]).reshape([batchSize, 1]).repeat([1, 10]);
+    auto preds = numerator / denominator;
 
 	//Create a symbol to represent the training loss function
-	auto lossSym = crossEntropy(preds.trainOutput, labels) + network.paramLoss;
+	auto lossSym = crossEntropy(preds, labels);
 
-	//Create an optimiser that can use minibatches of labelled data to update the weights of the network
+	//Create an optimiser that can use minibatches of labelled data to update the parameters of the model
 	auto lr = float32([], [0.001f]);
-	auto updater = adam([lossSym], network.params, network.paramProj);
+	auto updater = adam([lossSym], [W, b], null);
 
-	//Iterate for 40 epochs of training
-	foreach(e; 0 .. 40)
+	//Iterate for 50 epochs of training
+	foreach(e; 0 .. 50)
 	{
 		float totloss = 0;
 		float tot = 0;
-
-		if(e == 30)
-		{
-			lr.value.as!float[0] = 0.0001f;
-		}
 
 		//Iterate over each minibatch of data and perform an update of the model parameters
 		foreach(fs, ls; zip(data.trainFeatures.chunks(batchSize), data.trainLabels.chunks(batchSize)))
@@ -93,9 +81,9 @@ void main(string[] args)
 	foreach(fs, ls; zip(data.testFeatures.chunks(batchSize), data.testLabels.chunks(batchSize)))
 	{
 		//Make some predictions for this minibatch
-		auto pred = network.outputs[0].evaluate([
+		auto pred = evaluate([preds], [
 			features: Buffer(fs.joiner().array())
-		]).as!float;
+		])[0].as!float;
 
 		//Determine the accuracy of these predictions using the ground truth data
 		foreach(p, t; zip(pred.chunks(10), ls))

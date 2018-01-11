@@ -13,7 +13,7 @@
 		"derelict-cudnn": "~>2.0.1"
 	},
 	"libs": [
-		"blas"
+		"blas", "cblas"
 	],
 	"-ddoxTool": "scod",
 	"-ddoxFilterArgs": [

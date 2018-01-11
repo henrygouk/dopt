@@ -19,7 +19,7 @@ class BatchNormOptions
         _gammaInit = constantInit(1.0f);
         _betaInit = constantInit(0.0f);
         _gammaDecay = 0;
-        _momentum = 0.99f;
+        _momentum = 0.9f;
     }
 
     mixin(dynamicProperties(
@@ -42,11 +42,11 @@ unittest
                .gammaProj(null)
                .gammaProj(null)
                .gammaDecay(0.0f)
-               .momentum(0.99f);
+               .momentum(0.9f);
     
     //Options can also be read back again later
     assert(opts.gammaDecay == 0.0f);
-    assert(opts.momentum == 0.99f);
+    assert(opts.momentum == 0.9f);
 }
 
 ///

@@ -33,6 +33,8 @@ Dataset loadMNIST(string path)
         for(size_t i = 0; i < numInstances; i++)
         {
             result[i] = features[i * numFeatures .. (i + 1) * numFeatures];
+            result[i][] /= 128.0f;
+            result[i][] -= 1.0f;
         }
 
         return result;

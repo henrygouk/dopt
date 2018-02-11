@@ -16,10 +16,10 @@ private
 {
     void uniform(Operation op, const(Buffer)[] inputs, Buffer output)
     {
-        import std.random : uniform;
+        import std.random : uniform01;
 
-        ubyte[] arr = output.as!ubyte[0 .. op.volume];
+        float[] arr = output.as!float[0 .. op.volume];
         foreach (ref v; arr)
-            v = uniform!ubyte;
+            v = uniform01!float + float.epsilon; // by default CUDA's random is 0-1 including 1 but not zero, D is 0-1 including 0 but not one.
     }
 }

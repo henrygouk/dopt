@@ -13,9 +13,11 @@ void initialize()
 {
     import dopt.core.cpu.basic;
     import dopt.core.cpu.math;
+    import dopt.core.cpu.random;
 
     dopt.core.cpu.basic.initialize();
     dopt.core.cpu.math.initialize();
+    dopt.core.cpu.random.initialize();
 }
 
 /**

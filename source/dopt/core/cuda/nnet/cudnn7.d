@@ -44,7 +44,7 @@ private
         import std.conv : to;
         import std.exception : enforce;
         enforce(status == CUDNN_STATUS_SUCCESS, mod ~ "(" ~ line.to!string ~ "): Failed to execute cuDNN function." ~
-            " Error code: " ~ status.to!string);
+            " Error code: " ~ cudnnGetErrorString(status).to!string);
     }
 
     CUDAKernel cudaKernelCtr(K)(Operation op)
@@ -124,7 +124,8 @@ private
 
 			cudnnConvolutionFwdAlgoPerf_t[9] algoPerfs;
 			int numAlgos;
-			cudnnFindConvolutionForwardAlgorithm(handle, xDesc, wDesc, convDesc, yDesc, cast(int)algoPerfs.length, &numAlgos, algoPerfs.ptr);
+			cudnnFindConvolutionForwardAlgorithm(handle, xDesc, wDesc, convDesc, yDesc, cast(int)algoPerfs.length, &numAlgos,
+                algoPerfs.ptr).cudnnCheck();
 
 			if(mWorkspace !is null && algoPerfs[0].memory > mWorkspace.numBytes)
 			{

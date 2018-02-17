@@ -49,6 +49,18 @@ private
         }
     }
 
+    T atan2(T)(T a, T b)
+    {
+        static if(is(T : int))
+        {
+            return cast(int)std.math.atan2(cast(float)a, cast(float)b);
+        }
+        else
+        {
+            return std.math.atan2(a, b);
+        }
+    }
+
     T sgn(T)(T t)
     {
         return cast(T)((t > 0) - (t < 0));
@@ -283,8 +295,9 @@ private
 
     immutable string[] arith = ["add", "sub", "mul", "div"];
     immutable string[] comp = ["lt", "lte", "gt", "gte", "eq", "neq"];
-    immutable string[] binfunc = ["max", "min", "pow"];
-    immutable string[] unfunc = ["neg", "abs", "sgn", "exp", "log", "sqrt"];
+    immutable string[] binfunc = ["max", "min", "pow", "atan2"];
+    immutable string[] unfunc = ["neg", "abs", "sgn", "exp", "log", "sqrt", "sin", "cos", "tan", "asin", "acos",
+        "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh"];
     
     string generateRegistrations()
     {
@@ -378,7 +391,7 @@ private
 
             if(sym == "")
             {
-                expr = op ~ "(ins[0][i])";
+                expr = op ~ "(cast(float)ins[0][i])";
             }
             else
             {

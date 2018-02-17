@@ -64,6 +64,45 @@ interface CUDAKernel
     void execute(const(CUDABuffer)[] inputs, CUDABuffer output);
 }
 
+private class CUDACPUKernel : CUDAKernel
+{
+    this(Operation op)
+    {
+        import std.algorithm : map;
+        import std.array : array;
+
+        mDeps = op
+               .deps
+               .map!(x => variable(x.outputType))
+               .array();
+        
+        mOp = createOperation(op.opType, mDeps, op.attributes);
+    }
+
+    void execute(const(CUDABuffer)[] inputs, CUDABuffer output)
+    {
+        import std.range : zip;
+
+        foreach(cudaInput, cpuInput; zip(inputs, mDeps))
+        {
+            cudaInput.get(cpuInput.value.as!ubyte);
+        }
+
+        Buffer ret = evaluateCPU([mOp])[0];
+
+        output.set(ret.as!ubyte);
+    }
+
+    Buffer[] mInputs;
+    Operation[] mDeps;
+    Operation mOp;
+}
+
+private CUDAKernel cudaCPUCtr(Operation op)
+{
+    return new CUDACPUKernel(op);
+}
+
 /**
     A class that encapsulates the CUDA memory allocation/deallocation process.
 */
@@ -174,6 +213,7 @@ class CUDAPlan : Plan
         {
             import std.algorithm : canFind, filter;
             import std.array : array;
+            import std.functional : toDelegate;
 
             super(outputs);
 
@@ -186,7 +226,7 @@ class CUDAPlan : Plan
                     continue;
                 }
                 
-                auto k = mKernelCtrs.get(o.opType, null);
+                auto k = mKernelCtrs.get(o.opType, toDelegate(&cudaCPUCtr));
 
                 enforce(k !is null, "Could not construct a CUDA kernel for operation of type '" ~ o.opType ~ "'");
 

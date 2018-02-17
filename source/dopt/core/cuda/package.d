@@ -284,7 +284,7 @@ class CUDAPlan : Plan
     {
         override void executeImpl(Buffer[Operation] args, Buffer[] rets)
         {
-            import std.datetime : StopWatch;
+            import std.datetime.stopwatch : StopWatch;
             StopWatch sw;
 
             //Make sure all the args are variable assignments
@@ -315,7 +315,7 @@ class CUDAPlan : Plan
 
                         sw.stop();
 
-                        profiler["variable"] = profiler.get("variable", 0) + sw.peek.usecs;
+                        profiler["variable"] = profiler.get("variable", 0) + sw.peek.split.usecs;
                     }
                     
                     continue;
@@ -340,7 +340,7 @@ class CUDAPlan : Plan
                 mKernels[o].execute(inputs, results[o]);
                 sw.stop();
 
-                profiler[o.opType] = profiler.get(o.opType, 0) + sw.peek.usecs;
+                profiler[o.opType] = profiler.get(o.opType, 0) + sw.peek.split.usecs;
             }
 
             foreach(i, o; mOutputs)

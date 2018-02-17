@@ -30,6 +30,9 @@ private __gshared
     CUcontext mContext;
 }
 
+/**
+    Registers all the kernels for the CUDA backend
+*/
 void initialize()
 {
     //TODO: handle case where CUDA isn't available
@@ -121,11 +124,15 @@ class CUDABuffer
             CUDABuffer ret = new CUDABuffer();
             ret.mNumBytes = numBytes;
             enforce(cuMemAlloc(&(ret.mPtr), ret.mNumBytes) == CUDA_SUCCESS, "CUDA memory allocation failed");
-            enforce(cuMemsetD8(ret.mPtr, 0, ret.mNumBytes) == CUDA_SUCCESS, "CUDA default buffer initialisation failed");
+            enforce(cuMemsetD8(ret.mPtr, 0, ret.mNumBytes) == CUDA_SUCCESS,
+                "CUDA default buffer initialisation failed");
 
             return ret;
         }
 
+        /**
+            Releases the CUDA resources used by buf internally.
+        */
         static void destroy(CUDABuffer buf)
         {
             enforce(cuMemFree(buf.mPtr) == CUDA_SUCCESS, "Failed to free CUDA device memory.");
@@ -261,6 +268,9 @@ class CUDAPlan : Plan
             cleanup();
         }
 
+        /**
+            Releases CUDA resources associated with this plan.
+        */
         void cleanup()
         {
             if(clean)

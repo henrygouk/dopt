@@ -40,6 +40,7 @@
 <url><loc>http://127.0.0.1/dopt/core/cuda.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDABuffer.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDABuffer.create.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/cuda/CUDABuffer.destroy.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDABuffer.get.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDABuffer.numBytes.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDABuffer.ptr.html</loc></url>
@@ -47,9 +48,11 @@
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDAKernel.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDAKernel.execute.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/CUDAPlan.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/cuda/CUDAPlan.cleanup.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/deregisterCUDAKernel.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/evaluateCUDA.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/evaluateCUDA.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/cuda/initialize.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/listCUDAOperations.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/cuda/registerCUDAKernel.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/grads.html</loc></url>

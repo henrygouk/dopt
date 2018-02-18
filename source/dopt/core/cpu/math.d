@@ -98,15 +98,22 @@ private
                 import std.range : iota;
                 import std.parallelism : parallel;
 
-                //for(size_t o = 0; o < outbuf.length / lowstride; o++)
                 foreach(o; iota(0, outbuf.length / lowstride).array().parallel)
                 {
-                    outbuf[o * lowstride .. (o + 1) * lowstride] = 0;
-
-                    for(size_t i = 0; i < highstride / lowstride; i++)
+                    if(lowstride == 1)
                     {
-                        outbuf[o * lowstride .. (o + 1) * lowstride] +=
-                            inbuf[o * highstride + i * lowstride .. o * highstride + (i + 1) * lowstride];
+                        outbuf[o] = inbuf[o * highstride .. (o + 1) * highstride]
+                                   .fold!((a, b) => a + b)(cast(T)0);
+                    }
+                    else
+                    {
+                        outbuf[o * lowstride .. (o + 1) * lowstride] = 0;
+
+                        for(size_t i = 0; i < highstride / lowstride; i++)
+                        {
+                            outbuf[o * lowstride .. (o + 1) * lowstride] +=
+                                inbuf[o * highstride + i * lowstride .. o * highstride + (i + 1) * lowstride];
+                        }
                     }
                 }
             }
@@ -164,10 +171,11 @@ private
         void run(T)()
         {
             import std.algorithm : fold, max, sort;
+            import std.parallelism : parallel;
 
             void process(const(T)[] inbuf, T[] outbuf, size_t highstride, size_t lowstride)
             {
-                for(size_t o = 0; o < outbuf.length / lowstride; o++)
+                foreach(o; iota(0, outbuf.length / lowstride).array().parallel)
                 {
                     outbuf[o * lowstride .. (o + 1) * lowstride] = -T.max;
 

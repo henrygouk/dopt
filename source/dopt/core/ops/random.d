@@ -37,6 +37,14 @@ private
 
 public
 {
+    /**
+        Creates a tensor that will contain different randomly generated data each time it is evaluated.
+
+        All elements in the tensor will be drawn from uniformly from the interval (0, 1]
+
+        Params:
+            shape = The shape of the random tensor
+    */
     Operation uniformSample(size_t[] shape, string mod = __MODULE__, size_t line = __LINE__)
     {
         return createOperation("uniform", [], ["shape": Variant(shape)], mod, line);

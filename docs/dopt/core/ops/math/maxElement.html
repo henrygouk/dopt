@@ -31,6 +31,20 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script></d
 <p>The resulting operation.
 </p>
 </section>
+<section><h2>Example</h2>
+
+<pre class="code"><code class="lang-d"><span class="kwd">import <a href="../../../../dopt/core.html"></span><span class="pln">dopt<wbr/></span><span class="pun">.</span><span class="pln">core</span></a><span class="pln"> </span><span class="pun">: </span><span class="pln">evaluate</span><span class="pun">;
+
+</span><span class="kwd">auto </span><span class="pln">a </span><span class="pun">= </span><span class="pln">float32</span><span class="pun">([</span><span class="lit">2</span><span class="pun">, </span><span class="lit">2</span><span class="pun">],[
+    </span><span class="lit">1.0f</span><span class="pun">, </span><span class="lit">4.0f</span><span class="pun">,
+    </span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">6.0f
+</span><span class="pun">]);
+
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">a<wbr/></span><span class="pun">.</span><span class="pln">maxElement<wbr/></span><span class="pun">.</span><span class="pln">evaluate</span><span class="pun">()<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float </span><span class="pun">== [</span><span class="lit">6.0f</span><span class="pun">]); </span><span class="com">//Max value in the entire tensor
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">a<wbr/></span><span class="pun">.</span><span class="pln">maxElement</span><span class="pun">([</span><span class="lit">0</span><span class="pun">])<wbr/>.</span><span class="pln">evaluate</span><span class="pun">()<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float </span><span class="pun">== [</span><span class="lit">3.0f</span><span class="pun">, </span><span class="lit">6.0f</span><span class="pun">]); </span><span class="com">//Max of each column
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">a<wbr/></span><span class="pun">.</span><span class="pln">maxElement</span><span class="pun">([</span><span class="lit">1</span><span class="pun">])<wbr/>.</span><span class="pln">evaluate</span><span class="pun">()<wbr/>.</span><span class="pln">as</span><span class="pun">!</span><span class="typ">float </span><span class="pun">== [</span><span class="lit">4.0f</span><span class="pun">, </span><span class="lit">6.0f</span><span class="pun">]); </span><span class="com">//Max of each row
+</span></code></pre>
+</section>
 </div><footer><div id="license-info"><p>Henry Gouk
 </p>
 

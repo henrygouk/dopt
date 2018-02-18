@@ -28,6 +28,7 @@ var symbols = [
 {name: 'dopt.core.ops.nnet.softmax', kind: "functiondeclaration", path: './dopt/core/ops/nnet/softmax.html', attributes: []},
 {name: 'dopt.core.ops.nnet.softmaxGrad', kind: "functiondeclaration", path: './dopt/core/ops/nnet/softmaxGrad.html', attributes: []},
 {name: 'dopt.core.ops.random', kind: "module", path: './dopt/core/ops/random.html', attributes: []},
+{name: 'dopt.core.ops.random.uniformSample', kind: "functiondeclaration", path: './dopt/core/ops/random/uniformSample.html', attributes: []},
 {name: 'dopt.core.cpu', kind: "module", path: './dopt/core/cpu.html', attributes: []},
 {name: 'dopt.core.cpu.CPUKernel', kind: "interfacedeclaration", path: './dopt/core/cpu/CPUKernel.html', attributes: []},
 {name: 'dopt.core.cpu.CPUKernelDelegate', kind: "classdeclaration", path: './dopt/core/cpu/CPUKernelDelegate.html', attributes: []},

@@ -273,6 +273,7 @@ Operation argmin(Operation input, size_t axis, string mod = __MODULE__, size_t l
     return createOperation("argmin", [input], ["axis": Variant(axis)], mod, line);
 }
 
+///
 unittest
 {
     import dopt.core : evaluate;
@@ -284,7 +285,6 @@ unittest
         6.0f, 7.0f, 2.0f
     ]).argmin(1);
 
-    import std.stdio;
     assert(a.evaluate().as!int == [3]);
     assert(b.evaluate().as!int == [1, 2]);
 }
@@ -314,4 +314,19 @@ Operation maxElement(Operation op, size_t[] axes = [], string mod = __MODULE__, 
     }
     
     return createOperation("maxElement", [op], ["axes": Variant(axes)], mod, line);
+}
+
+///
+unittest
+{
+    import dopt.core : evaluate;
+
+    auto a = float32([2, 2],[
+        1.0f, 4.0f,
+        3.0f, 6.0f
+    ]);
+
+    assert(a.maxElement.evaluate().as!float == [6.0f]); //Max value in the entire tensor
+    assert(a.maxElement([0]).evaluate().as!float == [3.0f, 6.0f]); //Max of each column
+    assert(a.maxElement([1]).evaluate().as!float == [4.0f, 6.0f]); //Max of each row
 }

@@ -5,5 +5,15 @@ __dummy.html
 *.obj
 __test__*__
 libdopt.a
+libdopt_core.a
+libdopt_cpu.a
+libdopt_cuda.a
+libdopt_nnet.a
+libdopt_online.a
 dopt-test-library
+dopt-core-test-library
+dopt-cpu-test-library
+dopt-cuda-test-library
+dopt-nnet-test-library
+dopt-online-test-library
 dub.selections.json

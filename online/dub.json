@@ -1,0 +1,10 @@
+{
+    "name": "online",
+    "dependencies": {
+        "dopt:core": "*",
+        "dopt:cuda": {
+            "version": "*",
+            "optional": true
+        }
+    }
+}

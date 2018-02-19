@@ -1,0 +1,25 @@
+{
+    "name": "nnet",
+    "configurations": [
+        {
+            "name": "cuda",
+            "dependencies": {
+                "dopt:core": "*",
+                "dopt:cpu": "*",
+                "dopt:cuda": "*",
+                "dopt:online": "*"
+            },
+            "versions": [
+                "Have_DoptCUDA"
+            ]
+        },
+        {
+            "name": "no-cuda",
+            "dependencies": {
+                "dopt:core": "*",
+                "dopt:cpu": "*",
+                "dopt:online": "*"
+            }
+        }
+    ]
+}

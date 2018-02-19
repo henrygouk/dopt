@@ -6,15 +6,23 @@
 	"description": "A numerical optimisation and deep learning framework",
 	"copyright": "Copyright © 2017, Henry Gouk",
 	"license": "BSD 3-clause",
-	"dependencies": {
-		"cblas": "~>2.0.0",
-		"derelict-cuda": "~>3.1.0",
-		"derelict-nvrtc": "~>1.0.2",
-		"derelict-cudnn": "~>2.0.1"
-	},
-	"libs": [
-		"blas", "cblas"
+	"subPackages": [
+		"core",
+		"cpu",
+		"cuda",
+		"nnet",
+		"online"
 	],
+	"dependencies": {
+		":core": "*",
+		":cpu": "*",
+		":cuda": {
+			"version": "*",
+			"optional": true
+		},
+		":nnet": "*",
+		":online": "*"
+	},
 	"-ddoxTool": "scod",
 	"-ddoxFilterArgs": [
 		"--ex", "cblas",

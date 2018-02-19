@@ -9,6 +9,7 @@ module dopt.online;
 public
 {
     import dopt.online.adam;
+    import dopt.online.amsgrad;
     import dopt.online.sgd;
 }
 

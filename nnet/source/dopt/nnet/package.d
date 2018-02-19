@@ -21,7 +21,7 @@
     The $(D DAGNetwork) class can then be used to traverse the resulting graph and aggregate parameters/loss terms:
 
     ---
-    auto network = new DAGNetwork([features], layers);
+    auto network = new DAGNetwork([features], [layers]);
     ---
 
     After this, one can define an objective function---there are a few standard loss functions implemented in
@@ -63,7 +63,7 @@ public
     import dopt.nnet.parameters;
 }
 
-version(Have_DoptCUDA)
+version(Have_dopt_cuda)
 {
     import dopt.cuda;
 }

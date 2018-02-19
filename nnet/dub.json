@@ -8,10 +8,7 @@
                 "dopt:cpu": "*",
                 "dopt:cuda": "*",
                 "dopt:online": "*"
-            },
-            "versions": [
-                "Have_DoptCUDA"
-            ]
+            }
         },
         {
             "name": "no-cuda",

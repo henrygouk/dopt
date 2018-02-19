@@ -26,7 +26,8 @@
 	"-ddoxTool": "scod",
 	"-ddoxFilterArgs": [
 		"--ex", "cblas",
-		"--min-protection", "Protected",
+		"--min-protection=Protected",
+		"--unittest-examples",
 		"--only-documented"
 	]
 }

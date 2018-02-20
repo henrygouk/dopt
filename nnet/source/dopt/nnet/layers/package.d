@@ -53,7 +53,7 @@ class Layer
 
         Parameter[] params()
         {
-            return mParams.dup;
+            return mParams;
         }
 
         Operation output()

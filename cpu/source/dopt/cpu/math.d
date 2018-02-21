@@ -178,14 +178,21 @@ private
             {
                 foreach(o; iota(0, outbuf.length / lowstride).array().parallel)
                 {
-                    outbuf[o * lowstride .. (o + 1) * lowstride] = -T.max;
-
-                    for(size_t i = 0; i < highstride / lowstride; i++)
+                    if(lowstride == 1)
                     {
-                        for(size_t j = 0; j < lowstride; j++)
+                        outbuf[o] = inbuf[o * highstride .. (o + 1) * highstride].fold!((a, b) => max(a, b))(-T.max);
+                    }
+                    else
+                    {
+                        outbuf[o * lowstride .. (o + 1) * lowstride] = -T.max;
+
+                        for(size_t i = 0; i < highstride / lowstride; i++)
                         {
-                            outbuf[o * lowstride + j] = max(outbuf[o * lowstride + j],
-                                inbuf[o * highstride + i * lowstride + j]);
+                            for(size_t j = 0; j < lowstride; j++)
+                            {
+                                outbuf[o * lowstride + j] = max(outbuf[o * lowstride + j],
+                                    inbuf[o * highstride + i * lowstride + j]);
+                            }
                         }
                     }
                 }

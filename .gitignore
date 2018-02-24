@@ -11,6 +11,8 @@ libdopt_cuda.a
 libdopt_nnet.a
 libdopt_online.a
 dopt-test-library
+dopt-test-cpu
+dopt-test-cuda
 dopt-core-test-library
 dopt-cpu-test-library
 dopt-cuda-test-library

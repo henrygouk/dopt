@@ -2,6 +2,7 @@ dopt
 ====
 
 [![DUB](https://img.shields.io/dub/v/dopt.svg)]()
+[![Travis-CI](https://travis-ci.org/henrygouk/dopt.svg?branch=master)]()
 
 A numerical optimisation and deep learning framework for D.
 
@@ -30,6 +31,17 @@ Using
 -----
 
 The easiest way to use dopt is by adding it as a dependency in your project's dub configuration file. See dub's [getting started page](http://code.dlang.org/getting_started) for more information about how to do this.
+
+If you want to take advantage of the CUDA backend (currently required for most neural network operations) then you should also ensure that the `cuda` configuration is used. This is the sort of thing you would end up putting in your dub.json file:
+
+```json
+"dependencies": {
+    "dopt": "~>0.3.8"
+},
+"subConfigurations": {
+    "dopt": "cuda"
+}
+```
 
 Example
 -------

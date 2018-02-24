@@ -309,29 +309,37 @@ private
         }
     }
 
-    immutable string[] arith = ["add", "sub", "mul", "div"];
-    immutable string[] comp = ["lt", "lte", "gt", "gte", "eq", "neq"];
-    immutable string[] binfunc = ["max", "min", "pow", "atan2"];
-    immutable string[] unfunc = ["neg", "abs", "sgn", "exp", "log", "sqrt", "sin", "cos", "tan", "asin", "acos",
-        "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh"];
+    import std.meta : AliasSeq;
+
+    enum arith = AliasSeq!("add", "sub", "mul", "div");
+    enum comp = AliasSeq!("lt", "lte", "gt", "gte", "eq", "neq");
+    enum binfunc = AliasSeq!("max", "min", "pow", "atan2");
+    enum unfunc = AliasSeq!("neg", "abs", "sgn", "exp", "log", "sqrt", "sin", "cos", "tan", "asin", "acos",
+        "atan", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh");
+    
+    enum opsymbol = ["add": "+", "sub": "-", "mul": "*", "div": "/", "lt": "<", "lte": "<=",
+        "gt": ">", "gte": ">=", "eq": "==", "neq": "!=", "neg": "-",
+        "exp": "expCast", "sqrt": "sqrtCast"];
+
+    enum types = ["float": "float32", "int": "int32"];
     
     string generateRegistrations()
     {
-        return chain(arith, comp, binfunc, unfunc)
-              .map!(x => "registerCPUKernel(\"" ~ x ~ "\", new CPUKernelDelegate(toDelegate(&" ~ x ~ "Kernel)));")
-              .joiner("\n")
-              .to!string;
+        import std.array : appender;
+
+        auto strBuilder = appender!string();
+        
+        static foreach(x; AliasSeq!(arith, comp, binfunc, unfunc))
+        {
+            strBuilder.put("registerCPUKernel(\"" ~ x ~ "\", new CPUKernelDelegate(toDelegate(&" ~ x ~ "Kernel)));");
+        }
+
+        return strBuilder.data;
     }
 
     string generateKernels()
     {
-        string[string] opsymbol = ["add": "+", "sub": "-", "mul": "*", "div": "/", "lt": "<", "lte": "<=",
-                                         "gt": ">", "gte": ">=", "eq": "==", "neq": "!=", "neg": "-",
-                                         "exp": "expCast", "sqrt": "sqrtCast"];
-
-        string[string] types = ["float": "float32", "int": "int32"];
-
-        string[] kernelStrings;
+        auto kernelStrings = appender!(string);
 
         //This is used for generating a kernel for a specific operation and type combination
         string generateSingleKernel(string op, string dtype, string expr)
@@ -373,11 +381,13 @@ private
             return ret;
         }
 
+        string sym;
+        string expr;
+
         //Iterate over each type of (binary) operation and generate the kernels
-        foreach(op; chain(arith, comp, binfunc))
+        static foreach(op; AliasSeq!(arith, comp, binfunc))
         {
-            string sym = opsymbol.get(op, "");
-            string expr;
+            sym = opsymbol.get(op, "");
 
             if(sym == "")
             {
@@ -388,22 +398,20 @@ private
                 expr = "ins[0][i] " ~ sym ~ "ins[1][i]";
             }
 
-            auto mux = generateTypedKernel(op, types);
-            auto kerns = types
+            kernelStrings.put(generateTypedKernel(op, types));
+            kernelStrings.put(
+                         types
                         .keys
                         .map!(x => generateSingleKernel(op, x, expr))
                         .joiner()
-                        .to!string;
-
-            kernelStrings ~= mux;
-            kernelStrings ~= kerns;
+                        .to!string
+            );
         }
 
         //Generates kernels for unary operations
-        foreach(op; unfunc)
+        static foreach(op; unfunc)
         {
-            string sym = opsymbol.get(op, "");
-            string expr;
+            sym = opsymbol.get(op, "");
 
             if(sym == "")
             {
@@ -414,18 +422,17 @@ private
                 expr = sym ~ "(ins[0][i])";
             }
 
-            auto mux = generateTypedKernel(op, types);
-            auto kerns = types
+            kernelStrings.put(generateTypedKernel(op, types));
+            kernelStrings.put(
+                         types
                         .keys
                         .map!(x => generateSingleKernel(op, x, expr))
                         .joiner()
-                        .to!string;
-
-            kernelStrings ~= mux;
-            kernelStrings ~= kerns;
+                        .to!string
+            );
         }
 
         //Return all the source code we've generated so it can be mixed in
-        return kernelStrings.joiner().to!string;
+        return kernelStrings.data;
     }
 }

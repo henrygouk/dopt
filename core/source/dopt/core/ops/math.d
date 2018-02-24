@@ -47,14 +47,14 @@ package
             registerOperation(opName, OpDef(&verifier, &judge));
         }
 
-        foreach(opName; chain(arith, comp, binfunc))
+        static foreach(opName; AliasSeq!(arith, comp, binfunc))
         {
-            registerPointwiseBinary(opName);
+            mixin("registerPointwiseBinary(\"" ~ opName ~ "\");");
         }
 
-        foreach(opName; unfunc)
+        static foreach(opName; unfunc)
         {
-            registerPointwiseUnary(opName);
+            mixin("registerPointwiseUnary(\"" ~ opName ~ "\");");
         }
 
         registerOperation("matmul", OpDef(toDelegate(&verifyMatmul), toDelegate(&judgeMatmul)));
@@ -68,11 +68,12 @@ package
 
 private
 {
-    immutable string[] arith = ["add", "sub", "mul", "div"];
-    immutable string[] comp = ["lt", "lte", "gt", "gte", "eq", "neq"];
-    immutable string[] binfunc = ["max", "min", "pow"];
-    immutable string[] unfunc = ["neg", "abs", "sgn", "exp", "log", "sqrt", "sin", "cos", "tan", "asin", "acos",
-        "atan", "atan2", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh"];
+    import std.meta : AliasSeq;
+    enum arith = AliasSeq!("add", "sub", "mul", "div");
+    enum comp = AliasSeq!("lt", "lte", "gt", "gte", "eq", "neq");
+    enum binfunc = AliasSeq!("max", "min", "pow");
+    enum unfunc = AliasSeq!("neg", "abs", "sgn", "exp", "log", "sqrt", "sin", "cos", "tan", "asin", "acos",
+        "atan", "atan2", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh");
 
     string createAllCtors()
     {
@@ -96,7 +97,11 @@ private
                 ";
         }
 
-        string binctors = chain(arith, comp, binfunc)
+        import std.array : appender;
+
+        auto strBuilder = appender!string();
+
+        /*string binctors = chain(arith, comp, binfunc)
                          .map!(x => createOpCtor(x, 2))
                          .joiner("\n")
                          .to!string;
@@ -106,7 +111,19 @@ private
                       .joiner("\n")
                       .to!string;
 
-        return binctors ~ unctors;
+        return binctors ~ unctors;*/
+
+        static foreach(f; AliasSeq!(arith, comp, binfunc))
+        {
+            strBuilder.put(createOpCtor(f, 2));
+        }
+
+        static foreach(f; unfunc)
+        {
+            strBuilder.put(createOpCtor(f, 1));
+        }
+
+        return strBuilder.data;
     }
 
     bool verifyMatmul(Operation op)

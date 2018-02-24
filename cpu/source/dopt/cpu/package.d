@@ -13,10 +13,12 @@ shared static this()
 {
     import dopt.cpu.basic;
     import dopt.cpu.math;
+    import dopt.cpu.nnet;
     import dopt.cpu.random;
 
     dopt.cpu.basic.initialize();
     dopt.cpu.math.initialize();
+    dopt.cpu.nnet.initialize();
     dopt.cpu.random.initialize();
 
     import std.functional : toDelegate;

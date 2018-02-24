@@ -3,7 +3,7 @@
     "dependencies": {
         "derelict-cuda": "~>3.1.0",
 		"derelict-nvrtc": "~>1.0.2",
-        "derelict-cudnn": "~>2.0.1",
+        "derelict-cudnn": "~>2.0.4",
         "dopt:core": "*",
         "dopt:cpu": "*"
     }

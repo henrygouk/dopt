@@ -13,16 +13,27 @@
 		"nnet",
 		"online"
 	],
-	"dependencies": {
-		":core": "*",
-		":cpu": "*",
-		":cuda": {
-			"version": "*",
-			"optional": true
+	"configurations": [
+		{
+			"name": "cpu",
+			"dependencies": {
+				":core": "*",
+				":cpu": "*",
+				":nnet": "*",
+				":online": "*"
+			}
 		},
-		":nnet": "*",
-		":online": "*"
-	},
+		{
+			"name": "cuda",
+			"dependencies": {
+				":core": "*",
+				":cpu": "*",
+				":cuda": "*",
+				":nnet": "*",
+				":online": "*"
+			}
+		}
+	],
 	"-ddoxTool": "scod",
 	"-ddoxFilterArgs": [
 		"--ex", "cblas",

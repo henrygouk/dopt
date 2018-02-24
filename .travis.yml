@@ -1,2 +1,8 @@
 language: d
+
+addons:
+  apt:
+    packages:
+      - libatlas-base-dev
+
 script: dub test --combined --config=cpu --compiler=${DC}

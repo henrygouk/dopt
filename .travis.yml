@@ -1,2 +1,2 @@
 language: d
-script: dub test --build-mode=singleFile --compiler=${DC}
+script: dub test --combined --config=cpu --compiler=${DC}

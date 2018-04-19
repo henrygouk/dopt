@@ -23,6 +23,7 @@ class Conv2DOptions
         _padding = [0, 0];
         _stride = [1, 1];
         _weightDecay = 0.0f;
+        _maxgain = float.infinity;
 
     }
 
@@ -33,6 +34,7 @@ class Conv2DOptions
         "ParamInitializer", "biasInit",
         "Projection", "filterProj",
         "Projection", "biasProj",
+        "float", "maxgain",
         "float", "weightDecay",
         "bool", "useBias"
     ));
@@ -90,12 +92,36 @@ Layer conv2D(Layer input, size_t outputChannels, size_t[] filterDims, Conv2DOpti
 
     auto filterLoss = (weightDecay == 0.0f) ? null : (weightDecay * sum(filters * filters));
 
+    auto y = x.convolution(filters, padding, stride);
+    auto yTr = xTr.convolution(filters, padding, stride);
+
+    auto before = xTr.reshape([xTr.shape[0], xTr.volume / xTr.shape[0]]);
+    auto after = yTr.reshape([yTr.shape[0], yTr.volume / yTr.shape[0]]);
+
+    Operation maxGainProj(Operation newWeights)
+    {
+        auto beforeNorms = sum(before * before, [1]) + 1e-8;
+        auto afterNorms = sum(after * after, [1]) + 1e-8;
+        auto mg = maxElement(sqrt(afterNorms / beforeNorms));
+
+        if(opts.filterProj is null)
+        {
+            return newWeights * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain));
+        }
+        else
+        {
+            return opts._filterProj(newWeights * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain)));
+        }
+    }
+
+    if(opts.maxgain != float.infinity)
+    {
+        filterProj = &maxGainProj;
+    }
+
     Parameter[] params = [
             Parameter(filters, filterLoss, filterProj)
         ];
-
-    auto y = x.convolution(filters, padding, stride);
-    auto yTr = xTr.convolution(filters, padding, stride);
 
     if(useBias)
     {

@@ -20,6 +20,7 @@ class DenseOptions
         _biasInit = constantInit(0.0f);
         _useBias = true;
         _weightDecay = 0;
+        _maxgain = float.infinity;
     }
 
     mixin(dynamicProperties(
@@ -27,6 +28,7 @@ class DenseOptions
         "ParamInitializer", "biasInit",
         "Projection", "weightProj",
         "Projection", "biasProj",
+        "float", "maxgain",
         "float", "weightDecay",
         "bool", "useBias"
     ));
@@ -72,13 +74,38 @@ Layer dense(Layer input, size_t numOutputs, DenseOptions opts = new DenseOptions
     opts._weightInit(weights);
 
     auto weightLoss = (opts.weightDecay == 0.0f) ? null : (opts.weightDecay * sum(weights * weights));
-
-    Parameter[] params = [
-        Parameter(weights, weightLoss, opts.weightProj)
-    ];
+    auto weightProj = opts._weightProj;
 
     auto y = matmul(x, weights.transpose([1, 0]));
     auto yTr = matmul(xTr, weights.transpose([1, 0]));
+
+    auto before = xTr.reshape([xTr.shape[0], xTr.volume / xTr.shape[0]]);
+    auto after = yTr.reshape([yTr.shape[0], yTr.volume / yTr.shape[0]]);
+
+    Operation maxGainProj(Operation newWeights)
+    {
+        auto beforeNorms = sum(before * before, [1]) + 1e-8;
+        auto afterNorms = sum(after * after, [1]) + 1e-8;
+        auto mg = maxElement(sqrt(afterNorms / beforeNorms));
+
+        if(opts.weightProj is null)
+        {
+            return newWeights * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain));
+        }
+        else
+        {
+            return opts._weightProj(newWeights * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain)));
+        }
+    }
+
+    if(opts.maxgain != float.infinity)
+    {
+        weightProj = &maxGainProj;
+    }
+
+    Parameter[] params = [
+        Parameter(weights, weightLoss, weightProj)
+    ];
 
     if(opts.useBias)
     {

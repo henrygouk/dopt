@@ -14,11 +14,11 @@ Layer maybeDropout(Layer l, float prob)
     }
 }
 
-Layer maybeBatchNorm(Layer l, bool bn)
+Layer maybeBatchNorm(Layer l, bool bn, BatchNormOptions opts = new BatchNormOptions())
 {
     if(bn)
     {
-        return l.batchNorm();
+        return l.batchNorm(opts);
     }
     else
     {

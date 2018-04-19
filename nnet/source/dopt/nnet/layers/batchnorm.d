@@ -21,6 +21,7 @@ class BatchNormOptions
         _betaInit = constantInit(0.0f);
         _gammaDecay = 0;
         _momentum = 0.9f;
+        _maxgain = float.infinity;
     }
 
     mixin(dynamicProperties(
@@ -28,6 +29,7 @@ class BatchNormOptions
         "ParamInitializer", "betaInit",
         "Projection", "gammaProj",
         "Projection", "betaProj",
+        "float", "maxgain",
         "float", "gammaDecay",
         "float", "momentum"
     ));
@@ -41,7 +43,7 @@ unittest
                .gammaInit(constantInit(1.0f))
                .betaInit(constantInit(0.0f))
                .gammaProj(null)
-               .gammaProj(null)
+               .betaProj(null)
                .gammaDecay(0.0f)
                .momentum(0.9f);
     
@@ -83,6 +85,36 @@ Layer batchNorm(Layer input, BatchNormOptions opts = new BatchNormOptions())
 
     auto y = x.batchNormInference(gamma, beta, mean, var);
 
+    auto before = xTr;
+    auto zeros = float32Constant([before.shape[1]], repeat(0.0f, before.shape[1]).array());
+    auto after = before.batchNormInference(gamma, zeros, zeros, var);
+
+    before = before.reshape([before.shape[0], before.volume / before.shape[0]]);
+    after = after.reshape([after.shape[0], after.volume / after.shape[0]]);
+
+    Operation maxGainProj(Operation newGamma)
+    {
+        auto beforeNorms = sum(before * before, [1]) + 1e-8;
+        auto afterNorms = sum(after * after, [1]) + 1e-8;
+        auto mg = maxElement(sqrt(afterNorms / beforeNorms));
+
+        if(opts._gammaProj is null)
+        {
+            return newGamma * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain));
+        }
+        else
+        {
+            return opts._gammaProj(newGamma * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain)));
+        }
+    }
+
+    Projection gammaProj = opts._gammaProj;
+
+    if(opts.maxgain != float.infinity)
+    {
+        gammaProj = &maxGainProj;
+    }
+
     Operation meanUpdater(Operation ignored)
     {
         return meanUpdateSym;
@@ -94,7 +126,7 @@ Layer batchNorm(Layer input, BatchNormOptions opts = new BatchNormOptions())
     }
 
     return new Layer([input], y, yTr, [
-        Parameter(gamma, opts._gammaDecay == 0.0f ? null : opts._gammaDecay * sum(gamma * gamma), opts._gammaProj),
+        Parameter(gamma, opts._gammaDecay == 0.0f ? null : opts._gammaDecay * sum(gamma * gamma), gammaProj),
         Parameter(beta, null, opts._betaProj),
         Parameter(mean, null, &meanUpdater),
         Parameter(var, null, &varUpdater)

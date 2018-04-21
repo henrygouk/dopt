@@ -260,6 +260,9 @@ ParamInitializer heGaussianInit()
     Creates a $(D Projection) function that can be applied to a parameter matrix/tensor to constraint the Lipschitz
     constant w.r.t. the L_1 vector norm.
 
+    This function should be used to create a $(D Projection) for $(D Conv2DOptions.filterProj) or
+    $(D DenseOptions.weightProj).
+
     See https://arxiv.org/abs/1804.04368 for more details.
 
     Params:
@@ -293,6 +296,9 @@ Projection lipschitz1(float maxK)
 /**
     Creates a $(D Projection) function that can be applied to a parameter matrix/tensor to constraint the Lipschitz
     constant w.r.t. the L_infty vector norm.
+
+    This function should be used to create a $(D Projection) for $(D Conv2DOptions.filterProj) or
+    $(D DenseOptions.weightProj).
 
     See https://arxiv.org/abs/1804.04368 for more details.
 

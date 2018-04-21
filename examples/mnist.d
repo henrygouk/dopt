@@ -57,6 +57,10 @@ void main(string[] args)
 	auto lr = float32([], [0.001f]);
 	auto updater = adam([lossSym], network.params, network.paramProj);
 
+	size_t bidx;
+	float[] fs = new float[features.volume];
+	float[] ls = new float[labels.volume];
+
 	//Iterate for 40 epochs of training
 	foreach(e; 0 .. 40)
 	{
@@ -68,17 +72,20 @@ void main(string[] args)
 			lr.value.as!float[0] = 0.0001f;
 		}
 
-		//Iterate over each minibatch of data and perform an update of the model parameters
-		foreach(fs, ls; zip(data.trainFeatures.chunks(batchSize), data.trainLabels.chunks(batchSize)))
+		do
 		{
+			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.
+			bidx = data.getBatch([fs, ls], bidx, 0);
+
 			auto loss = updater([
-				features: Buffer(fs.joiner().array()),
-				labels: Buffer(ls.joiner().array())
+				features: Buffer(fs),
+				labels: Buffer(ls)
 			]);
 
 			totloss += loss[0].as!float[0];
 			tot++;
 		}
+		while(bidx != 0);
 
 		//Write out the training loss for this epoch
 		writeln(e, ": ", totloss / tot);
@@ -89,16 +96,18 @@ void main(string[] args)
 
 	import std.stdio : writeln;
 
-	//Iterate over each minibatch in the test set
-	foreach(fs, ls; zip(data.testFeatures.chunks(batchSize), data.testLabels.chunks(batchSize)))
+	do
 	{
+		//Get the next batch of test data (put into [fs, ls]). Update bidx with the next batch index.
+		bidx = data.getBatch([fs, ls], bidx, 1);
+
 		//Make some predictions for this minibatch
 		auto pred = network.outputs[0].evaluate([
-			features: Buffer(fs.joiner().array())
+			features: Buffer(fs)
 		]).as!float;
 
 		//Determine the accuracy of these predictions using the ground truth data
-		foreach(p, t; zip(pred.chunks(10), ls))
+		foreach(p, t; zip(pred.chunks(10), ls.chunks(10)))
 		{
 			if(p.maxIndex == t.maxIndex)
 			{
@@ -108,6 +117,7 @@ void main(string[] args)
 			total++;
 		}
 	}
+	while(bidx != 0);
 
 	//Write out the accuracy of the model on the test set
 	writeln(correct / cast(float)total);

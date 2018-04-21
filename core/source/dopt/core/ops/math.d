@@ -253,6 +253,30 @@ Operation sum(Operation op, size_t[] axes = [], string mod = __MODULE__, size_t 
     {
         axes = iota(0, op.rank).array();
     }
+
+    //Temporary speed enhancement: use BLAS to do row/col sums of matrices
+    if(op.rank == 2 && axes.length == 1)
+    {
+        import std.array : array;
+        import std.range : repeat;
+
+        if(axes[0] == 1)
+        {
+            auto ones = float32Constant([op.shape[1], 1], repeat(1.0f, op.shape[1]).array());
+
+            return op.matmul(ones).reshape([op.shape[0]]);
+        }
+        else if(axes[0] == 0)
+        {
+            auto ones = float32Constant([1, op.shape[0]], repeat(1.0f, op.shape[0]).array());
+
+            return ones.matmul(op).reshape([op.shape[1]]);
+        }
+        else
+        {
+            throw new Exception("axes[0] must be less than op.rank");
+        }
+    }
     
     return createOperation("sum", [op], ["axes": Variant(axes)], mod, line);
 }

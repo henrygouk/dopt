@@ -87,6 +87,8 @@
 <url><loc>http://127.0.0.1/dopt/nnet/parameters/glorotUniformInit.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/parameters/heGaussianInit.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/parameters/heUniformInit.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/parameters/lipschitz1.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/parameters/lipschitzInf.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/parameters/Parameter.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/parameters/Parameter.loss.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/parameters/Parameter.projection.html</loc></url>

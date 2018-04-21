@@ -1,7 +1,7 @@
 dopt
 ====
 
-[![DUB](https://img.shields.io/dub/v/dopt.svg)]()
+[![DUB](https://img.shields.io/dub/v/dopt.svg)](http://code.dlang.org/packages/dopt)
 [![Travis-CI](https://travis-ci.org/henrygouk/dopt.svg?branch=master)]()
 
 A numerical optimisation and deep learning framework for D.
@@ -36,7 +36,7 @@ If you want to take advantage of the CUDA backend (currently required for most n
 
 ```json
 "dependencies": {
-    "dopt": "~>0.3.8"
+    "dopt": "~>0.3.9"
 },
 "subConfigurations": {
     "dopt": "cuda"

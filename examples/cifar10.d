@@ -111,6 +111,8 @@ void main(string[] args)
 
 		auto trainProgress = new Progress(data.foldSize(0) / batchSize);
 
+		data.shuffle(0);
+
 		do
 		{
 			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.

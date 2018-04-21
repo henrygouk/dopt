@@ -72,6 +72,8 @@ void main(string[] args)
 			lr.value.as!float[0] = 0.0001f;
 		}
 
+		data.shuffle(0);
+
 		do
 		{
 			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.

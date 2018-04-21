@@ -55,7 +55,8 @@ void main(string[] args)
 
 	//Create an optimiser that can use minibatches of labelled data to update the weights of the network
 	auto lr = float32([], [0.001f]);
-	auto updater = adam([lossSym], network.params, network.paramProj);
+	auto updater = adam([lossSym], network.params, network.paramProj, lr);
+	auto testPlan = compile([preds.output]);
 
 	size_t bidx;
 	float[] fs = new float[features.volume];
@@ -104,9 +105,9 @@ void main(string[] args)
 		bidx = data.getBatch([fs, ls], bidx, 1);
 
 		//Make some predictions for this minibatch
-		auto pred = network.outputs[0].evaluate([
+		auto pred = testPlan.execute([
 			features: Buffer(fs)
-		]).as!float;
+		])[0].as!float;
 
 		//Determine the accuracy of these predictions using the ground truth data
 		foreach(p, t; zip(pred.chunks(10), ls.chunks(10)))

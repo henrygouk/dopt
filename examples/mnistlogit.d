@@ -48,7 +48,8 @@ void main(string[] args)
 
 	//Create an optimiser that can use minibatches of labelled data to update the parameters of the model
 	auto lr = float32([], [0.001f]);
-	auto updater = adam([lossSym], [W, b], null);
+	auto updater = adam([lossSym], [W, b], null, lr);
+	auto testPlan = compile([preds]);
 
 	size_t bidx;
 	float[] fs = new float[features.volume];
@@ -92,7 +93,7 @@ void main(string[] args)
 		bidx = data.getBatch([fs, ls], bidx, 1);
 
 		//Make some predictions for this minibatch
-		auto pred = evaluate([preds], [
+		auto pred = testPlan.execute([
 			features: Buffer(fs)
 		])[0].as!float;
 

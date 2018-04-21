@@ -82,6 +82,7 @@ void main(string[] args)
 	writeln("Creating optimiser...");
 	auto learningRate = float32([], [0.0001f]);
 	auto updater = adam([lossSym, preds.trainOutput], network.params, network.paramProj, learningRate);
+	auto testPlan = compile([testLossSym, preds.output]);
 
 	writeln("Training...");
 
@@ -146,7 +147,7 @@ void main(string[] args)
 			bidx = data.getBatch([fs, ls], bidx, 1);
 
 			//Make some predictions
-			auto res = evaluate([testLossSym, preds.output], [
+			auto res = testPlan.execute([
 				features: Buffer(fs),
 				labels: Buffer(ls)
 			]);

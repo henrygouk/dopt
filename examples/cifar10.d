@@ -91,7 +91,7 @@ void main(string[] args)
 	size_t bidx;
 
 	//Iterate for 120 epochs of training!
-	foreach(e; 0 .. 120)
+	foreach(e; 0 .. 140)
 	{
 		float trainLoss = 0;
         float testLoss = 0;

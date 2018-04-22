@@ -90,7 +90,7 @@ void main(string[] args)
 	float[] ls = new float[labels.volume];
 	size_t bidx;
 
-	//Iterate for 120 epochs of training!
+	//Iterate for 140 epochs of training!
 	foreach(e; 0 .. 140)
 	{
 		float trainLoss = 0;

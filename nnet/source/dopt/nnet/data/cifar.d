@@ -58,11 +58,9 @@ private
 			}
 		}
 
-		return new HoldOutDataset(
-			features[0 .. 50_000],
-			features[50_000 .. $],
-			labels[0 .. 50_000],
-			labels[50_000 .. $],
+		return new CORDataset(
+			[features[0 .. 50_000], features[50_000 .. $]],
+			[labels[0 .. 50_000], labels[50_000 .. $]],
 			[3, 32, 32]
 		);
 	}

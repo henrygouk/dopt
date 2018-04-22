@@ -5,6 +5,7 @@ public
     import dopt.nnet.data.cifar;
     import dopt.nnet.data.imagetransformer;
     import dopt.nnet.data.mnist;
+    import dopt.nnet.data.sins;
 }
 
 import std.exception : enforce;
@@ -18,24 +19,27 @@ interface Dataset
     void shuffle(size_t foldIdx);
 }
 
-class HoldOutDataset : Dataset
+/**
+    Classification or Regression Dataset.
+
+    This dataset provider will store an entire classification or regression dataset in memory. It assumes that each
+    object in the dataset is composed of a feature vector and a label vector.
+*/
+class CORDataset : Dataset
 {
     public
     {
-        this(float[][] trainFeatures, float[][] testFeatures, float[][] trainLabels, float[][] testLabels,
-            size_t[] shape)
+        this(float[][][] features, float[][][] labels, size_t[] shape)
         {
-            import std.algorithm : fold;
+            import std.algorithm : fold, map;
+            import std.array : array;
 
-            enforce(trainFeatures.length == trainLabels.length, "trainFeatures.length != trainLabels.length");
-            enforce(testFeatures.length == testLabels.length, "testFeatures.length != testLabels.length");
+            enforce(features.length == labels.length, "features.length != labels.length");
             enforce(shape.length != 0, "shape.length == 0");
 
-            mTrainFeatures = trainFeatures;
-            mTestFeatures = testFeatures;
-            mTrainLabels = trainLabels;
-            mTestLabels = testLabels;
-            mShape = shape;
+            mFeatures = features.map!(x => x.dup).array();
+            mLabels = labels.map!(x => x.dup).array();
+            mShape = shape.dup;
             mVolume = shape.fold!((a, b) => a * b);
         }
 
@@ -51,16 +55,9 @@ class HoldOutDataset : Dataset
 
         size_t foldSize(size_t foldIdx)
         {
-            enforce(foldIdx == 0 || foldIdx == 1, "foldIdx must be 0 (train) or 1 (test)");
+            enforce(foldIdx < mFeatures.length, "Invalid foldIdx");
 
-            if(foldIdx == 0)
-            {
-                return mTrainFeatures.length;
-            }
-            else
-            {
-                return mTestFeatures.length;
-            }
+            return mFeatures[foldIdx].length;
         }
 
         size_t getBatch(float[][] batchData, size_t batchIdx, size_t foldIdx)
@@ -88,17 +85,10 @@ class HoldOutDataset : Dataset
                 return (batchIdx + 1) % fsChunks.length;
             }
 
-            enforce(foldIdx == 0 || foldIdx == 1, "foldIdx must be 0 (train) or 1 (test)");
+            enforce(foldIdx < mFeatures.length, "Invalid foldIdx");
             enforce(batchData.length == 2, "batchData.length != 2");
 
-            if(foldIdx == 0)
-            {
-                return getBatchImpl(mTrainFeatures, mTrainLabels);
-            }
-            else
-            {
-                return getBatchImpl(mTestFeatures, mTestLabels);
-            }
+            return getBatchImpl(mFeatures[foldIdx], mLabels[foldIdx]);
         }
 
         void shuffle(size_t foldIdx)
@@ -106,25 +96,16 @@ class HoldOutDataset : Dataset
             import std.random : randomShuffle;
             import std.range : zip;
 
-            enforce(foldIdx == 0 || foldIdx == 1, "foldIdx must be 0 (train) or 1 (test)");
+            enforce(foldIdx < mFeatures.length, "Invalid foldIdx");
 
-            if(foldIdx == 0)
-            {
-                randomShuffle(zip(mTrainFeatures, mTrainLabels));
-            }
-            else
-            {
-                randomShuffle(zip(mTestFeatures, mTestLabels));
-            }
+            randomShuffle(zip(mFeatures[foldIdx], mLabels[foldIdx]));
         }
     }
 
     protected
     {
-        float[][] mTrainFeatures;
-        float[][] mTestFeatures;
-        float[][] mTrainLabels;
-        float[][] mTestLabels;
+        float[][][] mFeatures;
+        float[][][] mLabels;
         size_t[] mShape;
         size_t mVolume;
     }

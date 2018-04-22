@@ -73,5 +73,5 @@ Dataset loadMNIST(string path)
 	auto testFeatures = loadFeatures!float(path ~ "/t10k-images-idx3-ubyte");
 	auto testLabels = loadLabels!float(path ~ "/t10k-labels-idx1-ubyte");
 
-	return new HoldOutDataset(trainFeatures, testFeatures, trainLabels, testLabels, [1, 28, 28]);
+	return new CORDataset([trainFeatures, testFeatures], [trainLabels, testLabels], [1, 28, 28]);
 }

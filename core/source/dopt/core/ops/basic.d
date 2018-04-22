@@ -435,6 +435,12 @@ public
         return variable(TensorType(DataType.float32, size), defaultVal, mod, line);
     }
 
+    ///
+    Operation float32(float defaultVal, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return float32([], [defaultVal], mod, line);
+    }
+
     /**
         Creates a variable with the given shape and int32 elements.
 
@@ -451,6 +457,12 @@ public
     Operation int32(size_t[] size = [], int[] defaultVal = null, string mod = __MODULE__, size_t line = __LINE__)
     {
         return variable(TensorType(DataType.int32, size), defaultVal, mod, line);
+    }
+
+    ///
+    Operation int32(int defaultVal, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return int32([], [defaultVal], mod, line);
     }
 
     /**
@@ -494,6 +506,12 @@ public
         return constant(TensorType(DataType.float32, size), val, mod, line);
     }
 
+    ///
+    Operation float32Constant(float val, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return float32Constant([], [val], mod, line);
+    }
+
     /**
         Creates a constant with the given shape and int32 values.
 
@@ -507,5 +525,11 @@ public
     Operation int32Constant(size_t[] size, int[] val, string mod = __MODULE__, size_t line = __LINE__)
     {
         return constant(TensorType(DataType.int32, size), val, mod, line);
+    }
+
+    ///
+    Operation int32Constant(int val, string mod = __MODULE__, size_t line = __LINE__)
+    {
+        return int32Constant(val, mod, line);
     }
 }

@@ -19,13 +19,14 @@ import dopt.online;
         wrt = an array of Operations that we want the derivative of objective with respect to.
         learningRate = the value used to scale the size of the gradient used in the update rule
         momentumRate = scaling factor for the previous update
+        nesterov = indicates whether Nesterov's accelerated gradient should be used
 
     Returns:
          A delegate that is used to actually perform the update steps. The optimised values are stored in the "default"
          attributes of the elements of wrt.
 */
 Updater sgd(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
-    Operation learningRate = float32([], [0.01f]), Operation momentumRate = float32([], [0.0f]))
+    Operation learningRate = float32([], [0.01f]), Operation momentumRate = float32([], [0.0f]), bool nesterov = false)
 {
     import std.algorithm : map;
     import std.array : array;
@@ -39,13 +40,29 @@ Updater sgd(Operation[] outputs, Operation[] wrt, Projection[Operation] projs,
                    .map!(x => float32(x.shape))
                    .array();
     
-    auto newMomentum = zip(grads, momentum)
+    Operation[] newMomentum;
+    Operation[] newvals;
+    
+    if(nesterov)
+    {
+        newMomentum = zip(grads, momentum)
+                      .map!(x => x[1] * momentumRate - learningRate * x[0])
+                      .array();
+
+        newvals = zip(wrt, newMomentum, grads)
+                  .map!(x => x[0] + momentumRate * x[1] - learningRate * x[2])
+                  .array();
+    }
+    else
+    {
+        newMomentum = zip(grads, momentum)
                       .map!(x => x[1] * momentumRate + learningRate * x[0])
                       .array();
 
-    auto newvals = zip(wrt, newMomentum)
+        newvals = zip(wrt, newMomentum)
                   .map!(x => x[0] - x[1])
                   .array();
+    }
 
     //Apply projections
     for(size_t i = 0; i < newvals.length; i++)

@@ -4,30 +4,42 @@ import dopt.core;
 import dopt.nnet;
 import dopt.nnet.models.maybe;
 
-Layer wideResNet(Operation features, size_t depth, size_t width, size_t[3] stride = [1, 2, 2], bool drop = true)
+Layer wideResNet(Operation features, size_t depth, size_t width, size_t[3] stride = [1, 2, 2], bool drop = true,
+    float maxgain = float.infinity)
 {
     size_t n = (depth - 4) / 6;
 
-    auto pred = dataSource(features)
+    auto pred = dataSource(features, new Conv2DOptions()
+                    .padding([1, 1])
+                    .useBias(false)
+                    .weightDecay(0.0001f)
+                    .maxgain(maxgain))
                .conv2D(16, [3, 3])
-               .wrnBlock(16 * width, n, stride[0], drop)
-               .wrnBlock(32 * width, n, stride[1], drop)
-               .wrnBlock(64 * width, n, stride[2], drop)
-               .batchNorm()
+               .wrnBlock(16 * width, n, stride[0], drop, maxgain)
+               .wrnBlock(32 * width, n, stride[1], drop, maxgain)
+               .wrnBlock(64 * width, n, stride[2], drop, maxgain)
+               .batchNorm(new BatchNormOptions().maxgain(maxgain))
                .relu()
                .meanPool();
 
     return pred;
 }
 
-private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, bool drop)
+private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, bool drop, float maxgain)
 {
     auto convOpts()
     {
         return new Conv2DOptions()
             .padding([1, 1])
             .useBias(false)
-            .weightDecay(0.0001f);
+            .weightDecay(0.0001f)
+            .maxgain(maxgain);
+    }
+
+    auto bnOpts()
+    {
+        return new BatchNormOptions()
+            .maxgain(maxgain);
     }
 
     Layer res;
@@ -35,10 +47,10 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, bool drop)
     for(size_t i = 0; i < n; i++)
     {
         res = inLayer
-            .batchNorm()
+            .batchNorm(bnOpts())
             .relu()
             .conv2D(u, [3, 3], convOpts().stride([s, s]))
-            .batchNorm()
+            .batchNorm(bnOpts())
             .relu()
             .maybeDropout(drop ? 0.3f : 0.0f)
             .conv2D(u, [3, 3], convOpts());
@@ -50,7 +62,8 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, bool drop)
             shortcut = inLayer.conv2D(u, [1, 1], new Conv2DOptions()
                                                 .stride([s, s])
                                                 .useBias(false)
-                                                .weightDecay(0.0001f));
+                                                .weightDecay(0.0001f)
+                                                .maxgain(maxgain));
         }
 
         res = new Layer(

@@ -9,12 +9,12 @@ Layer wideResNet(Operation features, size_t depth, size_t width, size_t[3] strid
 {
     size_t n = (depth - 4) / 6;
 
-    auto pred = dataSource(features, new Conv2DOptions()
+    auto pred = dataSource(features)
+               .conv2D(16, [3, 3], new Conv2DOptions()
                     .padding([1, 1])
                     .useBias(false)
                     .weightDecay(0.0001f)
                     .maxgain(maxgain))
-               .conv2D(16, [3, 3])
                .wrnBlock(16 * width, n, stride[0], drop, maxgain)
                .wrnBlock(32 * width, n, stride[1], drop, maxgain)
                .wrnBlock(64 * width, n, stride[2], drop, maxgain)

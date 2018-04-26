@@ -368,8 +368,13 @@ public
     */
     Operation repeat(Operation input, size_t repetitions, string mod = __MODULE__, size_t line = __LINE__)
     {
-        auto flat = input.reshape([input.volume]);
-        auto r = flat.repeat([repetitions], mod, line);
+        auto vec = input.reshape([1, input.volume]);
+
+        import std.range : drepeat = repeat;
+        import std.array : array;
+
+        auto pattern = float32Constant([repetitions, 1], drepeat(1.0f, repetitions).array());
+        auto r = pattern.matmul(vec);
         
         return r.reshape([repetitions] ~ input.shape, mod, line);
     }

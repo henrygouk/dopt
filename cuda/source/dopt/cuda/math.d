@@ -131,12 +131,11 @@ private
         static if(deps == 2)
         {
             enum code = `
-                //TODO: change this to iterate over elements with a stride to fully exploit SIMD units
                 extern "C" __global__ void pointwiseKernel(size_t n, const T *dep1, const T *dep2, T *output)
                 {
-                    size_t i = blockDim.x * blockIdx.x + threadIdx.x;
+                    size_t i0 = blockDim.x * blockIdx.x + threadIdx.x;
 
-                    if(i < n)
+                    for(size_t i = i0; i < n; i += blockDim.x * gridDim.x)
                     {
                         output[i] = ` ~ (infix ? "dep1[i] " ~ opName ~ " dep2[i]" : opName ~ "(dep1[i], dep2[i])") ~ `;
                     }
@@ -151,12 +150,11 @@ private
                     return (T)((T(0) < a) - (a < T(0)));
                 }
 
-                //TODO: change this to iterate over elements with a stride to fully exploit SIMD units
                 extern "C" __global__ void pointwiseKernel(size_t n, const T *dep1, T *output)
                 {
-                    size_t i = blockDim.x * blockIdx.x + threadIdx.x;
+                    size_t i0 = blockDim.x * blockIdx.x + threadIdx.x;
 
-                    if(i < n)
+                    for(size_t i = i0; i < n; i += blockDim.x * gridDim.x)
                     {
                         output[i] = ` ~ opName ~ `(dep1[i]);
                     }

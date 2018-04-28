@@ -36,7 +36,8 @@ void main(string[] args)
 
     writeln("Loading data...");
     size_t fold = args[2].to!size_t;
-    auto data = new ImageTransformer(loadSINS10(args[1])[fold], 24, 24, true, false);
+    auto data = loadSINS10(args[1])[fold];
+	data.train = new ImageTransformer(data.train, 24, 24, true, false);
 
     writeln("Constructing network graph...");
 	size_t batchSize = 50;
@@ -84,14 +85,15 @@ void main(string[] args)
 			learningRate.value.as!float[0] = 0.004f;
 		}
 
-		auto trainProgress = new Progress(data.foldSize(0) / batchSize);
+		data.train.restart();
+		data.test.restart();
 
-		data.shuffle(0);
+		auto trainProgress = new Progress(data.train.length / batchSize);
 
-		do
+		while(!data.train.finished())
 		{
 			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.
-			bidx = data.getBatch([fs, ls], bidx, 0);
+			data.train.getBatch([fs, ls]);
 
 			//Make an update to the model parameters using the minibatch of training data
 			auto res = updater([
@@ -109,16 +111,15 @@ void main(string[] args)
 			trainProgress.title = format("Epoch: %03d  Loss: %02.4f  Acc: %.4f", e + 1, loss, acc);
             trainProgress.next();
 		}
-		while(bidx != 0);
 
 		writeln();
 
-		auto testProgress = new Progress(data.foldSize(1) / batchSize);
+		auto testProgress = new Progress(data.test.length / batchSize);
 
-		do
+		while(!data.test.finished)
 		{
 			//Get the next batch of testing data
-			bidx = data.getBatch([fs, ls], bidx, 1);
+			data.test.getBatch([fs, ls]);
 
 			//Make some predictions
 			auto res = testPlan.execute([
@@ -136,7 +137,6 @@ void main(string[] args)
 			testProgress.title = format("            Loss: %02.4f  Acc: %.4f", loss, acc);
             testProgress.next();
 		}
-		while(bidx != 0);
 
 		writeln();
 		writeln();

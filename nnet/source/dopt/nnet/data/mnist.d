@@ -8,7 +8,7 @@ import std.typecons;
 
 import dopt.nnet.data;
 
-Dataset loadMNIST(string path)
+auto loadMNIST(string path)
 {
     T[][] loadFeatures(T)(string filename)
     {
@@ -73,5 +73,10 @@ Dataset loadMNIST(string path)
 	auto testFeatures = loadFeatures!float(path ~ "/t10k-images-idx3-ubyte");
 	auto testLabels = loadLabels!float(path ~ "/t10k-labels-idx1-ubyte");
 
-	return new CORDataset([trainFeatures, testFeatures], [trainLabels, testLabels], [1, 28, 28]);
+	BatchIterator trainData = new SupervisedBatchIterator(trainFeatures, trainLabels, [[1, 28, 28], [10]], true);
+    BatchIterator testData = new SupervisedBatchIterator(testFeatures, testLabels, [[1, 28, 28], [10]], false);
+
+    import std.typecons;
+
+    return tuple!("train", "test")(trainData, testData);
 }

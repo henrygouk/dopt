@@ -10,103 +10,116 @@ public
 
 import std.exception : enforce;
 
-interface Dataset
+interface BatchIterator
 {
-    size_t[] shape();
-    size_t volume();
-    size_t foldSize(size_t foldIdx);
-    size_t getBatch(float[][] batchData, size_t batchIdx, size_t foldIdx);
-    void shuffle(size_t foldIdx);
+    size_t[][] shape();
+    size_t[] volume();
+    size_t length();
+    void getBatch(float[][] batchData);
+    bool finished();
+    void restart();
 }
 
 /**
-    Classification or Regression Dataset.
-
-    This dataset provider will store an entire classification or regression dataset in memory. It assumes that each
-    object in the dataset is composed of a feature vector and a label vector.
+    A $(D BatchIterator) specialisation for supervised learning tasks.
 */
-class CORDataset : Dataset
+class SupervisedBatchIterator : BatchIterator
 {
     public
     {
-        this(float[][][] features, float[][][] labels, size_t[] shape)
+        this(float[][] features, float[][] labels, size_t[][] shape, bool shuffle)
         {
             import std.algorithm : fold, map;
             import std.array : array;
+            import std.range : iota;
 
             enforce(features.length == labels.length, "features.length != labels.length");
             enforce(shape.length != 0, "shape.length == 0");
 
-            mFeatures = features.map!(x => x.dup).array();
-            mLabels = labels.map!(x => x.dup).array();
-            mShape = shape.dup;
-            mVolume = shape.fold!((a, b) => a * b);
+            mFeatures = features.dup;
+            mLabels = labels.dup;
+            mShape = shape.map!(x => x.dup).array;
+            mShuffle = shuffle;
+            mVolumes = shape
+                      .map!(y => y.fold!((a, b) => a * b))
+                      .array();
+
+            mIndices = iota(0, mFeatures.length).array();
         }
 
-        size_t[] shape()
+        size_t[][] shape()
         {
             return mShape;
         }
 
-        size_t volume()
+        size_t[] volume()
         {
-            return mVolume;
+            return mVolumes;
         }
 
-        size_t foldSize(size_t foldIdx)
+        size_t length()
         {
-            enforce(foldIdx < mFeatures.length, "Invalid foldIdx");
-
-            return mFeatures[foldIdx].length;
+            return mFeatures.length;
         }
 
-        size_t getBatch(float[][] batchData, size_t batchIdx, size_t foldIdx)
+        bool finished()
         {
-            import std.algorithm : copy, joiner;
-            import std.range : chunks;
-
-            size_t getBatchImpl(float[][] fs, float[][] ls)
-            {
-                size_t batchSize = batchData[0].length / mVolume;
-
-                auto fsChunks = fs.chunks(batchSize);
-                auto rem = fsChunks[batchIdx]
-                          .joiner()
-                          .copy(batchData[0]);
-                
-                rem[] = 0.0f;
-
-                rem = ls.chunks(batchSize)[batchIdx]
-                        .joiner()
-                        .copy(batchData[1]);
-                
-                rem[] = 0.0f;
-
-                return (batchIdx + 1) % fsChunks.length;
-            }
-
-            enforce(foldIdx < mFeatures.length, "Invalid foldIdx");
-            enforce(batchData.length == 2, "batchData.length != 2");
-
-            return getBatchImpl(mFeatures[foldIdx], mLabels[foldIdx]);
+            return mFront >= length;
         }
 
-        void shuffle(size_t foldIdx)
+        void restart()
         {
             import std.random : randomShuffle;
-            import std.range : zip;
 
-            enforce(foldIdx < mFeatures.length, "Invalid foldIdx");
+            if(mShuffle)
+            {
+                mIndices.randomShuffle();
+            }
 
-            randomShuffle(zip(mFeatures[foldIdx], mLabels[foldIdx]));
+            mFront = 0;
+        }
+
+        void getBatch(float[][] batchData)
+        {
+            import std.algorithm : map, joiner, copy;
+            import std.range : drop, take;
+
+            //Check the size of the arguments
+            enforce(batchData.length == 2, "SupervisedBatchIterator.getBatch expects two arrays to fill.");
+            enforce(batchData[0].length % volume[0] == 0, "batchData[0].length % volume[0] != 0");
+            enforce(batchData[1].length % volume[1] == 0, "batchData[1].length % volume[1] != 0");
+            enforce(batchData[0].length / volume[0] == batchData[1].length / volume[1],
+                "batchData[0].length / volume[0] != batchData[1].length / volume[1]");
+            
+            size_t batchSize = batchData[0].length / volume[0];
+
+            batchData[0][] = 0;
+            batchData[1][] = 0;
+
+            mIndices.drop(mFront)
+                    .take(batchSize)
+                    .map!(x => mFeatures[x])
+                    .joiner()
+                    .copy(batchData[0]);
+            
+            mIndices.drop(mFront)
+                    .take(batchSize)
+                    .map!(x => mLabels[x])
+                    .joiner()
+                    .copy(batchData[1]);
+
+            mFront += batchSize;
         }
     }
 
     protected
     {
-        float[][][] mFeatures;
-        float[][][] mLabels;
-        size_t[] mShape;
-        size_t mVolume;
+        float[][] mFeatures;
+        float[][] mLabels;
+        size_t[][] mShape;
+        size_t[] mVolumes;
+        bool mShuffle;
+        size_t mFront;
+        size_t[] mIndices;
     }
 }

@@ -61,12 +61,12 @@ void main(string[] args)
 		float totloss = 0;
 		float tot = 0;
 
-		data.shuffle(0);
+		data.train.restart();
 
-		do
+		while(!data.train.finished())
 		{
 			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.
-			bidx = data.getBatch([fs, ls], bidx, 0);
+			data.train.getBatch([fs, ls]);
 
 			auto loss = updater([
 				features: Buffer(fs),
@@ -76,7 +76,6 @@ void main(string[] args)
 			totloss += loss[0].as!float[0];
 			tot++;
 		}
-		while(bidx != 0);
 
 		//Write out the training loss for this epoch
 		writeln(e, ": ", totloss / tot);
@@ -87,10 +86,10 @@ void main(string[] args)
 
 	import std.stdio : writeln;
 
-	do
+	while(!data.test.finished)
 	{
 		//Get the next batch of test data (put into [fs, ls]). Update bidx with the next batch index.
-		bidx = data.getBatch([fs, ls], bidx, 1);
+		data.test.getBatch([fs, ls]);
 
 		//Make some predictions for this minibatch
 		auto pred = testPlan.execute([
@@ -108,7 +107,6 @@ void main(string[] args)
 			total++;
 		}
 	}
-	while(bidx != 0);
 
 	//Write out the accuracy of the model on the test set
 	writeln(correct / cast(float)total);

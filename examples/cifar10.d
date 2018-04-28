@@ -43,7 +43,8 @@ void main(string[] args)
 		horizontal flips of the training images---a popular form of data augmentation for image datasets.
 	*/
 	writeln("Loading data...");
-    auto data = new ImageTransformer(loadCIFAR10(args[1]), 4, 4, true, false);
+    auto data = loadCIFAR10(args[1]);
+	data.train = new ImageTransformer(data.train, 4, 4, true, false);
 
 	/*
 	Now we create two variable nodes. ``features'' is used to represent a minibatch of input images, and ``labels''
@@ -88,7 +89,6 @@ void main(string[] args)
 
 	float[] fs = new float[features.volume];
 	float[] ls = new float[labels.volume];
-	size_t bidx;
 
 	//Iterate for 140 epochs of training!
 	foreach(e; 0 .. 140)
@@ -110,14 +110,14 @@ void main(string[] args)
 			learningRate.value.as!float[0] = 0.000001f;
 		}
 
-		auto trainProgress = new Progress(data.foldSize(0) / batchSize);
+		data.train.restart();
+		data.test.restart();
 
-		data.shuffle(0);
+		auto trainProgress = new Progress(data.train.length / batchSize);
 
-		do
+		while(!data.train.finished())
 		{
-			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.
-			bidx = data.getBatch([fs, ls], bidx, 0);
+			data.train.getBatch([fs, ls]);
 
 			//Make an update to the model parameters using the minibatch of training data
 			auto res = updater([
@@ -135,16 +135,14 @@ void main(string[] args)
 			trainProgress.title = format("Epoch: %03d  Loss: %02.4f  Acc: %.4f", e + 1, loss, acc);
             trainProgress.next();
 		}
-		while(bidx != 0);
 
 		writeln();
 
-		auto testProgress = new Progress(data.foldSize(1) / batchSize);
+		auto testProgress = new Progress(data.test.length / batchSize);
 
-		do
+		while(!data.test.finished())
 		{
-			//Get the next batch of testing data
-			bidx = data.getBatch([fs, ls], bidx, 1);
+			data.test.getBatch([fs, ls]);
 
 			//Make some predictions
 			auto res = testPlan.execute([
@@ -162,7 +160,6 @@ void main(string[] args)
 			testProgress.title = format("            Loss: %02.4f  Acc: %.4f", loss, acc);
             testProgress.next();
 		}
-		while(bidx != 0);
 
 		writeln();
 		writeln();

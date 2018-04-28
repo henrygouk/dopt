@@ -9,7 +9,7 @@ import std.typecons;
 
 import dopt.nnet.data;
 
-Dataset loadCIFAR10(string path)
+auto loadCIFAR10(string path)
 {
 	auto batchFiles = [
 		"data_batch_1.bin",
@@ -23,7 +23,7 @@ Dataset loadCIFAR10(string path)
 	return loadCIFAR(path, batchFiles, 1, 0, 10);
 }
 
-Dataset loadCIFAR100(string path)
+auto loadCIFAR100(string path)
 {
 	auto batchFiles = ["train.bin", "test.bin"];
 
@@ -32,7 +32,7 @@ Dataset loadCIFAR100(string path)
 
 private
 {
-	Dataset loadCIFAR(string path, string[] batchFiles, size_t labelBytes, size_t labelIdx, size_t numLabels)
+	auto loadCIFAR(string path, string[] batchFiles, size_t labelBytes, size_t labelIdx, size_t numLabels)
 	{
 		auto batches = batchFiles.map!(x => path ~ "/" ~ x).array();
 
@@ -58,10 +58,22 @@ private
 			}
 		}
 
-		return new CORDataset(
-			[features[0 .. 50_000], features[50_000 .. $]],
-			[labels[0 .. 50_000], labels[50_000 .. $]],
-			[3, 32, 32]
+		BatchIterator trainData = new SupervisedBatchIterator(
+			features[0 .. 50_000],
+			labels[0 .. 50_000],
+			[[cast(size_t)3, 32, 32], [numLabels]],
+			true
 		);
+
+		BatchIterator testData = new SupervisedBatchIterator(
+			features[50_000 .. $],
+			labels[50_000 .. $],
+			[[cast(size_t)3, 32, 32], [numLabels]],
+			false
+		);
+
+		import std.typecons;
+    
+    	return tuple!("train", "test")(trainData, testData);
 	}
 }

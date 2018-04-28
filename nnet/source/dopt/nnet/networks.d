@@ -120,6 +120,46 @@ class DAGNetwork
         {
             return mParams.dup;
         }
+
+        /**
+            Save the model parameters to a file.
+
+            Params:
+                filename = The name of the file to save the model parameters to.
+        */
+        void save(string filename)
+        {
+            import std.stdio : File;
+
+            File f = File(filename, "wb");
+
+            foreach(p; params)
+            {
+                f.rawWrite(p.value.as!float);
+            }
+
+            f.close();
+        }
+
+        /**
+            Load model parameters from a file.
+
+            Params:
+                filename = The name of the file to load the parameters from.
+        */
+        void load(string filename)
+        {
+            import std.stdio : File;
+
+            File f = File(filename, "rb");
+
+            foreach(p; params)
+            {
+                f.rawRead(p.value.as!float);
+            }
+
+            f.close();
+        }
     }
 
     private

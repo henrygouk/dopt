@@ -4,8 +4,12 @@
 <url><loc>http://127.0.0.1/dopt/core/ops/basic.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/constant.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/float32.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/ops/basic/float32.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/ops/basic/float32Constant.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/float32Constant.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/int32.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/ops/basic/int32.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/core/ops/basic/int32Constant.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/int32Constant.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/pad.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/core/ops/basic/repeat.html</loc></url>
@@ -74,10 +78,12 @@
 <url><loc>http://127.0.0.1/dopt/nnet/networks.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.inputs.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.load.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.outputs.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.paramLoss.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.paramProj.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.params.html</loc></url>
+<url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.save.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.this.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/networks/DAGNetwork.trainOutputs.html</loc></url>
 <url><loc>http://127.0.0.1/dopt/nnet/parameters.html</loc></url>

@@ -275,6 +275,8 @@ Projection lipschitz1(float maxK)
 {
     Operation proj(Operation param)
     {
+        import dopt.core : abs;
+
         if(param.rank != 2)
         {
             param = param.reshape([param.shape[0], param.volume / param.shape[0]]);
@@ -312,6 +314,8 @@ Projection lipschitzInf(float maxK)
 {
     Operation proj(Operation param)
     {
+        import dopt.core : abs;
+        
         if(param.rank != 2)
         {
             param = param.reshape([param.shape[0], param.volume / param.shape[0]]);

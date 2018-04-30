@@ -24,6 +24,7 @@ shared static this()
     import std.functional : toDelegate;
     defaultEvaluator = toDelegate(&evaluateCPU);
     defaultCompiler = (Operation[] ops) { return new CPUPlan(ops); };
+    defaultAllocator = (size_t numBytes) { return new CPUBuffer(numBytes); };
 }
 
 /**
@@ -97,6 +98,42 @@ string[] listAllCPUOperations()
     return mKernels.keys.dup ~ ["constant", "variable", "reshape"];
 }
 
+class CPUBuffer : DeviceBuffer
+{
+    public
+    {
+        this(size_t len)
+        {
+            mBuffer = new ubyte[len];
+        }
+
+        this(void[] buf)
+        {
+            mBuffer = buf.dup;
+        }
+
+        override size_t numBytes() const
+        {
+            return mBuffer.length;
+        }
+
+        override void get(void[] buf) const
+        {
+            buf[] = mBuffer[];
+        }
+
+        override void set(const void[] buf)
+        {
+            mBuffer[] = buf[];
+        }
+    }
+
+    private
+    {
+        void[] mBuffer;
+    }
+}
+
 class CPUPlan : Plan
 {
     public
@@ -109,7 +146,7 @@ class CPUPlan : Plan
 
     protected
     {
-        override void executeImpl(Buffer[Operation] args, Buffer[] rets)
+        override void executeImpl(DeviceBuffer[Operation] args, DeviceBuffer[] rets)
         {
             auto tmpRets = evaluateCPU(mOutputs, args);
 
@@ -117,7 +154,7 @@ class CPUPlan : Plan
 
             foreach(t, r; zip(tmpRets, rets))
             {
-                r.set(t.get!ubyte);
+                r.set(t);
             }
         }
     }
@@ -136,7 +173,7 @@ class CPUPlan : Plan
     Returns:
         An array of $(D Buffer) objects, each containing the value of the corresponding element in $(D ops).
 */
-Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
+DeviceBuffer[] evaluateCPU(Operation[] ops, DeviceBuffer[Operation] args = null)
 {
     import std.algorithm : canFind, filter;
     import std.array : array;
@@ -226,11 +263,11 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
         }
     }
 
-    Buffer[] returnVals = new Buffer[ops.length];
+    DeviceBuffer[] returnVals = new DeviceBuffer[ops.length];
 
     foreach(i, o; ops)
     {
-        returnVals[i] = Buffer(results[o]);
+        returnVals[i] = new CPUBuffer(results[o]);
     }
 
     return returnVals;

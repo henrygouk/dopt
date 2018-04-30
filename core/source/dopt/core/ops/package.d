@@ -126,14 +126,14 @@ class Operation
 
         Operation opBinary(string op)(int i, string mod = __MODULE__, size_t line = __LINE__)
         {
-            auto bc = int32([], [i]);
+            auto bc = int32Constant(i);
 
             return opBinary!op(bc, mod, line);
         }
 
         Operation opBinary(string op)(float i, string mod = __MODULE__, size_t line = __LINE__)
         {
-            auto bc = float32([], [i]);
+            auto bc = float32Constant(i);
 
             return opBinary!op(bc, mod, line);
         }
@@ -146,11 +146,11 @@ class Operation
             }
             else static if(op == "-" && is(T == float))
             {
-                return float32([], [t]) - this;
+                return float32Constant(t) - this;
             }
             else static if(op == "/" && is(T == float))
             {
-                return float32([], [t]) / this;
+                return float32Constant(t) / this;
             }
             else
             {
@@ -187,9 +187,14 @@ class Operation
             }
         }
 
-        Buffer value()
+        DeviceBuffer value()
         {
-            return attributes["default"].get!Buffer;
+            return mBuffer;
+        }
+
+        void setBuffer(DeviceBuffer buf)
+        {
+            mBuffer = buf;
         }
 
         auto shape()
@@ -221,6 +226,7 @@ class Operation
         Operation[] mDeps;
         Variant[string] mAttributes;
         TensorType mOutputType;
+        DeviceBuffer mBuffer;
 
         this(string opType, Operation[] deps, Variant[string] attribs, string mod, size_t line)
         {

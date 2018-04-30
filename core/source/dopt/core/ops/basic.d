@@ -5,6 +5,7 @@
 */
 module dopt.core.ops.basic;
 
+import dopt.core : buffer;
 import dopt.core.ops;
 import dopt.core.types;
 
@@ -419,7 +420,10 @@ public
             enforce(defaultVal.length == bufSize, "The length of defaultVal does not match type.volume.");
         }
 
-        return createOperation("variable", [], ["type": Variant(type), "default": Variant(Buffer(defaultVal))], mod, line);
+        auto op = createOperation("variable", [], ["type": Variant(type)], mod, line);
+        op.setBuffer(buffer(defaultVal));
+
+        return op;
     }
 
     /**
@@ -493,7 +497,10 @@ public
             enforce(val.length == bufSize, "The length of val does not match type.volume.");
         }
 
-        return createOperation("constant", [], ["type": Variant(type), "default": Variant(Buffer(val))], mod, line);
+        auto op = createOperation("constant", [], ["type": Variant(type)], mod, line);
+        op.setBuffer(buffer(val));
+        
+        return op;
     }
 
     /**

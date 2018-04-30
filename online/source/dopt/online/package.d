@@ -25,4 +25,4 @@ alias Projection = Operation delegate(Operation);
 /**
     A delegate that can be used to perform the update step for an online optimisation algorithm.
 */
-alias Updater = Buffer[] delegate(Buffer[Operation] args);
+alias Updater = DeviceBuffer[] delegate(DeviceBuffer[Operation] args);

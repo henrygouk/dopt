@@ -113,7 +113,7 @@ Operation[] grad(Operation objective, Operation[] wrt)
 unittest
 {
     import std.random : uniform;
-    import dopt.core : evaluate;
+    import dopt.core : evaluate, buffer;
 
     auto x = float32();
     auto y = x * x;
@@ -122,7 +122,7 @@ unittest
     auto r = uniform(-100.0f, 100.0f);
 
     auto gradYwrtX = gradY.evaluate([
-        x: Buffer([r])
+        x: buffer([r])
     ])[0];
 
     assert(gradYwrtX.get!float[0] == r + r);

@@ -134,14 +134,14 @@ unittest
         loss = updater([
             x: Buffer(xdata[j .. j + 1]),
             y: Buffer(ydata[j .. j + 1])
-        ])[0].as!float[0];
+        ])[0].get!float[0];
     }
 
     //Print the loss after 200 iterations. Let the user decide whether it's good enough to be considered a pass.
     import std.stdio : writeln;
     writeln(
         "AMSGrad loss: ", loss, "    ",
-        "m=", m.value.as!float[0], ", ",
-        "c=", c.value.as!float[0], "    ",
+        "m=", m.value.get!float[0], ", ",
+        "c=", c.value.get!float[0], "    ",
         "(expected m=3, c=2)");
 }

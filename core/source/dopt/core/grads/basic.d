@@ -62,7 +62,7 @@ private
 
         import std.algorithm : equal;
 
-        assert(evaluate(grad(c, [a]))[0].as!float.equal(
+        assert(evaluate(grad(c, [a]))[0].get!float.equal(
             [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
     }
 

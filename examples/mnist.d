@@ -70,7 +70,7 @@ void main(string[] args)
 
 		if(e == 30)
 		{
-			lr.value.as!float[0] = 0.0001f;
+			lr.value.set([0.0001f]);
 		}
 
 		data.train.restart();
@@ -85,7 +85,7 @@ void main(string[] args)
 				labels: Buffer(ls)
 			]);
 
-			totloss += loss[0].as!float[0];
+			totloss += loss[0].get!float[0];
 			tot++;
 		}
 
@@ -106,7 +106,7 @@ void main(string[] args)
 		//Make some predictions for this minibatch
 		auto pred = testPlan.execute([
 			features: Buffer(fs)
-		])[0].as!float;
+		])[0].get!float;
 
 		//Determine the accuracy of these predictions using the ground truth data
 		foreach(p, t; zip(pred.chunks(10), ls.chunks(10)))

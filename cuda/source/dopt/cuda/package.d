@@ -99,12 +99,12 @@ private class CUDACPUKernel : CUDAKernel
 
         foreach(cudaInput, cpuInput; zip(inputs, mDeps))
         {
-            cudaInput.get(cpuInput.value.as!ubyte);
+            cpuInput.value.set(cudaInput.get!ubyte());
         }
 
         Buffer ret = evaluateCPU([mOp])[0];
 
-        output.set(ret.as!ubyte);
+        output.set(ret.get!ubyte);
     }
 
     Buffer[] mInputs;
@@ -171,6 +171,14 @@ class CUDABuffer
         {
             enforce(buf.length == mNumBytes, "output buffer is the wrong length.");
 			enforce(cuMemcpyDtoH(buf.ptr, mPtr, buf.length) == CUDA_SUCCESS, "Failed to get contents of CUDA buffer");
+        }
+
+        T[] get(T)() const
+        {
+            auto buf = new T[mNumBytes / T.sizeof];
+            get(buf);
+
+            return buf;
         }
 
         /**
@@ -266,7 +274,7 @@ class CUDAPlan : Plan
 
                     if(o.opType == "constant")
                     {
-                        results[o].set(o.value.as!ubyte);
+                        results[o].set(o.value.get!ubyte);
                     }
                 }
             }
@@ -318,7 +326,7 @@ class CUDAPlan : Plan
             //Load the args into their buffers
             foreach(k, v; args)
             {
-                results[k].set(v.as!ubyte);
+                results[k].set(v.get!ubyte);
             }
 
             //Iterate through each operation and execute it
@@ -332,7 +340,7 @@ class CUDAPlan : Plan
                         sw.start();
 
                         auto buf = cast(Buffer)o.value;
-                        results[o].set(buf.as!ubyte);
+                        results[o].set(buf.get!ubyte);
 
                         sw.stop();
 
@@ -366,7 +374,7 @@ class CUDAPlan : Plan
 
             foreach(i, o; mOutputs)
             {
-                results[o].get(rets[i].as!ubyte);
+                rets[i].set(results[o].get!ubyte());
             }
         }
     }
@@ -488,5 +496,5 @@ unittest
 
     auto y = a * b + c;
 
-    assert(evaluateCUDA(y).as!float[0] == 11.0f);
+    assert(evaluateCUDA(y).get!float[0] == 11.0f);
 }

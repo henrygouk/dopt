@@ -117,7 +117,10 @@ ParamInitializer constantInit(float val)
 {
     void init(Operation param)
     {
-        param.value.as!float[] = val;
+        import std.array : array;
+        import std.range : repeat;
+
+        param.value.set(repeat(val, param.volume).array());
     }
 
     return &init;
@@ -138,7 +141,9 @@ ParamInitializer uniformInit(float minval, float maxval)
 {
     void init(Operation param)
     {
-        fillUniform(param.value.as!float, minval, maxval);
+        auto buf = param.value.get!float;
+        fillUniform(buf, minval, maxval);
+        param.value.set(buf);
     }
 
     return &init;
@@ -159,7 +164,9 @@ ParamInitializer gaussianInit(float mean, float stddev)
 {
     void init(Operation param)
     {
-        fillGaussian(param.value.as!float, mean, stddev);
+        auto buf = param.value.get!float;
+        fillGaussian(buf, mean, stddev);
+        param.value.set(buf);
     }
 
     return &init;
@@ -182,7 +189,9 @@ ParamInitializer glorotUniformInit()
     void init(Operation param)
     {
         auto bound = sqrt(6.0f / (param.shape.fanIn + param.shape.fanOut));
-        fillUniform(param.value.as!float, -bound, bound);
+        auto buf = param.value.get!float;
+        fillUniform(buf, -bound, bound);
+        param.value.set(buf);
     }
 
     return &init;
@@ -205,7 +214,9 @@ ParamInitializer glorotGaussianInit()
 {
     void init(Operation param)
     {
-        fillGaussian(param.value.as!float, 0, sqrt(2.0f / (param.shape.fanIn + param.shape.fanOut)));
+        auto buf = param.value.get!float;
+        fillGaussian(buf, 0, sqrt(2.0f / (param.shape.fanIn + param.shape.fanOut)));
+        param.value.set(buf);
     }
 
     return &init;
@@ -227,7 +238,9 @@ ParamInitializer heUniformInit()
 {
     void init(Operation param)
     {
-        fillUniform(param.value.as!float, 0, sqrt(6.0f / (param.shape.fanIn)));
+        auto buf = param.value.get!float;
+        fillUniform(buf, 0, sqrt(6.0f / (param.shape.fanIn)));
+        param.value.set(buf);
     }
 
     return &init;
@@ -250,7 +263,9 @@ ParamInitializer heGaussianInit()
 {
     void init(Operation param)
     {
-        fillGaussian(param.value.as!float, 0, sqrt(2.0f / (param.shape.fanIn )));
+        auto buf = param.value.get!float;
+        fillGaussian(buf, 0, sqrt(2.0f / (param.shape.fanIn)));
+        param.value.set(buf);
     }
 
     return &init;

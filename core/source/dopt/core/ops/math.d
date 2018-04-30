@@ -224,7 +224,7 @@ unittest
 
     auto c = matmul(a, b);
 
-    assert(c.evaluate().as!float == [
+    assert(c.evaluate().get!float == [
         3.0f, 4.0f,
         6.0f, 8.0f
     ]);
@@ -291,10 +291,10 @@ unittest
     auto s3 = float32([2, 2], [0, 1, 0, 5]).sum([0]);
     auto s4 = float32([2, 2], [0, 1, 0, 5]).sum([1]);
 
-    assert(s1.evaluate().as!float == [2.0f]);
-    assert(s2.evaluate().as!float == [6.0f]);
-    assert(s3.evaluate().as!float == [0.0f, 6.0f]);
-    assert(s4.evaluate().as!float == [1.0f, 5.0f]);
+    assert(s1.evaluate().get!float == [2.0f]);
+    assert(s2.evaluate().get!float == [6.0f]);
+    assert(s3.evaluate().get!float == [0.0f, 6.0f]);
+    assert(s4.evaluate().get!float == [1.0f, 5.0f]);
 }
 
 /**
@@ -326,8 +326,8 @@ unittest
         6.0f, 7.0f, 2.0f
     ]).argmin(1);
 
-    assert(a.evaluate().as!int == [3]);
-    assert(b.evaluate().as!int == [1, 2]);
+    assert(a.evaluate().get!int == [3]);
+    assert(b.evaluate().get!int == [1, 2]);
 }
 
 /**
@@ -367,7 +367,7 @@ unittest
         3.0f, 6.0f
     ]);
 
-    assert(a.maxElement.evaluate().as!float == [6.0f]); //Max value in the entire tensor
-    assert(a.maxElement([0]).evaluate().as!float == [3.0f, 6.0f]); //Max of each column
-    assert(a.maxElement([1]).evaluate().as!float == [4.0f, 6.0f]); //Max of each row
+    assert(a.maxElement.evaluate().get!float == [6.0f]); //Max value in the entire tensor
+    assert(a.maxElement([0]).evaluate().get!float == [3.0f, 6.0f]); //Max of each column
+    assert(a.maxElement([1]).evaluate().get!float == [4.0f, 6.0f]); //Max of each row
 }

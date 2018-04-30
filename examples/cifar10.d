@@ -103,11 +103,11 @@ void main(string[] args)
 		//Decreasing the learning rate after a while often results in better performance.
 		if(e == 100)
 		{
-			learningRate.value.as!float[0] = 0.00001f;
+			learningRate.value.set([0.00001f]);
 		}
 		else if(e == 120)
 		{
-			learningRate.value.as!float[0] = 0.000001f;
+			learningRate.value.set([0.000001f]);
 		}
 
 		data.train.restart();
@@ -125,8 +125,8 @@ void main(string[] args)
 				labels: Buffer(ls)
 			]);
 
-			trainLoss += res[0].as!float[0] * batchSize;
-			trainAcc += computeAccuracy(ls, res[1].as!float);
+			trainLoss += res[0].get!float[0] * batchSize;
+			trainAcc += computeAccuracy(ls, res[1].get!float);
 			trainNum += batchSize;
 
 			float loss = trainLoss / trainNum;
@@ -150,8 +150,8 @@ void main(string[] args)
 				labels: Buffer(ls)
 			]);
 
-			testLoss += res[0].as!float[0] * batchSize;
-			testAcc += computeAccuracy(ls, res[1].as!float);
+			testLoss += res[0].get!float[0] * batchSize;
+			testAcc += computeAccuracy(ls, res[1].get!float);
 			testNum += batchSize;
 
 			float loss = testLoss / testNum;

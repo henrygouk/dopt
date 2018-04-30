@@ -65,17 +65,22 @@ struct Buffer
     {
         this(void[] buf)
         {
-            mBuffer = buf;
+            mBuffer = buf.dup;
         }
 
-        T[] as(T)()
+        T[] get(T)() const
         {
-            return cast(T[])mBuffer;
+            return (cast(T[])mBuffer).dup;
         }
 
-        const(T)[] as(T)() const
+        void get(T)(T[] buf) const
         {
-            return cast(const(T)[])mBuffer;
+            buf[] = mBuffer[];
+        }
+
+        void set(T)(T[] buf)
+        {
+            mBuffer[] = buf[];
         }
     }
 

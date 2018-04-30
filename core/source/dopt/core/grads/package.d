@@ -125,7 +125,7 @@ unittest
         x: Buffer([r])
     ])[0];
 
-    assert(gradYwrtX.as!float[0] == r + r);
+    assert(gradYwrtX.get!float[0] == r + r);
 }
 
 void registerGradient(string opName, Gradient g)

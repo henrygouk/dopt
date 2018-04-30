@@ -17,7 +17,7 @@ package
 
 private
 {
-    void convolution(Operation op, const(Buffer)[] inputs, Buffer output)
+    void convolution(Operation op, const(void[])[] inputs, void[] output)
     {
         size_t[] inDims = op.deps[0].shape[2 .. $];
         size_t[] outDims = op.shape[2 .. $];
@@ -64,9 +64,9 @@ private
             }
         }
 
-        auto inbuf = inputs[0].as!float;
-        auto kernbuf = inputs[1].as!float;
-        auto outbuf = output.as!float;
+        auto inbuf = cast(const(float[]))inputs[0];
+        auto kernbuf = cast(const(float[]))inputs[1];
+        auto outbuf = cast(float[])output;
 
         for(size_t b = 0; b < batchSize; b++)
         {
@@ -86,7 +86,7 @@ private
         }
     }
 
-    void maxpool(Operation op, const(Buffer)[] inputs, Buffer output)
+    void maxpool(Operation op, const(void[])[] inputs, void[] output)
     {
         size_t[] poolDims = op.attributes["dims"].get!(size_t[]);
         size_t[] inDims = op.deps[0].shape[2 .. $];
@@ -117,8 +117,8 @@ private
             }
         }
 
-        float[] outbuf = output.as!float;
-        const(float)[] inbuf = inputs[0].as!float;
+        float[] outbuf = cast(float[])output;
+        const(float)[] inbuf = cast(const(float)[])inputs[0];
 
         for(size_t i = 0; i < numMaps; i++)
         {
@@ -126,10 +126,10 @@ private
         }
     }
 
-    void softmax(Operation op, const(Buffer)[] inputs, Buffer output)
+    void softmax(Operation op, const(void[])[] inputs, void[] output)
     {
-        const(float)[] inbuf = inputs[0].as!float;
-        float[] outbuf = output.as!float;
+        const(float)[] inbuf = cast(const(float[]))inputs[0];
+        float[] outbuf = cast(float[])output;
 
         size_t elvol = op.volume / (op.shape[0] * op.shape[1]);
 

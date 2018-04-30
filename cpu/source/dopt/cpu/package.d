@@ -126,6 +126,11 @@ class CPUBuffer : DeviceBuffer
         {
             mBuffer[] = buf[];
         }
+
+        ubyte[] raw()
+        {
+            return cast(ubyte[])mBuffer;
+        }
     }
 
     private

@@ -287,14 +287,14 @@ unittest
     import dopt.core : evaluate;
 
     auto s1 = float32([2], [0.5, 1.5]).sum();
-    auto s2 = float32([2, 2], [0, 1, 0, 5]).sum();
-    auto s3 = float32([2, 2], [0, 1, 0, 5]).sum([0]);
-    auto s4 = float32([2, 2], [0, 1, 0, 5]).sum([1]);
+    auto s2 = float32([2, 2], [0, 1, 2, 5]).sum();
+    auto s3 = float32([2, 2], [0, 1, 2, 5]).sum([0]);
+    auto s4 = float32([2, 2], [0, 1, 2, 5]).sum([1]);
 
     assert(s1.evaluate().get!float == [2.0f]);
-    assert(s2.evaluate().get!float == [6.0f]);
-    assert(s3.evaluate().get!float == [0.0f, 6.0f]);
-    assert(s4.evaluate().get!float == [1.0f, 5.0f]);
+    assert(s2.evaluate().get!float == [8.0f]);
+    assert(s3.evaluate().get!float == [2.0f, 6.0f]);
+    assert(s4.evaluate().get!float == [1.0f, 7.0f]);
 }
 
 /**

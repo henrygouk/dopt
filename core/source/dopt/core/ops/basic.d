@@ -218,7 +218,7 @@ public
             7, 8, 9
         ]).slice([1, 1], [3, 3]);
 
-        assert(s1.evaluate().as!int == [
+        assert(s1.evaluate().get!int == [
             5, 6,
             8, 9
         ]);
@@ -248,7 +248,7 @@ public
 
         auto p1 = int32([1, 1], [3]).pad([2, 1], [3, 3]);
 
-        assert(p1.evaluate().as!int == [
+        assert(p1.evaluate().get!int == [
             0, 0, 0, 0, 0,
             0, 0, 0, 0, 0,
             0, 3, 0, 0, 0,
@@ -281,7 +281,7 @@ public
         auto r1 = float32([2, 2], [1.0f, 2.0f, 3.0f, 4.0f]).reshape([1, 4]);
 
         assert(r1.shape == [1, 4]);
-        assert(r1.evaluate().as!float == [1.0f, 2.0f, 3.0f, 4.0f]);
+        assert(r1.evaluate().get!float == [1.0f, 2.0f, 3.0f, 4.0f]);
     }
 
     /**
@@ -309,7 +309,7 @@ public
 
         auto t1 = float32([2, 2], [1.0f, 2.0f, 3.0f, 4.0f]).transpose([1, 0]);
 
-        assert(t1.evaluate().as!float == [1.0f, 3.0f, 2.0f, 4.0f]);
+        assert(t1.evaluate().get!float == [1.0f, 3.0f, 2.0f, 4.0f]);
     }
 
     /**
@@ -339,12 +339,12 @@ public
         auto r1 = float32([1, 1], [3.0f]).repeat([2, 3]);
         auto r2 = float32([2, 2], [1.0f, 2.0f, 3.0f, 4.0f]).repeat([3, 2]);
 
-        assert(r1.evaluate().as!float == [
+        assert(r1.evaluate().get!float == [
             3.0f, 3.0f, 3.0f,
             3.0f, 3.0f, 3.0f
         ]);
 
-        assert(r2.evaluate().as!float == [
+        assert(r2.evaluate().get!float == [
             1.0f, 2.0f, 1.0f, 2.0f,
             3.0f, 4.0f, 3.0f, 4.0f,
             1.0f, 2.0f, 1.0f, 2.0f,
@@ -386,7 +386,7 @@ public
 
         auto r1 = float32([2], [1.0f, 2.0f]).repeat(3);
 
-        assert(r1.evaluate().as!float == [
+        assert(r1.evaluate().get!float == [
             1.0f, 2.0f,
             1.0f, 2.0f,
             1.0f, 2.0f

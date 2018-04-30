@@ -18,7 +18,7 @@ package
 
 private
 {
-    void slice(Operation op, const(Buffer)[] inputs, Buffer output)
+    void slice(Operation op, const(void[])[] inputs, void[] output)
     {
         size_t size = 4;
 
@@ -60,10 +60,10 @@ private
             outVol /= outShape[0];
         }
 
-        sliceImpl(inputs[0].as!ubyte, inShape, inVol, output.as!ubyte, outShape, outVol, offset);
+        sliceImpl(cast(const(ubyte[]))inputs[0], inShape, inVol, cast(ubyte[])output, outShape, outVol, offset);
     }
 
-    void pad(Operation op, const(Buffer)[] inputs, Buffer output)
+    void pad(Operation op, const(void[])[] inputs, void[] output)
     {
         size_t size = 4;
 
@@ -111,10 +111,10 @@ private
             outVol /= outShape[0];
         }
 
-        padImpl(inputs[0].as!ubyte, inShape, inVol, output.as!ubyte, outShape, outVol, offset);
+        padImpl(cast(const(ubyte[]))inputs[0], inShape, inVol, cast(ubyte[])output, outShape, outVol, offset);
     }
 
-    void transpose(Operation op, const(Buffer)[] inputs, Buffer output)
+    void transpose(Operation op, const(void[])[] inputs, void[] output)
     {
         import std.exception : enforce;
         enforce(op.outputType.rank <= 2, "transpose is only implemented for rank <= 2");
@@ -131,12 +131,12 @@ private
 
         if(op.outputType.rank < 2)
         {
-            output.as!ubyte[] = inputs[0].as!ubyte[];
+            output[] = inputs[0][];
         }
         else
         {
-            auto inBuf = inputs[0].as!ubyte;
-            auto outBuf = output.as!ubyte;
+            auto inBuf = cast(const(ubyte[]))inputs[0];
+            auto outBuf = cast(ubyte[])output;
             size_t size = outBuf.length / op.outputType.volume;
             size_t rows = op.outputType.shape[0];
             size_t cols = op.outputType.shape[1];
@@ -152,7 +152,7 @@ private
         }
     }
 
-    void repeat(Operation op, const(Buffer)[] inputs, Buffer output)
+    void repeat(Operation op, const(void[])[] inputs, void[] output)
     {
         void run(T)()
         {
@@ -174,7 +174,7 @@ private
 
             //Iterate over each axis, from smallest stride to largest stride
             size_t vol = 1;
-            auto inbuf = inputs[0].as!T;
+            auto inbuf = cast(T[])inputs[0];
             T[] outbuf;
 
             foreach_reverse(i, a; op.attributes["repetitions"].get!(size_t[]))
@@ -186,7 +186,7 @@ private
                 inbuf = outbuf;
             }
 
-            output.as!T[] = outbuf[];
+            output[] = outbuf[];
         }
 
         switch(op.outputType.elementType)

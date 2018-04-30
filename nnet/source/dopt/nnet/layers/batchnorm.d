@@ -151,5 +151,5 @@ unittest
 
     import std.math : approxEqual;
     
-    assert(approxEqual(layers.params[2].symbol.value.as!float, [3.0f, 4.0f]));
+    assert(approxEqual(layers.params[2].symbol.value.get!float, [3.0f, 4.0f]));
 }

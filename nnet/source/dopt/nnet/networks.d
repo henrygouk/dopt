@@ -135,7 +135,7 @@ class DAGNetwork
 
             foreach(p; params)
             {
-                f.rawWrite(p.value.as!float);
+                f.rawWrite(p.value.get!float);
             }
 
             f.close();
@@ -155,7 +155,9 @@ class DAGNetwork
 
             foreach(p; params)
             {
-                f.rawRead(p.value.as!float);
+                auto buf = p.value.get!float;
+                f.rawRead(buf);
+                p.value.set(buf);
             }
 
             f.close();

@@ -31,7 +31,7 @@ shared static this()
 */
 interface CPUKernel
 {
-    void execute(Operation op, const(Buffer)[] inputs, Buffer output);
+    void execute(Operation op, const(void[])[] inputs, void[] output);
 }
 
 /**
@@ -41,12 +41,12 @@ class CPUKernelDelegate : CPUKernel
 {
     public
     {
-        this(void delegate(Operation, const(Buffer)[], Buffer) kern)
+        this(void delegate(Operation, const(void[])[], void[]) kern)
         {
             mKernel = kern;
         }
 
-        void execute(Operation op, const(Buffer)[] inputs, Buffer output)
+        void execute(Operation op, const(void[])[] inputs, void[] output)
         {
             mKernel(op, inputs, output);
         }
@@ -54,7 +54,7 @@ class CPUKernelDelegate : CPUKernel
 
     private
     {
-        void delegate(Operation op, const(Buffer)[], Buffer) mKernel;
+        void delegate(Operation op, const(void[])[], void[]) mKernel;
     }
 }
 
@@ -117,7 +117,7 @@ class CPUPlan : Plan
 
             foreach(t, r; zip(tmpRets, rets))
             {
-                r.as!ubyte[] = t.as!ubyte[];
+                r.set(t.get!ubyte);
             }
         }
     }
@@ -163,7 +163,12 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
     }
 
     //Start executing the operations
-    Buffer[Operation] results = args.dup;
+    ubyte[][Operation] results;
+
+    foreach(k, v; args)
+    {
+        results[k] = v.get!ubyte();
+    }
 
     foreach(o; sortedOps)
     {
@@ -173,12 +178,12 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
         //Check for some easy optimizations
         if(o.opType == "variable" && !("variable" in mKernels))
         {
-            results[o] = cast(Buffer)o.attributes["default"].get!Buffer;
+            results[o] = o.value.get!ubyte;
             continue;
         }
         else if(o.opType == "constant" && !("constant" in mKernels))
         {
-            results[o] = cast(Buffer)o.attributes["default"].get!Buffer;
+            results[o] = o.value.get!ubyte;
             continue;
         }
         else if(o.opType == "reshape" && !("reshape" in mKernels))
@@ -188,11 +193,11 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
         }
 
         //Allocate a buffer for the output of this operation
-        auto output = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
+        auto output = new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()];
         results[o] = output;
 
         //Get the input buffers
-        Buffer[] inputs;
+        ubyte[][] inputs;
 
         foreach(d; o.deps)
         {
@@ -208,7 +213,7 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
             throw new Exception("No CPU kernel registered for operation " ~ o.opType);
         }
 
-        kern.execute(o, inputs, output);
+        kern.execute(o, cast(const(void[])[]) inputs, cast(void[])output);
 
         foreach(d; o.deps)
         {
@@ -216,7 +221,7 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
             //This will allow the GC to collect it at some point, if required
             if(refCounts[d] == 0)
             {
-                results[d] = Buffer([]);
+                results[d] = null;
             }
         }
     }
@@ -225,7 +230,7 @@ Buffer[] evaluateCPU(Operation[] ops, Buffer[Operation] args = null)
 
     foreach(i, o; ops)
     {
-        returnVals[i] = results[o];
+        returnVals[i] = Buffer(results[o]);
     }
 
     return returnVals;

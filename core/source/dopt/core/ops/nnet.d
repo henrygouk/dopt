@@ -283,7 +283,7 @@ public
 
         auto result = convolution(features, filters);
 
-        auto edges = result.evaluate().as!float;
+        auto edges = result.evaluate().get!float;
 
         assert(edges == [
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -342,7 +342,7 @@ public
 
         auto result = features.maxpool([2,2]);
 
-        auto pooledFeatures = result.evaluate().as!float;
+        auto pooledFeatures = result.evaluate().get!float;
 
         assert(pooledFeatures == [
             5.0f, 4.0f,
@@ -428,7 +428,7 @@ public
         auto y = float32([1, 5], [1.0f, 2.0f, 3.0f, 1.0f, 2.0f]).softmax();
 
         assert(approxEqual(
-            y.evaluate().as!float,
+            y.evaluate().get!float,
             [0.0674508, 0.18335, 0.498398, 0.0674508, 0.18335]
         ));
     }

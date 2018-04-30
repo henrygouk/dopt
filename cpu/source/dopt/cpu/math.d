@@ -67,7 +67,7 @@ private
         return cast(T)((t > 0) - (t < 0));
     }
 
-    void matmulKernel(Operation op, const(Buffer)[] inputs, Buffer output)
+    void matmulKernel(Operation op, const(void[])[] inputs, void[] output)
     {
         if(op.outputType.elementType == DataType.float32)
         {
@@ -77,9 +77,9 @@ private
             import cblas;
 
             gemm(Order.RowMajor, Transpose.NoTrans, Transpose.NoTrans,
-                cast(int)ashape[0], cast(int)bshape[1], cast(int)ashape[1], 1.0, cast(float *)inputs[0].as!float.ptr,
-                cast(int)ashape[1], cast(float *)inputs[1].as!float.ptr, cast(int)bshape[1], 0,
-                cast(float *)output.as!float.ptr, cast(int)bshape[1]);
+                cast(int)ashape[0], cast(int)bshape[1], cast(int)ashape[1], 1.0, cast(float *)inputs[0].ptr,
+                cast(int)ashape[1], cast(float *)inputs[1].ptr, cast(int)bshape[1], 0,
+                cast(float *)output.ptr, cast(int)bshape[1]);
         }
         else
         {
@@ -87,7 +87,7 @@ private
         }
     }
 
-    void sumKernel(Operation op, const(Buffer)[] inputs, Buffer output)
+    void sumKernel(Operation op, const(void[])[] inputs, void[] output)
     {
         void run(T)()
         {
@@ -122,7 +122,7 @@ private
             auto axes = op.attributes["axes"].get!(size_t[]);
             auto shape = op.deps[0].shape.dup;
 
-            auto inbuf = inputs[0].as!T;
+            auto inbuf = cast(const(T)[])inputs[0];
             T[] outbuf;
 
             foreach(axis; axes)
@@ -149,7 +149,7 @@ private
                 shape[axis] = 1;
             }
 
-            output.as!T[] = outbuf[];
+            output[] = outbuf[];
         }
 
         switch(op.outputType.elementType)
@@ -167,7 +167,7 @@ private
         }
     }
 
-    void maxElementKernel(Operation op, const(Buffer)[] inputs, Buffer output)
+    void maxElementKernel(Operation op, const(void[])[] inputs, void[] output)
     {
         void run(T)()
         {
@@ -201,7 +201,7 @@ private
             auto axes = op.attributes["axes"].get!(size_t[]);
             auto shape = op.deps[0].shape.dup;
 
-            auto inbuf = inputs[0].as!T;
+            auto inbuf = cast(const(T)[])inputs[0];
             T[] outbuf;
 
             foreach(axis; axes)
@@ -228,7 +228,7 @@ private
                 shape[axis] = 1;
             }
 
-            output.as!T[] = outbuf[];
+            output[] = outbuf[];
         }
 
         switch(op.outputType.elementType)
@@ -246,12 +246,12 @@ private
         }
     }
 
-    void argminKernel(Operation op, const(Buffer)[] inputs, Buffer output)
+    void argminKernel(Operation op, const(void[])[] inputs, void[] output)
     {
         void run(T)()
         {
-            auto inbuf = inputs[0].as!T;
-            auto outbuf = output.as!int;
+            auto inbuf = cast(const(T)[])inputs[0];
+            auto outbuf = cast(int[])output;
 
             size_t axis = op.attributes["axis"].get!size_t;
             size_t outer = 1;
@@ -345,10 +345,10 @@ private
         string generateSingleKernel(string op, string dtype, string expr)
         {
             return
-                "void " ~ op ~ "Kernel_" ~ dtype ~ "(Operation op, const(Buffer)[] inputs, Buffer output)
+                "void " ~ op ~ "Kernel_" ~ dtype ~ "(Operation op, const(void[])[] inputs, void[] output)
                 {
-                    auto ins = inputs.map!(x => x.as!" ~ dtype ~ ").array();
-                    auto outs = output.as!" ~ dtype ~ ";
+                    auto ins = inputs.map!(x => cast(const(" ~ dtype ~ ")[])x).array();
+                    auto outs = cast(" ~ dtype ~ "[])output;
 
                     for(size_t i = 0; i < outs.length; i++)
                     {
@@ -362,7 +362,7 @@ private
         string generateTypedKernel(string op, string[string] types)
         {
             string ret =
-                "void " ~ op ~ "Kernel(Operation op, const(Buffer)[] inputs, Buffer output)
+                "void " ~ op ~ "Kernel(Operation op, const(void[])[] inputs, void[] output)
                 {
                     switch(op.outputType.elementType)
                     {

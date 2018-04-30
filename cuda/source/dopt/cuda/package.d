@@ -54,6 +54,7 @@ shared static this()
         import std.functional : toDelegate;
         defaultEvaluator = toDelegate(&evaluateCUDA);
         defaultCompiler = (Operation[] ops) { return new CUDAPlan(ops); };
+        //This is bad. The GC is unlikely to call finalisers, so CUDA will leak memory.
         defaultAllocator = (size_t numBytes) { return CUDABuffer.create(numBytes); };
     }
     catch(Exception e)
@@ -164,13 +165,20 @@ class CUDABuffer : DeviceBuffer
 
         override void set(const DeviceBuffer buf)
         {
-            auto cbuf = cast(CUDABuffer)buf;
+            import dopt.cpu : CPUBuffer;
 
-            if(cbuf !is null)
+            enforce(numBytes == buf.numBytes, "Mismatch in buffer size");
+
+            auto cubuf = cast(CUDABuffer)buf;
+            auto cpubuf = cast(CPUBuffer)buf;
+
+            if(cubuf !is null)
             {
-                enforce(numBytes == buf.numBytes, "Mismatch in buffer size");
-
-                cuMemcpyDtoD(mPtr, cbuf.ptr, numBytes);
+                cuMemcpyDtoD(mPtr, cubuf.ptr, numBytes);
+            }
+            else if(cpubuf !is null)
+            {
+                cuMemcpyHtoD(mPtr, cpubuf.raw.ptr, numBytes);
             }
             else
             {
@@ -342,12 +350,14 @@ class CUDAPlan : Plan
     {
         Operation[] mOps;
         CUDAKernel[Operation] mKernels;
-        bool clean = false;
     }
 }
 
 void useCUDAStorage(Operation op)
 {
+    //TODO: This function is incorrect if two Operations share the same DeviceBuffer. After running this function,
+    //they will no longer share the same buffer.
+
     if(op.opType == "reshape")
     {
         useCUDAStorage(op.deps[0]);

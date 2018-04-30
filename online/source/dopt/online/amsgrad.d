@@ -86,9 +86,9 @@ Updater amsgrad(Operation[] outputs, Operation[] wrt, Projection[Operation] proj
                   .map!(x => x.value)
                   .array();
 
-    newbufs = outputs.map!(x => Buffer(new ubyte[x.volume * x.elementType.sizeOf])).array() ~ newbufs;
+    newbufs = outputs.map!(x => allocate(x.volume * x.elementType.sizeOf)).array() ~ newbufs;
 
-    Buffer[] update(Buffer[Operation] args)
+    DeviceBuffer[] update(DeviceBuffer[Operation] args)
     {
         updatePlan.execute(args, newbufs);
 
@@ -132,8 +132,8 @@ unittest
         size_t j = i % 100;
 
         loss = updater([
-            x: Buffer(xdata[j .. j + 1]),
-            y: Buffer(ydata[j .. j + 1])
+            x: buffer(xdata[j .. j + 1]),
+            y: buffer(ydata[j .. j + 1])
         ])[0].get!float[0];
     }
 

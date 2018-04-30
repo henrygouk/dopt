@@ -19,11 +19,13 @@ public
     import dopt.core.types;
 }
 
-alias Evaluator = Buffer[] delegate(Operation[] ops, Buffer[Operation] args);
+alias Evaluator = DeviceBuffer[] delegate(Operation[] ops, DeviceBuffer[Operation] args);
 alias Compiler = Plan delegate(Operation[] ops);
+alias Allocator = DeviceBuffer delegate(size_t numBytes);
 
 private __gshared Evaluator mDefaultEvaluator;
 private __gshared Compiler mDefaultCompiler;
+private __gshared Allocator mDefaultAllocator;
 
 Evaluator defaultEvaluator()
 {
@@ -45,6 +47,16 @@ void defaultCompiler(Compiler de)
     mDefaultCompiler = de;
 }
 
+Allocator defaultAllocator()
+{
+    return mDefaultAllocator;
+}
+
+void defaultAllocator(Allocator da)
+{
+    mDefaultAllocator = da;
+}
+
 shared static this()
 {
     import std.functional : toDelegate;
@@ -61,9 +73,9 @@ shared static this()
         args = A set of variable assignments.
 
     Returns:
-        An array of $(D Buffer) objects, each containing the value of the corresponding element in $(D ops).
+        An array of $(D DeviceBuffer) objects, each containing the value of the corresponding element in $(D ops).
 */
-Buffer[] evaluate(Operation[] ops, Buffer[Operation] args = null)
+DeviceBuffer[] evaluate(Operation[] ops, DeviceBuffer[Operation] args = null)
 {
     return mDefaultEvaluator(ops, args);
 }
@@ -80,7 +92,7 @@ Buffer[] evaluate(Operation[] ops, Buffer[Operation] args = null)
     Returns:
         A $(D Buffer) containing the result of the computation.
 */
-Buffer evaluate(Operation op, Buffer[Operation] args = null)
+DeviceBuffer evaluate(Operation op, DeviceBuffer[Operation] args = null)
 {
     return evaluate([op], args)[0];
 }
@@ -102,6 +114,19 @@ Plan compile(Operation[] outputs)
     return mDefaultCompiler(outputs);
 }
 
+DeviceBuffer allocate(size_t numBytes)
+{
+    return mDefaultAllocator(numBytes);
+}
+
+DeviceBuffer buffer(void[] vals)
+{
+    auto buf = allocate(vals.length);
+    buf.set(vals);
+
+    return buf;
+}
+
 class Plan
 {
     public
@@ -119,13 +144,13 @@ class Plan
             Params:
                 args = A set of variable assignments.
         */
-        Buffer[] execute(Buffer[Operation] args = null)
+        DeviceBuffer[] execute(DeviceBuffer[Operation] args = null)
         {
-            auto rets = new Buffer[mOutputs.length];
+            auto rets = new DeviceBuffer[mOutputs.length];
 
             foreach(i, o; mOutputs)
             {
-                rets[i] = Buffer(new ubyte[o.outputType.volume * o.outputType.elementType.sizeOf()]);
+                rets[i] = allocate(o.outputType.volume * o.outputType.elementType.sizeOf());
             }
 
             execute(args, rets);
@@ -134,7 +159,7 @@ class Plan
         }
 
         ///
-        void execute(Buffer[Operation] args, Buffer[] rets)
+        void execute(DeviceBuffer[Operation] args, DeviceBuffer[] rets)
         {
             executeImpl(args, rets);
         }
@@ -144,6 +169,6 @@ class Plan
     {
         Operation[] mOutputs;
 
-        abstract void executeImpl(Buffer[Operation] args, Buffer[] rets);
+        abstract void executeImpl(DeviceBuffer[Operation] args, DeviceBuffer[] rets);
     }
 }

@@ -54,6 +54,7 @@ shared static this()
         import std.functional : toDelegate;
         defaultEvaluator = toDelegate(&evaluateCUDA);
         defaultCompiler = (Operation[] ops) { return new CUDAPlan(ops); };
+        defaultAllocator = (size_t numBytes) { return CUDABuffer.create(numBytes); };
     }
     catch(Exception e)
     {
@@ -99,15 +100,15 @@ private class CUDACPUKernel : CUDAKernel
 
         foreach(cudaInput, cpuInput; zip(inputs, mDeps))
         {
-            cpuInput.value.set(cudaInput.get!ubyte());
+            cpuInput.value.set(cudaInput);
         }
 
-        Buffer ret = evaluateCPU([mOp])[0];
+        DeviceBuffer ret = evaluateCPU([mOp])[0];
 
-        output.set(ret.get!ubyte);
+        output.set(ret);
     }
 
-    Buffer[] mInputs;
+    DeviceBuffer[] mInputs;
     Operation[] mDeps;
     Operation mOp;
 }
@@ -120,7 +121,7 @@ private CUDAKernel cudaCPUCtr(Operation op)
 /**
     A class that encapsulates the CUDA memory allocation/deallocation process.
 */
-class CUDABuffer
+class CUDABuffer : DeviceBuffer
 {
     public
     {
@@ -155,10 +156,26 @@ class CUDABuffer
             Params:
                 buf = An array of data to be copied to the device.
         */
-        void set(const void[] buf)
+        override void set(const void[] buf)
         {
             enforce(buf.length == mNumBytes, "input buffer is the wrong length.");
 			enforce(cuMemcpyHtoD(mPtr, buf.ptr, buf.length) == CUDA_SUCCESS, "Failed to set contents of CUDA buffer");
+        }
+
+        override void set(const DeviceBuffer buf)
+        {
+            auto cbuf = cast(CUDABuffer)buf;
+
+            if(cbuf !is null)
+            {
+                enforce(numBytes == buf.numBytes, "Mismatch in buffer size");
+
+                cuMemcpyDtoD(mPtr, cbuf.ptr, numBytes);
+            }
+            else
+            {
+                super.set(buf);
+            }
         }
 
         /**
@@ -167,18 +184,10 @@ class CUDABuffer
             Params:
                 buf = The buffer that the data from the CUDA device will be written to.
         */
-        void get(void[] buf) const
+        override void get(void[] buf) const
         {
             enforce(buf.length == mNumBytes, "output buffer is the wrong length.");
 			enforce(cuMemcpyDtoH(buf.ptr, mPtr, buf.length) == CUDA_SUCCESS, "Failed to get contents of CUDA buffer");
-        }
-
-        T[] get(T)() const
-        {
-            auto buf = new T[mNumBytes / T.sizeof];
-            get(buf);
-
-            return buf;
         }
 
         /**
@@ -187,7 +196,7 @@ class CUDABuffer
             Returns:
                 The number of bytes allocated on the CUDA device.
         */
-        size_t numBytes() const
+        override size_t numBytes() const
         {
             return mNumBytes;
         }
@@ -260,96 +269,38 @@ class CUDAPlan : Plan
             }
 
             mOps = sortedOps.array;
-
-            foreach(o; mOps)
-            {
-                //For reshape operations, we will just reuse the buffer of o.deps[0]
-                if(o.opType == "reshape")
-                {
-                    results[o] = results[o.deps[0]];
-                }
-                else
-                {
-                    results[o] = CUDABuffer.create(o.volume * o.elementType.sizeOf);
-
-                    if(o.opType == "constant")
-                    {
-                        results[o].set(o.value.get!ubyte);
-                    }
-                }
-            }
-
-            results.rehash();
-        }
-
-        ~this()
-        {
-            cleanup();
-        }
-
-        /**
-            Releases CUDA resources associated with this plan.
-        */
-        void cleanup()
-        {
-            if(clean)
-            {
-                return;
-            }
-
-            foreach(o; mOps)
-            {
-                if(o.opType != "reshape")
-                {
-                    CUDABuffer.destroy(results[o]);
-                }
-            }
-
-            clean = true;
         }
     }
 
     protected
     {
-        override void executeImpl(Buffer[Operation] args, Buffer[] rets)
+        override void executeImpl(DeviceBuffer[Operation] args, DeviceBuffer[] rets)
         {
+            import std.algorithm : each;
             import std.datetime.stopwatch : StopWatch;
             StopWatch sw;
+
+            mOps.each!(useCUDAStorage);
+
+            DeviceBuffer[Operation] originalBuffers;
 
             //Make sure all the args are variable assignments
             foreach(o; args.keys)
             {
                 enforce(o.opType == "variable",
                     "All assignments in args must be for Operations with an opType of 'variable'");
-            }
 
-            //Load the args into their buffers
-            foreach(k, v; args)
-            {
-                results[k].set(v.get!ubyte);
+                //Cache original DeviceBuffers, swap out for args
+                auto orig = o.value;
+                o.setBuffer(CUDABuffer.create(orig.numBytes));
+                o.value.set(args[o]);
+                originalBuffers[o] = orig;
             }
 
             //Iterate through each operation and execute it
             foreach(o; mOps)
             {
-                if(o.opType == "variable")
-                {
-                    if(!(o in args))
-                    {
-                        sw.reset();
-                        sw.start();
-
-                        auto buf = cast(Buffer)o.value;
-                        results[o].set(buf.get!ubyte);
-
-                        sw.stop();
-
-                        profiler["variable"] = profiler.get("variable", 0) + sw.peek.split.usecs;
-                    }
-                    
-                    continue;
-                }
-                else if(o.opType == "reshape" || o.opType == "constant")
+                if(o.opType == "variable" || o.opType == "reshape" || o.opType == "constant")
                 {
                     continue;
                 }
@@ -359,14 +310,14 @@ class CUDAPlan : Plan
 
                 foreach(d; o.deps)
                 {
-                    inputs ~= results[d];
+                    inputs ~= cast(CUDABuffer)d.value;
                 }
 
                 //Execute the operation
                 sw.reset();
                 sw.start();
-                results[o].zero();
-                mKernels[o].execute(inputs, results[o]);
+                (cast(CUDABuffer)o.value).zero();
+                mKernels[o].execute(inputs, cast(CUDABuffer)o.value);
                 sw.stop();
 
                 profiler[o.opType] = profiler.get(o.opType, 0) + sw.peek.split.usecs;
@@ -374,7 +325,15 @@ class CUDAPlan : Plan
 
             foreach(i, o; mOutputs)
             {
-                rets[i].set(results[o].get!ubyte());
+                rets[i].set(o.value);
+            }
+
+            foreach(o; args.keys)
+            {
+                auto buf = cast(CUDABuffer)o.value;
+                CUDABuffer.destroy(buf);
+
+                o.setBuffer(originalBuffers[o]);
             }
         }
     }
@@ -383,8 +342,30 @@ class CUDAPlan : Plan
     {
         Operation[] mOps;
         CUDAKernel[Operation] mKernels;
-        CUDABuffer[Operation] results;
         bool clean = false;
+    }
+}
+
+void useCUDAStorage(Operation op)
+{
+    if(op.opType == "reshape")
+    {
+        useCUDAStorage(op.deps[0]);
+        op.setBuffer(op.deps[0].value);
+        return;
+    }
+
+    auto cbuf = cast(CUDABuffer)op.value;
+
+    if(cbuf is null && op.value !is null)
+    {
+        auto tmp = op.value;
+        op.setBuffer(CUDABuffer.create(tmp.numBytes));
+        op.value.set(tmp);
+    }
+    else if(cbuf is null)
+    {
+        op.setBuffer(CUDABuffer.create(op.volume * sizeOf(op.elementType)));
     }
 }
 
@@ -401,19 +382,17 @@ class CUDAPlan : Plan
     Returns:
         The result of evaluating $(D ops).
 */
-Buffer[] evaluateCUDA(Operation[] ops, Buffer[Operation] args = null)
+DeviceBuffer[] evaluateCUDA(Operation[] ops, DeviceBuffer[Operation] args = null)
 {
     auto p = new CUDAPlan(ops);
     
     auto ret = p.execute(args);
 
-    p.cleanup();
-
     return ret;
 }
 
 /**
-    A convenience overload that evaluates a single operation and returns a single $(D Buffer).
+    A convenience overload that evaluates a single operation and returns a single $(D DeviceBuffer).
 
     Params:
         op = The operation to be evaluated.
@@ -422,7 +401,7 @@ Buffer[] evaluateCUDA(Operation[] ops, Buffer[Operation] args = null)
     Returns:
         The result of evaluating $(D op)
 */
-Buffer evaluateCUDA(Operation op, Buffer[Operation] args = null)
+DeviceBuffer evaluateCUDA(Operation op, DeviceBuffer[Operation] args = null)
 {
     return evaluateCUDA([op], args)[0];
 }

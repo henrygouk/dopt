@@ -56,36 +56,23 @@ struct TensorType
     }
 }
 
-/**
-Creates a wrapper around a user allocated buffer
-*/
-struct Buffer
+class DeviceBuffer
 {
-    public
+    abstract size_t numBytes() const;
+    abstract void get(void[] buf) const;
+    abstract void set(const void[] buf);
+
+    T[] get(T)() const
     {
-        this(void[] buf)
-        {
-            mBuffer = buf.dup;
-        }
+        auto ret = new T[numBytes / T.sizeof];
+        get(ret);
 
-        T[] get(T)() const
-        {
-            return (cast(T[])mBuffer).dup;
-        }
-
-        void get(T)(T[] buf) const
-        {
-            buf[] = mBuffer[];
-        }
-
-        void set(T)(T[] buf)
-        {
-            mBuffer[] = buf[];
-        }
+        return ret;
     }
 
-    private
+    void set(const DeviceBuffer buf)
     {
-        void[] mBuffer;
+        auto tmp = buf.get!ubyte();
+        set(tmp);
     }
 }

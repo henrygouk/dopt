@@ -97,8 +97,8 @@ void main(string[] args)
 
 			//Make an update to the model parameters using the minibatch of training data
 			auto res = updater([
-				features: Buffer(fs),
-				labels: Buffer(ls)
+				features: buffer(fs),
+				labels: buffer(ls)
 			]);
 
 			trainLoss += res[0].get!float[0] * batchSize;
@@ -123,8 +123,8 @@ void main(string[] args)
 
 			//Make some predictions
 			auto res = testPlan.execute([
-				features: Buffer(fs),
-				labels: Buffer(ls)
+				features: buffer(fs),
+				labels: buffer(ls)
 			]);
 
 			testLoss += res[0].get!float[0] * batchSize;

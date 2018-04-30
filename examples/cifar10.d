@@ -120,10 +120,9 @@ void main(string[] args)
 			data.train.getBatch([fs, ls]);
 
 			//Make an update to the model parameters using the minibatch of training data
-			auto res = updater([
-				features: Buffer(fs),
-				labels: Buffer(ls)
-			]);
+			features.value.set(fs);
+			labels.value.set(ls);
+			auto res = updater(null);
 
 			trainLoss += res[0].get!float[0] * batchSize;
 			trainAcc += computeAccuracy(ls, res[1].get!float);
@@ -145,10 +144,9 @@ void main(string[] args)
 			data.test.getBatch([fs, ls]);
 
 			//Make some predictions
-			auto res = testPlan.execute([
-				features: Buffer(fs),
-				labels: Buffer(ls)
-			]);
+			features.value.set(fs);
+			labels.value.set(ls);
+			auto res = testPlan.execute();
 
 			testLoss += res[0].get!float[0] * batchSize;
 			testAcc += computeAccuracy(ls, res[1].get!float);

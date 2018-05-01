@@ -5,7 +5,7 @@
 */
 module dopt.core.ops.basic;
 
-import dopt.core : buffer;
+import dopt.core : allocate;
 import dopt.core.ops;
 import dopt.core.types;
 
@@ -421,7 +421,9 @@ public
         }
 
         auto op = createOperation("variable", [], ["type": Variant(type)], mod, line);
-        op.setBuffer(buffer(defaultVal));
+        auto buf = allocate(bufSize);
+        buf.set(defaultVal);
+        op.setBuffer(buf);
 
         return op;
     }
@@ -498,7 +500,9 @@ public
         }
 
         auto op = createOperation("constant", [], ["type": Variant(type)], mod, line);
-        op.setBuffer(buffer(val));
+        auto buf = allocate(bufSize);
+        buf.set(val);
+        op.setBuffer(buf);
         
         return op;
     }

@@ -80,9 +80,10 @@ void main(string[] args)
 			//Get the next batch of training data (put into [fs, ls]). Update bidx with the next batch index.
 			data.train.getBatch([fs, ls]);
 
-			features.value.set(fs);
-			labels.value.set(ls);
-			auto loss = updater(null);
+			auto loss = updater([
+				features: buffer(fs),
+				labels: buffer(ls)
+			]);
 
 			totloss += loss[0].get!float[0];
 			tot++;
@@ -103,8 +104,9 @@ void main(string[] args)
 		data.test.getBatch([fs, ls]);
 
 		//Make some predictions for this minibatch
-		features.value.set(fs);
-		auto pred = testPlan.execute()[0].get!float;
+		auto pred = testPlan.execute([
+				features: buffer(fs)
+			])[0].get!float;
 
 		//Determine the accuracy of these predictions using the ground truth data
 		foreach(p, t; zip(pred.chunks(10), ls.chunks(10)))

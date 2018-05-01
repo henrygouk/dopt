@@ -25,7 +25,8 @@ alias Allocator = DeviceBuffer delegate(size_t numBytes);
 
 private __gshared Evaluator mDefaultEvaluator;
 private __gshared Compiler mDefaultCompiler;
-private __gshared Allocator mDefaultAllocator;
+private __gshared Allocator mDefaultVarAllocator;
+private __gshared Allocator mDefaultArgAllocator;
 
 Evaluator defaultEvaluator()
 {
@@ -47,14 +48,24 @@ void defaultCompiler(Compiler de)
     mDefaultCompiler = de;
 }
 
-Allocator defaultAllocator()
+Allocator defaultVarAllocator()
 {
-    return mDefaultAllocator;
+    return mDefaultVarAllocator;
 }
 
-void defaultAllocator(Allocator da)
+void defaultVarAllocator(Allocator da)
 {
-    mDefaultAllocator = da;
+    mDefaultVarAllocator = da;
+}
+
+Allocator defaultArgAllocator()
+{
+    return mDefaultArgAllocator;
+}
+
+void defaultArgAllocator(Allocator da)
+{
+    mDefaultArgAllocator = da;
 }
 
 shared static this()
@@ -116,12 +127,12 @@ Plan compile(Operation[] outputs)
 
 DeviceBuffer allocate(size_t numBytes)
 {
-    return mDefaultAllocator(numBytes);
+    return mDefaultVarAllocator(numBytes);
 }
 
 DeviceBuffer buffer(void[] vals)
 {
-    auto buf = allocate(vals.length);
+    auto buf = mDefaultArgAllocator(vals.length);
     buf.set(vals);
 
     return buf;

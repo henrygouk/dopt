@@ -24,7 +24,8 @@ shared static this()
     import std.functional : toDelegate;
     defaultEvaluator = toDelegate(&evaluateCPU);
     defaultCompiler = (Operation[] ops) { return new CPUPlan(ops); };
-    defaultAllocator = (size_t numBytes) { return new CPUBuffer(numBytes); };
+    defaultVarAllocator = (size_t numBytes) { return new CPUBuffer(numBytes); };
+    defaultArgAllocator = (size_t numBytes) { return new CPUBuffer(numBytes); };
 }
 
 /**

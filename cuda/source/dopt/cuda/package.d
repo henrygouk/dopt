@@ -54,8 +54,7 @@ shared static this()
         import std.functional : toDelegate;
         defaultEvaluator = toDelegate(&evaluateCUDA);
         defaultCompiler = (Operation[] ops) { return new CUDAPlan(ops); };
-        //This is bad. The GC is unlikely to call finalisers, so CUDA will leak memory.
-        defaultAllocator = (size_t numBytes) { return CUDABuffer.create(numBytes); };
+        defaultVarAllocator = (size_t numBytes) { return CUDABuffer.create(numBytes); };
     }
     catch(Exception e)
     {
@@ -134,6 +133,11 @@ class CUDABuffer : DeviceBuffer
         */
         static CUDABuffer create(size_t numBytes)
         {
+            import core.memory : GC;
+
+            //Rely on the GC to run some finalisers to free CUDA memory. I know this is bad please help.
+            GC.collect();
+
             CUDABuffer ret = new CUDABuffer();
             ret.mNumBytes = numBytes;
             enforce(cuMemAlloc(&(ret.mPtr), ret.mNumBytes) == CUDA_SUCCESS, "CUDA memory allocation failed");
@@ -277,6 +281,52 @@ class CUDAPlan : Plan
             }
 
             mOps = sortedOps.array;
+
+            foreach(o; mOps)
+            {
+                if(o.opType == "reshape")
+                {
+                    //This will be overwritten in executeImpl, but we want a slot in the hashmap for it now.
+                    mResults[o] = mResults[o.deps[0]];
+                }
+                else
+                {
+                    mResults[o] = CUDABuffer.create(o.volume * o.elementType.sizeOf);
+
+                    if(o.opType == "constant")
+                    {
+                        mResults[o].set(o.value);
+                    }
+                }
+            }
+
+            mResults.rehash();
+        }
+
+        ~this()
+        {
+            cleanup();
+        }
+
+        /**
+            Releases CUDA resources associated with this plan.
+        */
+        void cleanup()
+        {
+            if(mClean)
+            {
+                return;
+            }
+
+            foreach(o; mOps)
+            {
+                if(o.opType != "reshape")
+                {
+                    CUDABuffer.destroy(mResults[o]);
+                }
+            }
+
+            mClean = true;
         }
     }
 
@@ -284,64 +334,83 @@ class CUDAPlan : Plan
     {
         override void executeImpl(DeviceBuffer[Operation] args, DeviceBuffer[] rets)
         {
-            import std.algorithm : each;
             import std.datetime.stopwatch : StopWatch;
             StopWatch sw;
 
-            mOps.each!(useCUDAStorage);
-
-            DeviceBuffer[Operation] originalBuffers;
-
-            //Make sure all the args are variable assignments
+            //Make sure all the args are variable assignments. Is this arbitrary?
             foreach(o; args.keys)
             {
                 enforce(o.opType == "variable",
                     "All assignments in args must be for Operations with an opType of 'variable'");
-
-                //Cache original DeviceBuffers, swap out for args
-                auto orig = o.value;
-                o.setBuffer(CUDABuffer.create(orig.numBytes));
-                o.value.set(args[o]);
-                originalBuffers[o] = orig;
             }
 
             //Iterate through each operation and execute it
             foreach(o; mOps)
             {
-                if(o.opType == "variable" || o.opType == "reshape" || o.opType == "constant")
+                if(o.opType == "variable" || o.opType == "constant")
                 {
                     continue;
                 }
 
                 //Get the input buffers
                 CUDABuffer[] inputs;
+                CUDABuffer output = mResults[o];
 
                 foreach(d; o.deps)
                 {
-                    inputs ~= cast(CUDABuffer)d.value;
+                    if(d.opType == "variable")
+                    {
+                        CUDABuffer cubuf;
+
+                        if(d in args)
+                        {
+                            cubuf = cast(CUDABuffer)args[d];
+
+                            if(cubuf is null)
+                            {
+                                cubuf = mResults[d];
+                                cubuf.set(args[d]);
+                            }
+                        }
+                        else
+                        {
+                            cubuf = cast(CUDABuffer)d.value;
+
+                            if(cubuf is null)
+                            {
+                                cubuf = mResults[d];
+                                cubuf.set(d.value);
+                            }
+
+                        }
+
+                        inputs ~= cubuf;
+                    }
+                    else
+                    {
+                        inputs ~= mResults[d];
+                    }
                 }
 
-                //Execute the operation
-                sw.reset();
-                sw.start();
-                (cast(CUDABuffer)o.value).zero();
-                mKernels[o].execute(inputs, cast(CUDABuffer)o.value);
-                sw.stop();
+                if(o.opType == "reshape")
+                {
+                    mResults[o] = inputs[0];
+                }
+                else
+                {
+                    //Execute the operation
+                    sw.reset();
+                    sw.start();
+                    mKernels[o].execute(inputs, output);
+                    sw.stop();
 
-                profiler[o.opType] = profiler.get(o.opType, 0) + sw.peek.split.usecs;
+                    profiler[o.opType] = profiler.get(o.opType, 0) + sw.peek.split.usecs;
+                }
             }
 
             foreach(i, o; mOutputs)
             {
-                rets[i].set(o.value);
-            }
-
-            foreach(o; args.keys)
-            {
-                auto buf = cast(CUDABuffer)o.value;
-                CUDABuffer.destroy(buf);
-
-                o.setBuffer(originalBuffers[o]);
+                rets[i].set(mResults[o]);
             }
         }
     }
@@ -350,32 +419,8 @@ class CUDAPlan : Plan
     {
         Operation[] mOps;
         CUDAKernel[Operation] mKernels;
-    }
-}
-
-void useCUDAStorage(Operation op)
-{
-    //TODO: This function is incorrect if two Operations share the same DeviceBuffer. After running this function,
-    //they will no longer share the same buffer.
-
-    if(op.opType == "reshape")
-    {
-        useCUDAStorage(op.deps[0]);
-        op.setBuffer(op.deps[0].value);
-        return;
-    }
-
-    auto cbuf = cast(CUDABuffer)op.value;
-
-    if(cbuf is null && op.value !is null)
-    {
-        auto tmp = op.value;
-        op.setBuffer(CUDABuffer.create(tmp.numBytes));
-        op.value.set(tmp);
-    }
-    else if(cbuf is null)
-    {
-        op.setBuffer(CUDABuffer.create(op.volume * sizeOf(op.elementType)));
+        CUDABuffer[Operation] mResults;
+        bool mClean = false;
     }
 }
 

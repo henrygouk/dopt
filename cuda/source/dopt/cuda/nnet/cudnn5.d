@@ -341,11 +341,13 @@ private
     {
         this(Operation op)
         {
+            import std.range : drop;
+
             auto shape = op.shape.map!(x => cast(int)x).array();
 
 			cudnnCreateTensorDescriptor(&desc).cudnnCheck();
-			cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1],
-                reduce!"a * b"(1, shape[2 .. $]), 1).cudnnCheck();
+			cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape.length > 1 ? shape[1] : 1,
+                reduce!"a * b"(1, shape.drop(2).array()), 1).cudnnCheck();
             
             cudnnCreateActivationDescriptor(&actDesc).cudnnCheck();
             cudnnSetActivationDescriptor(actDesc, CUDNN_ACTIVATION_RELU, CUDNN_PROPAGATE_NAN, 0.0).cudnnCheck();
@@ -377,11 +379,13 @@ private
     {
         this(Operation op)
         {
+            import std.range : drop;
+
             auto shape = op.shape.map!(x => cast(int)x).array();
 
 			cudnnCreateTensorDescriptor(&desc).cudnnCheck();
-			cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape[1],
-                reduce!"a * b"(1, shape[2 .. $]), 1).cudnnCheck();
+			cudnnSetTensor4dDescriptor(desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, shape[0], shape.length > 1 ? shape[1] : 1,
+                reduce!"a * b"(1, shape.drop(2).array()), 1).cudnnCheck();
             
             cudnnCreateActivationDescriptor(&actDesc).cudnnCheck();
             cudnnSetActivationDescriptor(actDesc, CUDNN_ACTIVATION_RELU, CUDNN_PROPAGATE_NAN, 0.0).cudnnCheck();

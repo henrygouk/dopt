@@ -21,7 +21,8 @@ private
     {
         import std.conv : to;
         import std.exception : enforce;
-        enforce(res == NVRTC_SUCCESS, mod ~ "(" ~ line.to!string ~ "): Failed to execute NVRTC function.");
+        enforce(res == NVRTC_SUCCESS,
+            mod ~ "(" ~ line.to!string ~ "): Failed to execute NVRTC function. Error " ~ res.to!string);
     }
 }
 

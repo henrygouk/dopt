@@ -6,7 +6,7 @@ module dopt.nnet.layers.maxpool;
 
 import dopt.core;
 import dopt.nnet;
-import dopt.nnet.layers.util;
+import dopt.nnet.util;
 import dopt.online;
 
 ///

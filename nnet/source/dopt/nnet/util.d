@@ -1,4 +1,4 @@
-module dopt.nnet.layers.util;
+module dopt.nnet.util;
 
 string dynamicProperties(Args...)(Args args)
 {

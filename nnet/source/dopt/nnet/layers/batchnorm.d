@@ -7,7 +7,7 @@ module dopt.nnet.layers.batchnorm;
 
 import dopt.core;
 import dopt.nnet;
-import dopt.nnet.layers.util;
+import dopt.nnet.util;
 import dopt.online;
 
 /**
@@ -22,6 +22,7 @@ class BatchNormOptions
         _gammaDecay = 0;
         _momentum = 0.9f;
         _maxgain = float.infinity;
+        _lipschitz = float.infinity;
     }
 
     mixin(dynamicProperties(
@@ -31,7 +32,8 @@ class BatchNormOptions
         "Projection", "betaProj",
         "float", "maxgain",
         "float", "gammaDecay",
-        "float", "momentum"
+        "float", "momentum",
+        "float", "lipschitz"
     ));
 }
 
@@ -106,6 +108,13 @@ Layer batchNorm(Layer input, BatchNormOptions opts = new BatchNormOptions())
         {
             return opts._gammaProj(newGamma * (1.0f / max(float32Constant([], [1.0f]), mg / opts.maxgain)));
         }
+    }
+
+    Operation lipschitzProj(Operation newGamma)
+    {
+        auto norm = (newGamma / sqrt(varUpdateSym + 1e-6)).abs().maxElement();
+
+        return newGamma * (1.0f / max(float32Constant(1.0f), norm / opts.lipschitz));
     }
 
     Projection gammaProj = opts._gammaProj;

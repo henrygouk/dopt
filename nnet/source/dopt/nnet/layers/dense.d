@@ -6,7 +6,7 @@ module dopt.nnet.layers.dense;
 
 import dopt.core;
 import dopt.nnet;
-import dopt.nnet.layers.util;
+import dopt.nnet.util;
 import dopt.online;
 
 /**

@@ -36,7 +36,7 @@ If you want to take advantage of the CUDA backend (currently required for most n
 
 ```json
 "dependencies": {
-    "dopt": "~>0.3.9"
+    "dopt": "~>0.3.11"
 },
 "subConfigurations": {
     "dopt": "cuda"
@@ -46,4 +46,4 @@ If you want to take advantage of the CUDA backend (currently required for most n
 Example
 -------
 
-Examples for training networks on MNIST and CIFAR10 are given in the `examples/` folder.
+Examples for training networks on MNIST, CIFAR-10, CIFAR-100, and [SINS-10](https://cs.waikato.ac.nz/~ml/sins10/) are given in the `examples/` folder.

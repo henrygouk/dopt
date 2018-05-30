@@ -134,13 +134,21 @@ class CUDABuffer : DeviceBuffer
         static CUDABuffer create(size_t numBytes)
         {
             import core.memory : GC;
+            import std.conv : to;
 
             //Rely on the GC to run some finalisers to free CUDA memory. I know this is bad please help.
             GC.collect();
 
             CUDABuffer ret = new CUDABuffer();
+
+            if(numBytes == 0)
+            {
+                return ret;
+            }
+
             ret.mNumBytes = numBytes;
-            enforce(cuMemAlloc(&(ret.mPtr), ret.mNumBytes) == CUDA_SUCCESS, "CUDA memory allocation failed");
+            enforce(cuMemAlloc(&(ret.mPtr), ret.mNumBytes) == CUDA_SUCCESS,
+                "CUDA memory allocation failed: unable to allocate " ~ numBytes.to!string ~ " bytes");
             enforce(cuMemsetD8(ret.mPtr, 0, ret.mNumBytes) == CUDA_SUCCESS,
                 "CUDA default buffer initialisation failed");
 

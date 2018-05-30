@@ -39,7 +39,7 @@ private
 
         return [
             convolution(parentGrad, op.deps[1], padding, stride),
-            convolutionFiltersGrad(parentGrad, op.deps[0], op.deps[1].shape, padding, stride)
+            convolutionFiltersGrad(op.deps[0], parentGrad, op.deps[1].shape, padding, stride)
         ];
     }
 

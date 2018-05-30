@@ -309,6 +309,7 @@ public
         outShape[2 .. $] -= 1;
         outShape[2 .. $] *= stride[];
         outShape[2 .. $] += filters.shape[2 .. $] - 2 * padding[];
+        outShape[1] = filters.shape[1];
 
         return convolutionFeaturesGrad(features, filters, outShape, padding, stride, mod, line);
     }

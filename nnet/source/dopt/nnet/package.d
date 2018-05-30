@@ -57,6 +57,7 @@ public
 {
     import dopt.nnet.data;
     import dopt.nnet.layers;
+    import dopt.nnet.lipschitz;
     import dopt.nnet.losses;
     import dopt.nnet.models;
     import dopt.nnet.networks;

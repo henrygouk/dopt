@@ -14,6 +14,7 @@ Current features include:
 * Reverse-mode automatic differentiation
 * Neural network primitives
 * Neural network construction utilities
+* Several prebuilt models (VGG, Wide ResNet)
 * Framework to add third party operations and their derivatives, and the ability register implementations for both the CPU and CUDA backends
 * Online optimisation algorithms: SGD, ADAM, AMSGrad, and more to come!
 
@@ -36,7 +37,7 @@ If you want to take advantage of the CUDA backend (currently required for most n
 
 ```json
 "dependencies": {
-    "dopt": "~>0.3.11"
+    "dopt": "~>0.3.12"
 },
 "subConfigurations": {
     "dopt": "cuda"

@@ -6,6 +6,7 @@ public
     import dopt.nnet.data.imagetransformer;
     import dopt.nnet.data.mnist;
     import dopt.nnet.data.sins;
+    import dopt.nnet.data.svhn;
 }
 
 import std.exception : enforce;

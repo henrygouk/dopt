@@ -71,6 +71,15 @@ Layer vgg19(Operation features, size_t[] denseLayerSizes = [4096, 4096], VGGOpti
           .makeTop(denseLayerSizes, opts);
 }
 
+Layer vgg(Operation features, int[] extractorSizes, size_t[] denseLayerSizes = [4096, 4096],
+    VGGOptions opts = new VGGOptions())
+{
+    opts.verify();
+
+    return makeExtractor(features, extractorSizes, opts)
+          .makeTop(denseLayerSizes, opts);
+}
+
 private
 {
     Layer makeExtractor(Operation features, int[] sizes, VGGOptions opts)

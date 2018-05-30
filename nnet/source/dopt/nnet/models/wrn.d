@@ -17,6 +17,7 @@ class WRNOptions
         _maxNorm = float.infinity;
         _spectralDecay = 0.0f;
         _weightDecay = 0.0001f;
+        _stride = [1, 2, 2];
     }
 
     void verify()

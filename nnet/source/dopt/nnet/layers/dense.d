@@ -21,6 +21,7 @@ class DenseOptions
         _useBias = true;
         _weightDecay = 0;
         _maxgain = float.infinity;
+        _spectralDecay = 0.0f;
     }
 
     mixin(dynamicProperties(
@@ -30,6 +31,7 @@ class DenseOptions
         "Projection", "biasProj",
         "float", "maxgain",
         "float", "weightDecay",
+        "float", "spectralDecay",
         "bool", "useBias"
     ));
 }
@@ -64,6 +66,26 @@ unittest
 */
 Layer dense(Layer input, size_t numOutputs, DenseOptions opts = new DenseOptions())
 {
+    Operation safeAdd(Operation op1, Operation op2)
+    {
+        if(op1 is null && op2 is null)
+        {
+            return null;
+        }
+        else if(op1 is null)
+        {
+            return op2;
+        }
+        else if(op2 is null)
+        {
+            return op1;
+        }
+        else
+        {
+            return op1 + op2;
+        }
+    }
+
     auto x = input.output;
     auto xTr = input.trainOutput;
 
@@ -73,7 +95,13 @@ Layer dense(Layer input, size_t numOutputs, DenseOptions opts = new DenseOptions
     auto weights = float32([numOutputs, x.shape[1]]);
     opts._weightInit(weights);
 
-    auto weightLoss = (opts.weightDecay == 0.0f) ? null : (opts.weightDecay * sum(weights * weights));
+    Operation weightLoss;
+    weightLoss = safeAdd(weightLoss, (opts.weightDecay == 0.0f) ? null : (opts.weightDecay * sum(weights * weights)));
+    weightLoss = safeAdd(
+        weightLoss,
+        (opts.spectralDecay == 0.0f) ? null : (opts.spectralDecay * spectralNorm(weights))
+    );
+
     auto weightProj = opts._weightProj;
 
     auto y = matmul(x, weights.transpose([1, 0]));
@@ -119,4 +147,19 @@ Layer dense(Layer input, size_t numOutputs, DenseOptions opts = new DenseOptions
     }
 
     return new Layer([input], y, yTr, params);
+}
+
+private Operation spectralNorm(Operation weights, size_t numIts = 1)
+{
+    auto x = uniformSample([weights.shape[0], 1]) * 2.0f - 1.0f;
+
+    for(int i = 0; i < numIts; i++)
+    {
+        x = matmul(weights.transpose([1, 0]), matmul(weights, x));
+    }
+
+    auto v = x / sqrt(sum(x * x));
+    auto y = matmul(weights, v);
+
+    return sum(y * y);
 }

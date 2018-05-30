@@ -24,6 +24,7 @@ class Conv2DOptions
         _stride = [1, 1];
         _weightDecay = 0.0f;
         _maxgain = float.infinity;
+        _spectralDecay = 0.0f;
 
     }
 
@@ -36,6 +37,7 @@ class Conv2DOptions
         "Projection", "biasProj",
         "float", "maxgain",
         "float", "weightDecay",
+        "float", "spectralDecay",
         "bool", "useBias"
     ));
 }
@@ -81,6 +83,7 @@ Layer conv2D(Layer input, size_t outputChannels, size_t[] filterDims, Conv2DOpti
     auto biasProj = opts.biasProj;
     auto weightDecay = opts.weightDecay;
     auto useBias = opts.useBias;
+    auto spectralDecay = opts.spectralDecay;
 
     auto x = input.output;
     auto xTr = input.trainOutput;
@@ -90,7 +93,32 @@ Layer conv2D(Layer input, size_t outputChannels, size_t[] filterDims, Conv2DOpti
 
     import std.math : isNaN;
 
-    auto filterLoss = (weightDecay == 0.0f) ? null : (weightDecay * sum(filters * filters));
+    Operation safeAdd(Operation op1, Operation op2)
+    {
+        if(op1 is null && op2 is null)
+        {
+            return null;
+        }
+        else if(op1 is null)
+        {
+            return op2;
+        }
+        else if(op2 is null)
+        {
+            return op1;
+        }
+        else
+        {
+            return op1 + op2;
+        }
+    }
+
+    Operation filterLoss;
+    filterLoss = safeAdd(filterLoss, (weightDecay == 0.0f) ? null : (weightDecay * sum(filters * filters)));
+    filterLoss = safeAdd(
+        filterLoss,
+        (spectralDecay == 0.0f) ? null : spectralDecay * spectralNorm(filters, padding, stride)
+    );
 
     auto y = x.convolution(filters, padding, stride);
     auto yTr = xTr.convolution(filters, padding, stride);
@@ -135,4 +163,26 @@ Layer conv2D(Layer input, size_t outputChannels, size_t[] filterDims, Conv2DOpti
     }
 
     return new Layer([input], y, yTr, params);
+}
+
+/**
+    Note that this function computes the incorrect norm used by Yoshida and Miyato (2017).
+
+    Yoshida, Y., & Miyato, T. (2017). Spectral Norm Regularization for Improving the Generalizability of Deep Learning.
+    arXiv preprint arXiv:1705.10941.
+*/
+private Operation spectralNorm(Operation filters, size_t[] padding, size_t[] stride, size_t numIts = 1)
+{
+    filters = filters.reshape([filters.shape[0], filters.volume / filters.shape[0]]);
+    auto x = uniformSample([filters.shape[1], 1]) * 2.0f - 1.0f;
+
+    for(int i = 0; i < numIts; i++)
+    {
+        x = matmul(filters.transpose([1, 0]), matmul(filters, x));
+    }
+
+    auto v = x / sqrt(sum(x * x));
+    auto y = matmul(filters, v);
+
+    return sum(y * y);
 }

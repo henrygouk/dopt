@@ -44,7 +44,10 @@ void main(string[] args)
     auto features = float32([batchSize, 3, 96, 96]);
     auto labels = float32([batchSize, 10]);
 
-    auto preds = wideResNet(features, 16, 8, [2, 2, 2])
+	auto opts = new WRNOptions();
+	opts.stride = [2, 2, 2];
+	
+    auto preds = wideResNet(features, 16, 8, opts)
                 .dense(10)
                 .softmax();
 

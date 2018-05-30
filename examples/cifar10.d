@@ -59,10 +59,10 @@ void main(string[] args)
 	There are a few predefined models in dopt.nnet.models, such as vgg19. We provide it with the variable we want to
 	use as the input to this model, tell it what sizes the fully connected layers should be, and then put a softmax
 	activation function on the end. The softmax function is the standard activation function when one is performing
-	a classification task. The model is regularised using dropout, batch norm, and maxgain.
+	a classification task.
 	*/
-    auto preds = vgg19(features, [512, 512], true, true, 3.0f)
-				.dense(10, new DenseOptions().maxgain(3.0f))
+    auto preds = vgg19(features, [512, 512])
+				.dense(10)
 				.softmax();
     
 	//The DAGNetwork class takes the inputs and outputs of a network and aggregates parameters in several different.
@@ -82,7 +82,7 @@ void main(string[] args)
 	*/
 	writeln("Creating optimiser...");
 	auto learningRate = float32([], [0.0001f]);
-	auto updater = adam([lossSym, preds.trainOutput], network.params, network.paramProj, learningRate);
+	auto updater = amsgrad([lossSym, preds.trainOutput], network.params, network.paramProj, learningRate);
 	auto testPlan = compile([testLossSym, preds.output]);
 
 	writeln("Training...");

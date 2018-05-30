@@ -6,6 +6,7 @@ import dopt.core;
 import dopt.nnet;
 import dopt.nnet.util;
 import dopt.nnet.models.maybe;
+import dopt.online;
 
 class WRNOptions
 {
@@ -60,9 +61,26 @@ Layer wideResNet(Operation features, size_t depth, size_t width, WRNOptions opts
 
     float maxgain = float.infinity;
 
-    if(!isNaN(opts.maxgainNorm))
+    if(opts.maxgainNorm == 2.0f)
     {
         maxgain = opts.maxNorm;
+    }
+
+    float lambda = float.infinity;
+    float lipschitzNorm = float.nan;
+
+    if(!isNaN(opts.lipschitzNorm))
+    {
+        lipschitzNorm = opts.lipschitzNorm;
+        lambda = opts.maxNorm;
+    }
+
+    Projection filterProj;
+    Operation lambdaSym = float32Constant(lambda);
+
+    if(lambda != float.infinity)
+    {
+        filterProj = projConvParams(lambdaSym, features.shape[2 .. $], [1, 1], [1, 1], lipschitzNorm);
     }
 
     auto pred = dataSource(features)
@@ -70,7 +88,8 @@ Layer wideResNet(Operation features, size_t depth, size_t width, WRNOptions opts
                     .padding([1, 1])
                     .useBias(false)
                     .weightDecay(opts.weightDecay)
-                    .maxgain(maxgain))
+                    .maxgain(maxgain)
+                    .filterProj(filterProj))
                .wrnBlock(16 * width, n, opts.stride[0], opts)
                .wrnBlock(32 * width, n, opts.stride[1], opts)
                .wrnBlock(64 * width, n, opts.stride[2], opts)
@@ -85,10 +104,21 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, WRNOptions o
 {
     float maxgain = float.infinity;
 
-    if(!isNaN(opts.maxgainNorm))
+    if(opts.maxgainNorm == 2.0f)
     {
         maxgain = opts.maxNorm;
     }
+
+    float lambda = float.infinity;
+    float lipschitzNorm = float.nan;
+
+    if(!isNaN(opts.lipschitzNorm))
+    {
+        lipschitzNorm = opts.lipschitzNorm;
+        lambda = opts.maxNorm;
+    }
+
+    Operation lambdaSym = float32Constant(lambda);
 
     auto convOpts()
     {
@@ -101,11 +131,9 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, WRNOptions o
 
     auto bnOpts()
     {
-        float bnlip = !isNaN(opts.lipschitzNorm) ? opts.maxNorm : float.infinity;
-
         return new BatchNormOptions()
             .maxgain(maxgain)
-            .lipschitz(bnlip);
+            .lipschitz(lambda);
     }
 
     Layer res;
@@ -114,22 +142,45 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, WRNOptions o
     {
         res = inLayer
             .batchNorm(bnOpts())
-            .relu()
-            .conv2D(u, [3, 3], convOpts().stride([s, s]))
-            .batchNorm(bnOpts())
-            .relu()
-            .maybeDropout(opts.dropout ? 0.3f : 0.0f)
-            .conv2D(u, [3, 3], convOpts());
+            .relu();
+        
+        Projection filterProj = null;
+
+        if(lambda != float.infinity)
+        {
+            filterProj = projConvParams(lambdaSym, res.trainOutput.shape[2 .. $], [s, s], [1, 1], lipschitzNorm);
+        }
+
+        res = res
+             .conv2D(u, [3, 3], convOpts().stride([s, s]).filterProj(filterProj))
+             .batchNorm(bnOpts())
+             .relu()
+             .maybeDropout(opts.dropout ? 0.3f : 0.0f);
+        
+        if(lambda != float.infinity)
+        {
+            filterProj = projConvParams(lambdaSym, res.trainOutput.shape[2 .. $], [1, 1], [1, 1], lipschitzNorm);
+        }
+        
+        res = res
+             .conv2D(u, [3, 3], convOpts().filterProj(filterProj));
         
         Layer shortcut = inLayer;
         
         if(inLayer.output.shape[1] != res.output.shape[1])
         {
+            if(lambda != float.infinity)
+            {
+                filterProj = projConvParams(lambdaSym, inLayer.trainOutput.shape[2 .. $], [s, s], [1, 1],
+                    lipschitzNorm);
+            }
+
             shortcut = inLayer.conv2D(u, [1, 1], new Conv2DOptions()
                                                 .stride([s, s])
                                                 .useBias(false)
                                                 .weightDecay(opts.weightDecay)
-                                                .maxgain(maxgain));
+                                                .maxgain(maxgain)
+                                                .filterProj(filterProj));
         }
 
         res = new Layer(

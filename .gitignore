@@ -20,6 +20,7 @@ dopt-nnet-test-library
 dopt-online-test-library
 dub.selections.json
 examples/cifar10
+examples/cifar100
 examples/sins10
 examples/mnist
 examples/mnistlogit

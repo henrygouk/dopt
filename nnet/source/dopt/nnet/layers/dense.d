@@ -151,15 +151,18 @@ Layer dense(Layer input, size_t numOutputs, DenseOptions opts = new DenseOptions
 
 private Operation spectralNorm(Operation weights, size_t numIts = 1)
 {
+    //We use W*W^T instead of W^T*W because the weights is actually the transpose of the weight matrix.
     auto x = uniformSample([weights.shape[0], 1]) * 2.0f - 1.0f;
+    auto weightsT = weights.transpose([1, 0]);
+    auto wwT = weights.matmul(weightsT);
 
     for(int i = 0; i < numIts; i++)
     {
-        x = matmul(weights.transpose([1, 0]), matmul(weights, x));
+        x = matmul(wwT, x);
     }
 
     auto v = x / sqrt(sum(x * x));
-    auto y = matmul(weights, v);
+    auto y = matmul(weightsT, v);
 
     return sum(y * y);
 }

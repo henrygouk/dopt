@@ -40,7 +40,7 @@ Projection projMatrix(Operation maxnorm, float p = 2)
 /**
     Computes the induced operator norm corresponding to the vector p-norm.
 */
-Operation matrixNorm(Operation param, float p)
+Operation matrixNorm(Operation param, float p, size_t n = 2)
 {
     import std.exception : enforce;
 
@@ -65,9 +65,9 @@ Operation matrixNorm(Operation param, float p)
     {
         auto x = uniformSample([param.shape[0], 1]) * 2.0f - 1.0f;
 
-        for(int i = 0; i < 2; i++)
+        for(int i = 0; i < n; i++)
         {
-            x = matmul(param.transpose([1, 0]), matmul(param, x));
+            x = matmul(param, matmul(param.transpose([1, 0], x));
         }
 
         auto v = x / sqrt(sum(x * x));

@@ -9,7 +9,7 @@ import std.typecons;
 
 import dopt.nnet.data;
 
-auto loadCIFAR10(string path)
+auto loadCIFAR10(string path, bool validation = false)
 {
 	auto batchFiles = [
 		"data_batch_1.bin",
@@ -20,19 +20,19 @@ auto loadCIFAR10(string path)
 		"test_batch.bin"
 	];
 
-	return loadCIFAR(path, batchFiles, 1, 0, 10);
+	return loadCIFAR(path, batchFiles, 1, 0, 10, validation);
 }
 
-auto loadCIFAR100(string path)
+auto loadCIFAR100(string path, bool validation = false)
 {
 	auto batchFiles = ["train.bin", "test.bin"];
 
-	return loadCIFAR(path, batchFiles, 2, 1, 100);
+	return loadCIFAR(path, batchFiles, 2, 1, 100, validation);
 }
 
 private
 {
-	auto loadCIFAR(string path, string[] batchFiles, size_t labelBytes, size_t labelIdx, size_t numLabels)
+	auto loadCIFAR(string path, string[] batchFiles, size_t labelBytes, size_t labelIdx, size_t numLabels, bool valid)
 	{
 		auto batches = batchFiles.map!(x => path ~ "/" ~ x).array();
 
@@ -58,16 +58,18 @@ private
 			}
 		}
 
+		size_t numTrain = valid ? 40_000 : 50_000;
+
 		BatchIterator trainData = new SupervisedBatchIterator(
-			features[0 .. 50_000],
-			labels[0 .. 50_000],
+			features[0 .. numTrain],
+			labels[0 .. numTrain],
 			[[cast(size_t)3, 32, 32], [numLabels]],
 			true
 		);
 
 		BatchIterator testData = new SupervisedBatchIterator(
-			features[50_000 .. $],
-			labels[50_000 .. $],
+			features[numTrain .. numTrain + 10_000],
+			labels[numTrain .. numTrain + 10_000],
 			[[cast(size_t)3, 32, 32], [numLabels]],
 			false
 		);

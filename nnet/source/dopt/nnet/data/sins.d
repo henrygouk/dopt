@@ -8,7 +8,7 @@ import std.typecons : tuple;
 
 import dopt.nnet.data;
 
-auto loadSINS10(string directory)
+auto loadSINS10(string directory, bool validation = false)
 {
     auto features = (cast(ubyte[])read(directory ~ "/X.bin"))
                    .map!(x => cast(float)x / 128.0f - 1.0f)
@@ -27,11 +27,23 @@ auto loadSINS10(string directory)
         labels[i][rawlabels[i]] = 1.0f;
     }
 
+    size_t numTrain = validation ? 8_000 : 9_000;
+
     return zip(features.chunks(10_000), labels.chunks(10_000))
           .map!(x => tuple(x[0].array, x[1].array))
           .map!(x => tuple!("train", "test")(
-              cast(BatchIterator)new SupervisedBatchIterator(x[0][0 .. 9_000], x[1][0 .. 9_000], [[3, 96, 96], [10]], true),
-              cast(BatchIterator)new SupervisedBatchIterator(x[0][9_000 .. $], x[1][9_000 .. $], [[3, 96, 96], [10]], false)
+              cast(BatchIterator)new SupervisedBatchIterator(
+                  x[0][0 .. numTrain],
+                  x[1][0 .. numTrain],
+                  [[3, 96, 96], [10]],
+                  true
+              ),
+              cast(BatchIterator)new SupervisedBatchIterator(
+                  x[0][numTrain .. numTrain + 1_000],
+                  x[1][numTrain .. numTrain + 1_000],
+                  [[3, 96, 96], [10]],
+                  false
+              )
           ))
           .array();
 }

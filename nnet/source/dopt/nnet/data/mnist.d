@@ -8,7 +8,7 @@ import std.typecons;
 
 import dopt.nnet.data;
 
-auto loadMNIST(string path)
+auto loadMNIST(string path, bool validation = false)
 {
     T[][] loadFeatures(T)(string filename)
     {
@@ -72,6 +72,14 @@ auto loadMNIST(string path)
 	auto trainLabels = loadLabels!float(path ~ "/train-labels-idx1-ubyte");
 	auto testFeatures = loadFeatures!float(path ~ "/t10k-images-idx3-ubyte");
 	auto testLabels = loadLabels!float(path ~ "/t10k-labels-idx1-ubyte");
+
+    if(validation)
+    {
+        testFeatures = trainFeatures[$ - 10_000 .. $];
+        testLabels = trainLabels[$ - 10_000 .. $];
+        trainFeatures = trainFeatures[0 .. $ - 10_000];
+        trainLabels = trainLabels[0 .. $ - 10_000];
+    }
 
 	BatchIterator trainData = new SupervisedBatchIterator(trainFeatures, trainLabels, [[1, 28, 28], [10]], true);
     BatchIterator testData = new SupervisedBatchIterator(testFeatures, testLabels, [[1, 28, 28], [10]], false);

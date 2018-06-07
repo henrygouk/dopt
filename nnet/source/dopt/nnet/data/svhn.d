@@ -8,7 +8,7 @@ import std.typecons;
 
 import dopt.nnet.data;
 
-auto loadSVHN(string directory)
+auto loadSVHN(string directory, bool validation = false)
 {
     auto loadFeatures(string filename)
     {
@@ -39,6 +39,14 @@ auto loadSVHN(string directory)
     auto testFeatures = loadFeatures("test_X.bin");
     auto trainLabels = loadLabels("train_y.bin") ~ loadLabels("extra_y.bin");
     auto testLabels = loadLabels("test_y.bin");
+
+    if(validation)
+    {
+        testFeatures = trainFeatures[0 .. 10_000];
+        testLabels = trainLabels[0 .. 10_000];
+        trainFeatures = trainFeatures[10_000 .. $];
+        trainLabels = trainLabels[10_000 .. $];
+    }
 
     BatchIterator trainData = new SupervisedBatchIterator(
         trainFeatures,

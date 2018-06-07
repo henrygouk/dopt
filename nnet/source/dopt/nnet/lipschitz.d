@@ -64,14 +64,16 @@ Operation matrixNorm(Operation param, float p, size_t n = 2)
     else if(p == 2.0f)
     {
         auto x = uniformSample([param.shape[0], 1]) * 2.0f - 1.0f;
+		auto weightsT = param.transpose([1, 0]);
+		auto wwT = param.matmul(weightsT);
 
         for(int i = 0; i < n; i++)
         {
-            x = matmul(param, matmul(param.transpose([1, 0], x));
+            x = matmul(wwT, x);
         }
 
         auto v = x / sqrt(sum(x * x));
-        auto y = matmul(param, v);
+        auto y = matmul(weightsT, v);
 
         return sqrt(sum(y * y));
     }

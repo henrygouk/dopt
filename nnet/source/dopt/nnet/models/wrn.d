@@ -88,12 +88,13 @@ Layer wideResNet(Operation features, size_t depth, size_t width, WRNOptions opts
                     .padding([1, 1])
                     .useBias(false)
                     .weightDecay(opts.weightDecay)
+                    .spectralDecay(opts.spectralDecay)
                     .maxgain(maxgain)
                     .filterProj(filterProj))
                .wrnBlock(16 * width, n, opts.stride[0], opts)
                .wrnBlock(32 * width, n, opts.stride[1], opts)
                .wrnBlock(64 * width, n, opts.stride[2], opts)
-               .batchNorm(new BatchNormOptions().maxgain(maxgain))
+               .batchNorm(new BatchNormOptions().maxgain(maxgain).lipschitz(lambda))
                .relu()
                .meanPool();
 
@@ -126,6 +127,7 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, WRNOptions o
             .padding([1, 1])
             .useBias(false)
             .weightDecay(opts.weightDecay)
+            .spectralDecay(opts.spectralDecay)
             .maxgain(maxgain);
     }
 
@@ -179,6 +181,7 @@ private Layer wrnBlock(Layer inLayer, size_t u, size_t n, size_t s, WRNOptions o
                                                 .stride([s, s])
                                                 .useBias(false)
                                                 .weightDecay(opts.weightDecay)
+                                                .spectralDecay(opts.spectralDecay)
                                                 .maxgain(maxgain)
                                                 .filterProj(filterProj));
         }

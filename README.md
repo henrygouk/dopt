@@ -37,7 +37,7 @@ If you want to take advantage of the CUDA backend (currently required for most n
 
 ```json
 "dependencies": {
-    "dopt": "~>0.3.12"
+    "dopt": "~>0.3.17"
 },
 "subConfigurations": {
     "dopt": "cuda"

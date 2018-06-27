@@ -546,6 +546,6 @@ public
     ///
     Operation int32Constant(int val, string mod = __MODULE__, size_t line = __LINE__)
     {
-        return int32Constant(val, mod, line);
+        return int32Constant([], [val], mod, line);
     }
 }

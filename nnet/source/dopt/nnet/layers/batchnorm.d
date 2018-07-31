@@ -112,9 +112,18 @@ Layer batchNorm(Layer input, BatchNormOptions opts = new BatchNormOptions())
 
     Operation lipschitzProj(Operation newGamma)
     {
-        auto norm = (newGamma / sqrt(varUpdateSym + 1e-6)).abs().maxElement();
+        auto norm = (newGamma / sqrt(varUpdateSym.reshape(newGamma.shape) + 1e-6)).abs().maxElement();
 
-        return newGamma * (1.0f / max(float32Constant(1.0f), norm / opts.lipschitz));
+        auto g = newGamma * (1.0f / max(float32Constant(1.0f), norm / opts.lipschitz));
+
+        if(opts._gammaProj is null)
+        {
+            return g;
+        }
+        else
+        {
+            return opts._gammaProj(g);
+        }
     }
 
     Projection gammaProj = opts._gammaProj;
@@ -122,6 +131,10 @@ Layer batchNorm(Layer input, BatchNormOptions opts = new BatchNormOptions())
     if(opts.maxgain != float.infinity)
     {
         gammaProj = &maxGainProj;
+    }
+    else if(opts.lipschitz != float.infinity)
+    {
+        gammaProj = &lipschitzProj;
     }
 
     Operation meanUpdater(Operation ignored)
